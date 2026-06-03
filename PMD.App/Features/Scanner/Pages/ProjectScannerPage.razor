@@ -1,0 +1,205 @@
+@page "/projektpruefung"
+@using Microsoft.AspNetCore.Components.Web
+@using CommunityToolkit.Maui.Storage
+@inject IProjectFolderScanner ProjectFolderScanner
+@inject IFolderPicker FolderPicker
+
+<PageTitle>PMD - Projektprüfung</PageTitle>
+
+<div class="container-fluid pmd-scanner-page">
+    <div class="mb-4">
+        <div class="text-muted small mb-1">PMD - Projektprüfung</div>
+        <h1>Projektprüfung</h1>
+        <p class="text-muted mb-0">
+            Hier kannst du einen Projektordner prüfen lassen.
+        </p>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Projektordner prüfen</h5>
+
+            <p class="card-text">
+                Wähle einen Projektordner aus oder trage den vollständigen Pfad manuell ein.
+            </p>
+
+            <div class="mb-3">
+                <label class="form-label" for="folder-path">Projektordner</label>
+                <input id="folder-path"
+                       class="form-control"
+                       placeholder="C:\Users\sakar.birkan\source\repos\PMD V0.4"
+                       @bind="folderPath" />
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-outline-secondary" @onclick="PickFolderAsync">
+                    Ordner auswählen
+                </button>
+
+                <button class="btn btn-primary" @onclick="ScanProjectFolder">
+                    Projekt prüfen
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger mt-3 mb-0">
+                    @errorMessage
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (scanResult is not null)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Prüfergebnis</h5>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Projektordner</dt>
+                    <dd class="col-sm-9">@scanResult.RootPath</dd>
+
+                    <dt class="col-sm-3">Geprüft am</dt>
+                    <dd class="col-sm-9">@scanResult.ScannedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+                    <dt class="col-sm-3">Dateien</dt>
+                    <dd class="col-sm-9">@scanResult.FileCount</dd>
+
+                    <dt class="col-sm-3">Gesamtgröße</dt>
+                    <dd class="col-sm-9">@FormatFileSize(scanResult.TotalSizeInBytes)</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Gefundene Dateien</h5>
+
+                @if (scanResult.Files.Count == 0)
+                {
+                    <p class="text-muted mb-0">
+                        Keine Dateien gefunden.
+                    </p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Datei</th>
+                                    <th>Endung</th>
+                                    <th>Größe</th>
+                                    <th>Geändert</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var file in scanResult.Files.Take(50))
+                                {
+                                    <tr>
+                                        <td>@file.RelativePath</td>
+                                        <td>@file.Extension</td>
+                                        <td>@FormatFileSize(file.SizeInBytes)</td>
+                                        <td>@file.LastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (scanResult.Files.Count > 50)
+                    {
+                        <p class="text-muted small mt-3 mb-0">
+                            Es werden erstmal nur die ersten 25 Dateien angezeigt.
+                        </p>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string folderPath = string.Empty;
+    private string? errorMessage;
+    private ProjectFolderScanResult? scanResult;
+
+    private async Task PickFolderAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            var result = await FolderPicker.PickAsync(CancellationToken.None);
+
+            if (result.IsSuccessful && result.Folder is not null)
+            {
+                folderPath = result.Folder.Path;
+                scanResult = null;
+            }
+            else if (result.Exception is not null)
+            {
+                errorMessage = $"Der Ordner konnte nicht ausgewählt werden: {result.Exception.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Der Ordner konnte nicht ausgewählt werden: {ex.Message}";
+        }
+    }
+
+    private void ScanProjectFolder()
+    {
+        errorMessage = null;
+        scanResult = null;
+        folderPath = folderPath.Trim();
+
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            errorMessage = "Bitte geben Sie zuerst einen Projektordner an.";
+            return;
+        }
+
+        if (!Directory.Exists(folderPath))
+        {
+            errorMessage = "Der angegebene Projektordner wurde nicht gefunden.";
+            return;
+        }
+
+        try
+        {
+            scanResult = ProjectFolderScanner.ScanFolder(folderPath);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Die Projektprüfung konnte nicht abgeschlossen werden: {ex.Message}";
+        }
+    }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024)
+        {
+            return $"{sizeInBytes} B";
+        }
+
+        double sizeInKb = sizeInBytes / 1024d;
+
+        if (sizeInKb < 1024)
+        {
+            return $"{sizeInKb:0.0} KB";
+        }
+
+        double sizeInMb = sizeInKb / 1024d;
+
+        if (sizeInMb < 1024)
+        {
+            return $"{sizeInMb:0.0} MB";
+        }
+
+        double sizeInGb = sizeInMb / 1024d;
+
+        return $"{sizeInGb:0.0} GB";
+    }
+}
