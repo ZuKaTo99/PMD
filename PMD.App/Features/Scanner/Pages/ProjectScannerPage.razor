@@ -57,6 +57,9 @@
                 <h5 class="card-title">Prüfergebnis</h5>
 
                 <dl class="row mb-0">
+                    <dt class="col-sm-3">Projektname</dt>
+                    <dd class="col-sm-9">@scanResult.ProjectName</dd>
+
                     <dt class="col-sm-3">Projektordner</dt>
                     <dd class="col-sm-9">@scanResult.RootPath</dd>
 
@@ -66,11 +69,144 @@
                     <dt class="col-sm-3">Dateien</dt>
                     <dd class="col-sm-9">@scanResult.FileCount</dd>
 
+                    <dt class="col-sm-3">Geprüfte Ordner</dt>
+                    <dd class="col-sm-9">@scanResult.ScannedFolderCount</dd>
+
+                    <dt class="col-sm-3">Angezeigt</dt>
+                    <dd class="col-sm-9">
+                        @GetDisplayedFileCount() von @scanResult.FileCount Dateien
+                    </dd>
+
                     <dt class="col-sm-3">Gesamtgröße</dt>
                     <dd class="col-sm-9">@FormatFileSize(scanResult.TotalSizeInBytes)</dd>
+
+                    <dt class="col-sm-3">Prüfdauer</dt>
+                    <dd class="col-sm-9">@FormatScanDuration(scanResult.ScanDuration)</dd>
+
+                    <dt class="col-sm-3">Übersprungene Ordner</dt>
+                    <dd class="col-sm-9">@scanResult.IgnoredFolderCount</dd>
+
+                    <dt class="col-sm-3">Hinweise</dt>
+                    <dd class="col-sm-9">@scanResult.WarningCount</dd>
                 </dl>
             </div>
         </div>
+
+        @if (scanResult.WarningCount > 0)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Hinweise</h5>
+
+                    <ul class="mb-0">
+                        @foreach (var warning in scanResult.Warnings.Take(20))
+                        {
+                            <li>@warning</li>
+                        }
+                    </ul>
+
+                    @if (scanResult.WarningCount > 20)
+                    {
+                        <p class="text-muted small mt-3 mb-0">
+                            Es werden erstmal nur die ersten 20 Hinweise angezeigt.
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (scanResult.IgnoredFolderCount > 0)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Übersprungene Ordner</h5>
+
+                    <ul class="mb-0">
+                        @foreach (var folder in scanResult.IgnoredFolders.Take(20))
+                        {
+                            <li>@folder</li>
+                        }
+                    </ul>
+
+                    @if (scanResult.IgnoredFolderCount > 20)
+                    {
+                        <p class="text-muted small mt-3 mb-0">
+                            Es werden erstmal nur die ersten 20 übersprungenen Ordner angezeigt.
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (scanResult.Files.Count > 0)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Dateitypen</h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Dateityp</th>
+                                    <th>Dateien</th>
+                                    <th>Gesamtgröße</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var fileType in GetFileTypeStats())
+                                {
+                                    <tr>
+                                        <td>@fileType.Extension</td>
+                                        <td>@fileType.Count</td>
+                                        <td>@FormatFileSize(fileType.SizeInBytes)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p class="text-muted small mt-3 mb-0">
+                        Es werden die häufigsten Dateitypen angezeigt.
+                    </p>
+                </div>
+            </div>
+        }
+
+        @if (scanResult.Files.Count > 0)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Größte Dateien</h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Datei</th>
+                                    <th>Größe</th>
+                                    <th>Geändert</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var file in GetLargestFiles())
+                                {
+                                    <tr>
+                                        <td>@file.RelativePath</td>
+                                        <td>@FormatFileSize(file.SizeInBytes)</td>
+                                        <td>@file.LastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p class="text-muted small mt-3 mb-0">
+                        Es werden die 10 größten Dateien im geprüften Projektordner angezeigt.
+                    </p>
+                </div>
+            </div>
+        }
 
         <div class="card">
             <div class="card-body">
@@ -95,7 +231,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var file in scanResult.Files.Take(50))
+                                @foreach (var file in scanResult.Files.Take(DisplayedFileLimit))
                                 {
                                     <tr>
                                         <td>@file.RelativePath</td>
@@ -108,10 +244,10 @@
                         </table>
                     </div>
 
-                    @if (scanResult.Files.Count > 50)
+                    @if (scanResult.Files.Count > DisplayedFileLimit)
                     {
                         <p class="text-muted small mt-3 mb-0">
-                            Es werden erstmal nur die ersten 25 Dateien angezeigt.
+                            Es werden erstmal nur die ersten @DisplayedFileLimit Dateien angezeigt.
                         </p>
                     }
                 }
@@ -121,6 +257,8 @@
 </div>
 
 @code {
+    private const int DisplayedFileLimit = 50;
+
     private string folderPath = string.Empty;
     private string? errorMessage;
     private ProjectFolderScanResult? scanResult;
@@ -177,6 +315,59 @@
         }
     }
 
+    private int GetDisplayedFileCount()
+    {
+        if (scanResult is null)
+        {
+            return 0;
+        }
+
+        return Math.Min(scanResult.FileCount, DisplayedFileLimit);
+    }
+
+    private IEnumerable<FileTypeStat> GetFileTypeStats()
+    {
+        if (scanResult is null)
+        {
+            return Enumerable.Empty<FileTypeStat>();
+        }
+
+        return scanResult.Files
+            .GroupBy(file => string.IsNullOrWhiteSpace(file.Extension)
+                ? "Ohne Endung"
+                : file.Extension.ToLowerInvariant())
+            .Select(group => new FileTypeStat(
+                group.Key,
+                group.Count(),
+                group.Sum(file => file.SizeInBytes)))
+            .OrderByDescending(fileType => fileType.Count)
+            .ThenBy(fileType => fileType.Extension)
+            .Take(10);
+    }
+
+    private IEnumerable<ProjectFileEntry> GetLargestFiles()
+    {
+        if (scanResult is null)
+        {
+            return Enumerable.Empty<ProjectFileEntry>();
+        }
+
+        return scanResult.Files
+            .OrderByDescending(file => file.SizeInBytes)
+            .ThenBy(file => file.RelativePath)
+            .Take(10);
+    }
+
+    private static string FormatScanDuration(TimeSpan duration)
+    {
+        if (duration.TotalMilliseconds < 1000)
+        {
+            return $"{duration.TotalMilliseconds:0} ms";
+        }
+
+        return $"{duration.TotalSeconds:0.0} Sekunden";
+    }
+
     private static string FormatFileSize(long sizeInBytes)
     {
         if (sizeInBytes < 1024)
@@ -202,4 +393,9 @@
 
         return $"{sizeInGb:0.0} GB";
     }
+
+    private sealed record FileTypeStat(
+        string Extension,
+        int Count,
+        long SizeInBytes);
 }

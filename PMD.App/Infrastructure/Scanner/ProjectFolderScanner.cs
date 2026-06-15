@@ -1,4 +1,5 @@
-﻿using PMD.App.Application.Scanner;
+﻿using System.Diagnostics;
+using PMD.App.Application.Scanner;
 using PMD.App.Domain.Scanner;
 
 namespace PMD.App.Infrastructure.Scanner;
@@ -28,38 +29,78 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
             throw new DirectoryNotFoundException($"Der Projektordner wurde nicht gefunden: {folderPath}");
         }
 
+        var stopwatch = Stopwatch.StartNew();
+
         var rootPath = Path.GetFullPath(folderPath);
         var files = new List<ProjectFileEntry>();
+        var ignoredFolders = new List<string>();
+        var warnings = new List<string>();
+        var scannedFolderCount = 0;
 
-        foreach (var filePath in EnumerateFilesSafe(rootPath))
+        foreach (var filePath in EnumerateFilesSafe(
+            rootPath,
+            ignoredFolders,
+            warnings,
+            () => scannedFolderCount++))
         {
-            var fileInfo = new FileInfo(filePath);
-
-            if (!fileInfo.Exists)
+            try
             {
-                continue;
+                var fileInfo = new FileInfo(filePath);
+
+                if (!fileInfo.Exists)
+                {
+                    continue;
+                }
+
+                files.Add(new ProjectFileEntry
+                {
+                    FullPath = fileInfo.FullName,
+                    RelativePath = Path.GetRelativePath(rootPath, fileInfo.FullName),
+                    FileName = fileInfo.Name,
+                    Extension = fileInfo.Extension,
+                    SizeInBytes = fileInfo.Length,
+                    LastChangedAt = fileInfo.LastWriteTime
+                });
             }
-
-            files.Add(new ProjectFileEntry
+            catch (UnauthorizedAccessException)
             {
-                FullPath = fileInfo.FullName,
-                RelativePath = Path.GetRelativePath(rootPath, fileInfo.FullName),
-                FileName = fileInfo.Name,
-                Extension = fileInfo.Extension,
-                SizeInBytes = fileInfo.Length,
-                LastChangedAt = fileInfo.LastWriteTime
-            });
+                warnings.Add($"Datei konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, filePath)}");
+            }
+            catch (IOException)
+            {
+                warnings.Add($"Datei konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, filePath)}");
+            }
         }
+
+        stopwatch.Stop();
+
 
         return new ProjectFolderScanResult
         {
+            ProjectName = new DirectoryInfo(rootPath).Name,
             RootPath = rootPath,
             ScannedAt = DateTime.Now,
+            ScanDuration = stopwatch.Elapsed,
+            ScannedFolderCount = scannedFolderCount,
             Files = files
+        .OrderBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase)
+        .ToList(),
+            IgnoredFolders = ignoredFolders
+        .OrderBy(folder => folder, StringComparer.OrdinalIgnoreCase)
+        .ToList(),
+            Warnings = warnings
+        .OrderBy(warning => warning, StringComparer.OrdinalIgnoreCase)
+        .ToList()
         };
+
+
     }
 
-    private static IEnumerable<string> EnumerateFilesSafe(string rootPath)
+    private static IEnumerable<string> EnumerateFilesSafe(
+        string rootPath,
+        List<string> ignoredFolders,
+        List<string> warnings,
+        Action countScannedFolder)
     {
         var foldersToCheck = new Stack<string>();
         foldersToCheck.Push(rootPath);
@@ -67,6 +108,7 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
         while (foldersToCheck.Count > 0)
         {
             var currentFolder = foldersToCheck.Pop();
+            countScannedFolder();
 
             string[] subFolders;
             string[] files;
@@ -78,10 +120,12 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
             }
             catch (UnauthorizedAccessException)
             {
+                warnings.Add($"Ordner konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, currentFolder)}");
                 continue;
             }
             catch (IOException)
             {
+                warnings.Add($"Ordner konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, currentFolder)}");
                 continue;
             }
 
@@ -91,6 +135,7 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
 
                 if (IgnoredFolderNames.Contains(folderName))
                 {
+                    ignoredFolders.Add(Path.GetRelativePath(rootPath, subFolder));
                     continue;
                 }
 
