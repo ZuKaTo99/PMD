@@ -23,11 +23,11 @@ public static class ProjectStateBuilder
             RootPath = scanResult.RootPath,
             CreatedAt = DateTime.Now,
             ScannedAt = scanResult.ScannedAt,
-            ScanDuration = TimeSpan.Zero,
+            ScanDuration = scanResult.ScanDuration,
             FileCount = scanResult.FileCount,
-            ScannedFolderCount = 0,
-            IgnoredFolderCount = 0,
-            WarningCount = 0,
+            ScannedFolderCount = scanResult.ScannedFolderCount,
+            IgnoredFolderCount = scanResult.IgnoredFolderCount,
+            WarningCount = scanResult.WarningCount,
             TotalSizeInBytes = scanResult.TotalSizeInBytes,
 
             Files = scanResult.Files
