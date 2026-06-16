@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace PMD.App.Domain.ProjectStates;
 
@@ -18,4 +19,10 @@ public sealed class ProjectStateComparisonResult
 
     public int TotalChangeCount =>
         NewFileCount + ChangedFileCount + DeletedFileCount;
+
+    public List<string> NewFilePaths { get; init; } = new();
+
+    public List<string> ChangedFilePaths { get; init; } = new();
+
+    public List<string> DeletedFilePaths { get; init; } = new();
 }

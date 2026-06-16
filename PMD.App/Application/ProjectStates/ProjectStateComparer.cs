@@ -23,13 +23,19 @@ public static class ProjectStateComparer
                 file => NormalizePath(file.RelativePath),
                 StringComparer.OrdinalIgnoreCase);
 
-        int newFileCount = newFilesByPath.Keys
-            .Count(path => !oldFilesByPath.ContainsKey(path));
+        var newFilePaths = newFilesByPath
+            .Where(file => !oldFilesByPath.ContainsKey(file.Key))
+            .Select(file => file.Value.RelativePath)
+            .OrderBy(path => path)
+            .ToList();
 
-        int deletedFileCount = oldFilesByPath.Keys
-            .Count(path => !newFilesByPath.ContainsKey(path));
+        var deletedFilePaths = oldFilesByPath
+            .Where(file => !newFilesByPath.ContainsKey(file.Key))
+            .Select(file => file.Value.RelativePath)
+            .OrderBy(path => path)
+            .ToList();
 
-        int changedFileCount = 0;
+        var changedFilePaths = new List<string>();
         int unchangedFileCount = 0;
 
         foreach (var newFileEntry in newFilesByPath)
@@ -41,7 +47,7 @@ public static class ProjectStateComparer
 
             if (HasFileChanged(oldFile, newFileEntry.Value))
             {
-                changedFileCount++;
+                changedFilePaths.Add(newFileEntry.Value.RelativePath);
             }
             else
             {
@@ -49,14 +55,21 @@ public static class ProjectStateComparer
             }
         }
 
+        changedFilePaths = changedFilePaths
+            .OrderBy(path => path)
+            .ToList();
+
         return new ProjectStateComparisonResult
         {
             OldProjectStateId = oldState.Id,
             NewProjectStateId = newState.Id,
-            NewFileCount = newFileCount,
-            ChangedFileCount = changedFileCount,
-            DeletedFileCount = deletedFileCount,
-            UnchangedFileCount = unchangedFileCount
+            NewFileCount = newFilePaths.Count,
+            ChangedFileCount = changedFilePaths.Count,
+            DeletedFileCount = deletedFilePaths.Count,
+            UnchangedFileCount = unchangedFileCount,
+            NewFilePaths = newFilePaths,
+            ChangedFilePaths = changedFilePaths,
+            DeletedFilePaths = deletedFilePaths
         };
     }
 
