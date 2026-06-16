@@ -461,6 +461,7 @@
     {
         errorMessage = null;
         preparedProjectState = null;
+        comparisonResult = null;
 
         try
         {
@@ -545,7 +546,35 @@
         var newState = rememberedProjectStates[0];
         var oldState = rememberedProjectStates[1];
 
+        if (!IsSameProjectFolder(oldState, newState))
+        {
+            comparisonResult = null;
+            errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden";
+            return;
+        }
+
+        errorMessage = null;
         comparisonResult = ProjectStateComparer.Compare(oldState, newState);
+    }
+
+    private static bool IsSameProjectFolder(
+    ProjectState oldState,
+    ProjectState newState)
+    {
+        string oldPath = NormalizeFolderPath(oldState.RootPath);
+        string newPath = NormalizeFolderPath(newState.RootPath);
+
+        return string.Equals(
+            oldPath,
+            newPath,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeFolderPath(string folderPath)
+    {
+        return folderPath
+            .Trim()
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
     private int GetDisplayedFileCount()
