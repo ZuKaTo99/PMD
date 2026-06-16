@@ -190,6 +190,23 @@
                         Verglichen wurden die letzten zwei gemerkten Projektstände.
                     </p>
 
+                    @if (comparedOldProjectState is not null && comparedNewProjectState is not null)
+                    {
+                        <dl class="row mb-3">
+                            <dt class="col-sm-3">Alter Stand</dt>
+                            <dd class="col-sm-9">
+                                @comparedOldProjectState.ProjectName -
+                                @comparedOldProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")
+                            </dd>
+
+                            <dt class="col-sm-3">Neuer Stand</dt>
+                            <dd class="col-sm-9">
+                                @comparedNewProjectState.ProjectName -
+                                @comparedNewProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")
+                            </dd>
+                        </dl>
+                    }
+
                     <dl class="row mb-0">
                         <dt class="col-sm-3">Neue Dateien</dt>
                         <dd class="col-sm-9">@comparisonResult.NewFileCount</dd>
@@ -456,12 +473,16 @@
     private ProjectState? preparedProjectState;
     private readonly List<ProjectState> rememberedProjectStates = new();
     private ProjectStateComparisonResult? comparisonResult;
+    private ProjectState? comparedOldProjectState;
+    private ProjectState? comparedNewProjectState;
 
     private async Task PickFolderAsync()
     {
         errorMessage = null;
         preparedProjectState = null;
         comparisonResult = null;
+        comparedOldProjectState = null;
+        comparedNewProjectState = null;
 
         try
         {
@@ -489,6 +510,8 @@
         scanResult = null;
         preparedProjectState = null;
         comparisonResult = null;
+        comparedOldProjectState = null;
+        comparedNewProjectState = null;
         folderPath = folderPath.Trim();
 
         if (string.IsNullOrWhiteSpace(folderPath))
@@ -534,6 +557,8 @@
 
         rememberedProjectStates.Insert(0, preparedProjectState);
         comparisonResult = null;
+        comparedOldProjectState = null;
+        comparedNewProjectState = null;
     }
 
     private void CompareLatestProjectStates()
@@ -554,6 +579,8 @@
         }
 
         errorMessage = null;
+        comparedOldProjectState = oldState;
+        comparedNewProjectState = newState;
         comparisonResult = ProjectStateComparer.Compare(oldState, newState);
     }
 
