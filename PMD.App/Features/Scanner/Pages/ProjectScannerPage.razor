@@ -180,7 +180,6 @@
                 </div>
             </div>
         }
-
         @if (comparisonResult is not null)
         {
             <div class="card mb-4">
@@ -207,6 +206,78 @@
                         <dt class="col-sm-3">Änderungen gesamt</dt>
                         <dd class="col-sm-9">@comparisonResult.TotalChangeCount</dd>
                     </dl>
+
+                    @if (comparisonResult.TotalChangeCount == 0)
+                    {
+                        <div class="alert alert-success mt-3 mb-0">
+                            Keine Änderungen gefunden.
+                        </div>
+                    }
+                    else
+                    {
+                        @if (comparisonResult.NewFilePaths.Count > 0)
+                        {
+                            <div class="mt-4">
+                                <h6>Neue Dateien</h6>
+
+                                <ul class="mb-0">
+                                    @foreach (var filePath in comparisonResult.NewFilePaths.Take(ComparisonFileLimit))
+                                    {
+                                        <li>@filePath</li>
+                                    }
+                                </ul>
+
+                                @if (comparisonResult.NewFilePaths.Count > ComparisonFileLimit)
+                                {
+                                    <p class="text-muted small mt-2 mb-0">
+                                        Es werden erstmal nur die ersten @ComparisonFileLimit neuen Dateien angezeigt.
+                                    </p>
+                                }
+                            </div>
+                        }
+
+                        @if (comparisonResult.ChangedFilePaths.Count > 0)
+                        {
+                            <div class="mt-4">
+                                <h6>Geänderte Dateien</h6>
+
+                                <ul class="mb-0">
+                                    @foreach (var filePath in comparisonResult.ChangedFilePaths.Take(ComparisonFileLimit))
+                                    {
+                                        <li>@filePath</li>
+                                    }
+                                </ul>
+
+                                @if (comparisonResult.ChangedFilePaths.Count > ComparisonFileLimit)
+                                {
+                                    <p class="text-muted small mt-2 mb-0">
+                                        Es werden erstmal nur die ersten @ComparisonFileLimit geänderten Dateien angezeigt.
+                                    </p>
+                                }
+                            </div>
+                        }
+
+                        @if (comparisonResult.DeletedFilePaths.Count > 0)
+                        {
+                            <div class="mt-4">
+                                <h6>Gelöschte Dateien</h6>
+
+                                <ul class="mb-0">
+                                    @foreach (var filePath in comparisonResult.DeletedFilePaths.Take(ComparisonFileLimit))
+                                    {
+                                        <li>@filePath</li>
+                                    }
+                                </ul>
+
+                                @if (comparisonResult.DeletedFilePaths.Count > ComparisonFileLimit)
+                                {
+                                    <p class="text-muted small mt-2 mb-0">
+                                        Es werden erstmal nur die ersten @ComparisonFileLimit gelöschten Dateien angezeigt.
+                                    </p>
+                                }
+                            </div>
+                        }
+                    }
                 </div>
             </div>
         }
@@ -377,6 +448,7 @@
 
 @code {
     private const int DisplayedFileLimit = 50;
+    private const int ComparisonFileLimit = 20;
 
     private string folderPath = string.Empty;
     private string? errorMessage;
