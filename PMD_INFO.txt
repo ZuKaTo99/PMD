@@ -1,88 +1,228 @@
 PMD – Project Manager Dashboard
 
-Aktueller Stand: V0.5
+Aktueller Arbeitsstand:
+Nach V0.5 – Projektstände-Erweiterung
 
 Beschreibung:
 PMD ist eine .NET MAUI Blazor Hybrid Desktop-App zur Verwaltung von Softwareprojekten.
 
-Aktueller Schwerpunkt:
-Projektprüfung / Scanner-Grundstein
+Das Programm soll später helfen, Projektordner zu prüfen, Projektstände festzuhalten und Änderungen zwischen alten und neuen Projektständen verständlich anzuzeigen.
 
-Stand V0.5:
-- App startet sauber
-- Build funktioniert ohne Fehler
-- Startziel ist Windows Machine
-- Projektprüfung-Seite funktioniert
-- Ordnerauswahl über FolderPicker funktioniert
-- manuelles Pfadfeld bleibt zusätzlich erhalten
-- Scanner liest Projektordner rekursiv ein
-- typische Projekt-/Buildordner werden übersprungen
-- Prüfergebnis zeigt Projektname, Projektordner, Prüfzeitpunkt, Dateianzahl und Gesamtgröße
-- geprüfte Ordner werden gezählt
-- Prüfdauer wird angezeigt
-- übersprungene Ordner werden angezeigt
-- Hinweise/Warnungen werden gesammelt und angezeigt
-- Dateitypen werden zusammengefasst angezeigt
-- größte Dateien werden angezeigt
-- gefundene Dateien werden sortiert angezeigt
-- Dateiliste ist aktuell auf 50 Einträge begrenzt
+Technik:
 
-Bewusst noch nicht eingebaut:
-- SQLite
-- Projektstände speichern
-- Vergleich alter/neuer Projektstände
-- Änderungsbericht
-- Kanban
-- Rust-Core
-- KI-Funktionen
+* .NET MAUI Blazor Hybrid App
+* .NET 10.0
+* Hauptprojekt: PMD.App
+* Startziel aktuell: Windows Machine
+* Oberfläche über Blazor/WebView
+* Code darf Englisch sein
+* sichtbare UI-Texte sollen einfaches Deutsch sein
 
-Nächster geplanter Bereich:
-Projektstände vorbereiten.
+Arbeitsweise:
 
-Ein Projektstand soll später ein gespeichertes Prüfergebnis eines Projektordners sein.
-Damit kann PMD später zwei Projektstände vergleichen.
+* Änderungen werden weiterhin Schritt für Schritt umgesetzt.
+* Keine großen Umbauten ohne vorherige Erklärung.
+* ZIP-Dateien sollen nur verwendet werden, wenn ein Stand korrigiert oder geprüft werden muss.
+* Die zentrale Projektdokumentation bleibt diese Datei: PMD_INFO.txt
 
+Stand V0.5 – Projektprüfung / Scanner-Grundstein
 
-## Projektstände – aktueller Zwischenstand nach V0.5
-
-Der Bereich Projektstände wurde weiter vorbereitet.
-
-Neu vorhanden:
-
-- ProjectState
-- ProjectStateFile
-- ProjectStateBuilder
-- ProjectStateComparer
-- ProjectStateComparisonResult
+Der Bereich Projektprüfung funktioniert grundsätzlich.
 
 Aktueller Funktionsstand:
 
-- Aus einem Prüfergebnis kann ein Projektstand vorbereitet werden.
-- Ein Projektstand besitzt mehrere Dateien.
-- Projektstände können aktuell für die laufende Sitzung gemerkt werden.
-- Gemerkte Projektstände werden noch nicht dauerhaft gespeichert.
-- Die letzten zwei gemerkten Projektstände können verglichen werden.
-- Der Vergleich zeigt:
-  - neue Dateien
-  - geänderte Dateien
-  - gelöschte Dateien
-  - unveränderte Dateien
-  - konkrete Dateipfade für neue, geänderte und gelöschte Dateien
-- Projektstände können nur verglichen werden, wenn sie aus demselben Projektordner kommen.
-- Die gemerkten Projektstände können wieder geleert werden.
-- Bereits gemerkte Projektstände werden nicht doppelt gemerkt.
+* App startet sauber
+* Build funktioniert ohne Fehler
+* Startziel ist Windows Machine
+* Projektprüfung-Seite funktioniert
+* Ordnerauswahl über FolderPicker funktioniert
+* manuelles Pfadfeld bleibt zusätzlich erhalten
+* Scanner liest Projektordner rekursiv ein
+* typische Projekt- und Buildordner werden übersprungen
+* Prüfergebnis zeigt Projektname, Projektordner, Prüfzeitpunkt, Dateianzahl und Gesamtgröße
+* geprüfte Ordner werden gezählt
+* Prüfdauer wird angezeigt
+* übersprungene Ordner werden angezeigt
+* Hinweise/Warnungen werden gesammelt und angezeigt
+* Dateitypen werden zusammengefasst angezeigt
+* größte Dateien werden angezeigt
+* gefundene Dateien werden sortiert angezeigt
+* Dateiliste ist aktuell begrenzt, damit die Anzeige übersichtlich bleibt
 
 Bewusst noch nicht eingebaut:
 
-- keine SQLite-Datenbank
-- keine dauerhafte Speicherung
-- kein Laden alter Projektstände nach App-Neustart
-- keine Hash-Prüfung
-- kein Detailvergleich einzelner Zell-/Code-Inhalte
-- kein Kanban
-- kein Rust-Core
+* keine SQLite-Datenbank
+* keine dauerhafte Speicherung
+* kein Laden alter Projektstände nach App-Neustart
+* kein Änderungsbericht
+* kein Kanban
+* kein Rust-Core
+* keine KI-Funktionen
 
-Hinweis:
+Projektstände – aktueller Zwischenstand nach V0.5
+
+Der Bereich Projektstände wurde vorbereitet und mit der bestehenden Projektprüfung verbunden.
+
+Neu vorhanden:
+
+* ProjectState
+* ProjectStateFile
+* ProjectStateChangedFile
+* ProjectStateBuilder
+* ProjectStateComparer
+* ProjectStateComparisonResult
+
+Aktueller Funktionsstand:
+
+* Aus einem Prüfergebnis kann ein Projektstand vorbereitet werden.
+* Ein Projektstand besitzt mehrere Dateien.
+* Projektstände können aktuell für die laufende Sitzung gemerkt werden.
+* Gemerkte Projektstände werden noch nicht dauerhaft gespeichert.
+* Die letzten zwei gemerkten Projektstände können verglichen werden.
+* Projektstände können nur verglichen werden, wenn sie aus demselben Projektordner kommen.
+* Die gemerkten Projektstände können wieder geleert werden.
+* Bereits gemerkte Projektstände werden nicht doppelt gemerkt.
+
+Der Vergleich zeigt aktuell:
+
+* neue Dateien
+* geänderte Dateien
+* gelöschte Dateien
+* unveränderte Dateien
+* konkrete Dateipfade für neue Dateien
+* konkrete Dateipfade für geänderte Dateien
+* konkrete Dateipfade für gelöschte Dateien
+
+Bei geänderten Dateien werden zusätzlich angezeigt:
+
+* Dateipfad
+* Art der Änderung:
+
+  * Größe
+  * Datum
+* alte Dateigröße
+* neue Dateigröße
+* altes Änderungsdatum
+* neues Änderungsdatum
+
+Die Änderungserkennung bleibt bewusst einfach.
+
+Eine Datei gilt aktuell als geändert, wenn:
+
+* die Dateigröße anders ist
+* oder das Änderungsdatum anders ist
+
+Noch nicht eingebaut:
+
+* kein Hash-Vergleich
+* kein Inhaltsvergleich
+* kein Zeilenvergleich
+* keine genaue Code-Analyse
+* keine dauerhafte Speicherung der Projektstände
+
+Wichtige aktuelle Dateien
+
+Domain / ProjectStates:
+
+* PMD.App/Domain/ProjectStates/ProjectState.cs
+* PMD.App/Domain/ProjectStates/ProjectStateFile.cs
+* PMD.App/Domain/ProjectStates/ProjectStateChangedFile.cs
+* PMD.App/Domain/ProjectStates/ProjectStateComparisonResult.cs
+
+Application / ProjectStates:
+
+* PMD.App/Application/ProjectStates/ProjectStateBuilder.cs
+* PMD.App/Application/ProjectStates/ProjectStateComparer.cs
+
+Scanner / Projektprüfung:
+
+* PMD.App/Features/Scanner/Pages/ProjectScannerPage.razor
+* PMD.App/Application/Scanner/IProjectFolderScanner.cs
+* PMD.App/Infrastructure/Scanner/ProjectFolderScanner.cs
+* PMD.App/Domain/Scanner/ProjectFileEntry.cs
+* PMD.App/Domain/Scanner/ProjectFolderScanResult.cs
+
+Aktueller Hinweis zur Speicherung
 
 Die aktuelle Projektstand-Funktion arbeitet erstmal nur im Arbeitsspeicher.
-Sie dient als Grundlage, um später gespeicherte Projektstände dauerhaft abzulegen und sauber miteinander zu vergleichen.
+
+Das bedeutet:
+
+* Projektstände bleiben nur während der laufenden App-Sitzung erhalten.
+* Nach einem Neustart der App sind gemerkte Projektstände wieder weg.
+* Es gibt noch keine Datenbank.
+* Es gibt noch keine gespeicherten Projektstände auf der Festplatte.
+
+Diese Arbeitsspeicher-Lösung ist bewusst so gewählt.
+
+Sie dient als einfache Grundlage, um die Projektstand-Logik und den Vergleich sauber zu testen, bevor später SQLite eingebaut wird.
+
+Bewusste Nicht-Ziele für den aktuellen Stand
+
+Aktuell soll noch nicht eingebaut werden:
+
+* keine SQLite-Datenbank
+* keine große neue Architektur
+* kein Rust-Core
+* kein Kanban-System
+* keine KI-Funktion
+* keine automatische Code-Zusammenfassung
+* kein komplexer Inhaltsvergleich
+* kein Hash-Vergleich
+* kein großer UI-Umbau
+
+Nächste sinnvolle Schritte
+
+Der nächste Schritt sollte weiterhin klein bleiben.
+
+Sinnvolle nächste Möglichkeiten:
+
+1. Projektstände besser kapseln
+
+Aktuell liegen die gemerkten Projektstände noch direkt in der Projektprüfung-Seite.
+Später könnte dafür ein kleiner In-Memory-Service erstellt werden.
+
+Ziel:
+Die Seite wird sauberer und die Projektstand-Verwaltung bekommt einen eigenen Platz.
+
+Noch keine Datenbank.
+
+2. Vergleichsanzeige weiter verbessern
+
+Die Anzeige könnte noch verständlicher werden.
+
+Mögliche kleine Verbesserungen:
+
+* bessere Gruppierung der Vergleichsergebnisse
+* klarere Hinweise, wenn keine Änderungen gefunden wurden
+* bessere Anzeige, wenn sehr viele Dateien geändert wurden
+
+3. PMD_INFO.txt weiter aktuell halten
+
+Nach abgeschlossenen Schritten sollte diese Datei kurz aktualisiert werden.
+
+4. SQLite später vorbereiten
+
+SQLite ist weiterhin geplant, aber noch nicht der nächste direkte Schritt.
+
+Erst sollte die Projektstand-Logik im Arbeitsspeicher sauber und verständlich bleiben.
+
+Aktueller Zustand zusammengefasst
+
+PMD kann aktuell:
+
+1. Projektordner prüfen
+2. Scan-Ergebnis anzeigen
+3. aus dem Scan-Ergebnis einen Projektstand vorbereiten
+4. Projektstand in der laufenden Sitzung merken
+5. mehrere Projektstände in der Sitzung halten
+6. letzte zwei Projektstände vergleichen
+7. Vergleich mit Zahlen anzeigen
+8. Vergleich mit konkreten Dateipfaden anzeigen
+9. bei geänderten Dateien alte/neue Größe und alte/neues Änderungsdatum anzeigen
+10. anzeigen, ob Größe und/oder Datum geändert wurde
+11. Vergleich nur erlauben, wenn beide Stände aus demselben Projektordner kommen
+12. gemerkte Stände wieder leeren
+13. Erfolgsmeldungen und Fehlermeldungen anzeigen
+
+Das ist weiterhin eine einfache, aber saubere Grundlage für spätere dauerhafte Projektstände.
