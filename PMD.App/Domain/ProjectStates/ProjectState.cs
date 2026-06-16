@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
 
 namespace PMD.App.Domain.ProjectStates;
 
@@ -18,11 +19,13 @@ public sealed class ProjectState
 
     public int FileCount { get; init; }
 
-    public int ScannFolderCount { get; init; }
+    public int ScannedFolderCount { get; init; }
 
-    public int IgnoredfolderCount { get; init; }
+    public int IgnoredFolderCount { get; init; }
 
     public int WarningCount { get; init; }
 
     public long TotalSizeInBytes { get; init; }
+
+    public List<ProjectStateFile> Files { get; init; } = new();
 }

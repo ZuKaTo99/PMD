@@ -1,18 +1,16 @@
-﻿using System.Data;
-
-namespace PMD.App.Domain.ProjectStates;
+﻿namespace PMD.App.Domain.ProjectStates;
 
 public sealed class ProjectStateFile
 {
-    public Guid ProjectStateId { get; set; }
+    public Guid ProjectStateId { get; init; }
 
-    public string RelativPath { get; set; } = string.Empty;
+    public string RelativePath { get; init; } = string.Empty;
 
-    public string FileName { get; set; } = string.Empty;
+    public string FileName { get; init; } = string.Empty;
 
-    public string Extension { get; set; } = string.Empty;
+    public string Extension { get; init; } = string.Empty;
 
-    public long SizeInBytes { get; set; }
+    public long SizeInBytes { get; init; }
 
-    public DataSetDateTime LastChangedAt { get; set; }
+    public DateTime LastChangedAt { get; init; }
 }
