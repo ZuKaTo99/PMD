@@ -41,3 +41,48 @@ Projektstände vorbereiten.
 
 Ein Projektstand soll später ein gespeichertes Prüfergebnis eines Projektordners sein.
 Damit kann PMD später zwei Projektstände vergleichen.
+
+
+## Projektstände – aktueller Zwischenstand nach V0.5
+
+Der Bereich Projektstände wurde weiter vorbereitet.
+
+Neu vorhanden:
+
+- ProjectState
+- ProjectStateFile
+- ProjectStateBuilder
+- ProjectStateComparer
+- ProjectStateComparisonResult
+
+Aktueller Funktionsstand:
+
+- Aus einem Prüfergebnis kann ein Projektstand vorbereitet werden.
+- Ein Projektstand besitzt mehrere Dateien.
+- Projektstände können aktuell für die laufende Sitzung gemerkt werden.
+- Gemerkte Projektstände werden noch nicht dauerhaft gespeichert.
+- Die letzten zwei gemerkten Projektstände können verglichen werden.
+- Der Vergleich zeigt:
+  - neue Dateien
+  - geänderte Dateien
+  - gelöschte Dateien
+  - unveränderte Dateien
+  - konkrete Dateipfade für neue, geänderte und gelöschte Dateien
+- Projektstände können nur verglichen werden, wenn sie aus demselben Projektordner kommen.
+- Die gemerkten Projektstände können wieder geleert werden.
+- Bereits gemerkte Projektstände werden nicht doppelt gemerkt.
+
+Bewusst noch nicht eingebaut:
+
+- keine SQLite-Datenbank
+- keine dauerhafte Speicherung
+- kein Laden alter Projektstände nach App-Neustart
+- keine Hash-Prüfung
+- kein Detailvergleich einzelner Zell-/Code-Inhalte
+- kein Kanban
+- kein Rust-Core
+
+Hinweis:
+
+Die aktuelle Projektstand-Funktion arbeitet erstmal nur im Arbeitsspeicher.
+Sie dient als Grundlage, um später gespeicherte Projektstände dauerhaft abzulegen und sauber miteinander zu vergleichen.
