@@ -1,0 +1,88 @@
+@namespace PMD.App.Features.Scanner.Components
+@using PMD.App.Domain.ProjectStates
+
+@if (ChangedFiles.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Datei</th>
+                    <th>Änderung</th>
+                    <th>Alte Größe</th>
+                    <th>Neue Größe</th>
+                    <th>Alt geändert am</th>
+                    <th>Neu geändert am</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ProjectStateChangedFile changedFile in ChangedFiles.Take(FileLimit))
+                {
+                    <tr>
+                        <td>@changedFile.RelativePath</td>
+                        <td>
+                            @if (changedFile.SizeChanged)
+                            {
+                                <span class="badge bg-warning text-dark me-1">Größe</span>
+                            }
+
+                            @if (changedFile.LastChangedAtChanged)
+                            {
+                                <span class="badge bg-info text-dark">Datum</span>
+                            }
+                        </td>
+                        <td>@FormatFileSize(changedFile.OldSizeInBytes)</td>
+                        <td>@FormatFileSize(changedFile.NewSizeInBytes)</td>
+                        <td>@FormatDateTime(changedFile.OldLastChangedAt)</td>
+                        <td>@FormatDateTime(changedFile.NewLastChangedAt)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (ChangedFiles.Count > FileLimit)
+    {
+        <p class="text-muted small">
+            Es werden nur die ersten @FileLimit geänderten Dateien angezeigt.
+        </p>
+    }
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ProjectStateChangedFile> ChangedFiles { get; set; } = Array.Empty<ProjectStateChangedFile>();
+
+    [Parameter]
+    public int FileLimit { get; set; } = 20;
+
+    private static string FormatDateTime(DateTime value)
+    {
+        return value.ToString("dd.MM.yyyy HH:mm:ss");
+    }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024)
+        {
+            return $"{sizeInBytes} B";
+        }
+
+        double sizeInKb = sizeInBytes / 1024d;
+
+        if (sizeInKb < 1024)
+        {
+            return $"{sizeInKb:0.##} KB";
+        }
+
+        double sizeInMb = sizeInKb / 1024d;
+
+        if (sizeInMb < 1024)
+        {
+            return $"{sizeInMb:0.##} MB";
+        }
+
+        double sizeInGb = sizeInMb / 1024d;
+        return $"{sizeInGb:0.##} GB";
+    }
+}

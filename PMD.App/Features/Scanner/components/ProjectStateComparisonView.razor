@@ -1,0 +1,125 @@
+@namespace PMD.App.Features.Scanner.Components
+@using PMD.App.Domain.ProjectStates
+
+@if (ComparisonResult is not null)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Vergleich</h5>
+
+            @if (OldProjectState is not null && NewProjectState is not null)
+            {
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <strong>Alter Stand</strong>
+                            <div class="text-muted small">@OldProjectState.ProjectName</div>
+                            <div class="small">@FormatDateTime(OldProjectState.CreatedAt)</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <strong>Neuer Stand</strong>
+                            <div class="text-muted small">@NewProjectState.ProjectName</div>
+                            <div class="small">@FormatDateTime(NewProjectState.CreatedAt)</div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Neue Dateien</div>
+                        <strong>@ComparisonResult.NewFileCount</strong>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Geänderte Dateien</div>
+                        <strong>@ComparisonResult.ChangedFileCount</strong>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Gelöschte Dateien</div>
+                        <strong>@ComparisonResult.DeletedFileCount</strong>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Unverändert</div>
+                        <strong>@ComparisonResult.UnchangedFileCount</strong>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Änderungen gesamt</div>
+                        <strong>@ComparisonResult.TotalChangeCount</strong>
+                    </div>
+                </div>
+            </div>
+
+            @if (ComparisonResult.TotalChangeCount == 0)
+            {
+                <div class="alert alert-success mb-0">
+                    Keine Änderungen gefunden.
+                </div>
+            }
+
+            @if (ComparisonResult.NewFilePaths.Count > 0)
+            {
+                <div class="mt-3">
+                    <h6>Neue Dateien</h6>
+
+                    <ProjectFilePathList FilePaths="ComparisonResult.NewFilePaths"
+                                         FileLimit="FileLimit" />
+                </div>
+            }
+
+            @if (ComparisonResult.ChangedFiles.Count > 0)
+            {
+                <div class="mt-3">
+                    <h6>Geänderte Dateien</h6>
+
+                    <ChangedProjectFilesTable ChangedFiles="ComparisonResult.ChangedFiles"
+                                              FileLimit="FileLimit" />
+                </div>
+            }
+
+            @if (ComparisonResult.DeletedFilePaths.Count > 0)
+            {
+                <div class="mt-3">
+                    <h6>Gelöschte Dateien</h6>
+
+                    <ProjectFilePathList FilePaths="ComparisonResult.DeletedFilePaths"
+                                         FileLimit="FileLimit" />
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ProjectStateComparisonResult? ComparisonResult { get; set; }
+
+    [Parameter]
+    public ProjectState? OldProjectState { get; set; }
+
+    [Parameter]
+    public ProjectState? NewProjectState { get; set; }
+
+    [Parameter]
+    public int FileLimit { get; set; } = 20;
+
+    private static string FormatDateTime(DateTime value)
+    {
+        return value.ToString("dd.MM.yyyy HH:mm:ss");
+    }
+}

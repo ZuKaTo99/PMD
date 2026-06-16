@@ -3,6 +3,7 @@
 @using CommunityToolkit.Maui.Storage
 @using PMD.App.Application.ProjectStates
 @using PMD.App.Domain.ProjectStates
+@using PMD.App.Features.Scanner.Components
 @inject IProjectFolderScanner ProjectFolderScanner
 @inject IFolderPicker FolderPicker
 @inject IProjectStateMemoryStore ProjectStateMemoryStore
@@ -110,7 +111,7 @@
                     <h5 class="card-title">Projektstand vorbereitet</h5>
 
                     <p class="text-muted">
-                        Aus der Projektprüfung wurde ein projektstand vorbereitet. Er wird noch nicht dauerhaft Gespeichert.
+                        Aus der Projektprüfung wurde ein Projektstand vorbereitet. Er wird noch nicht dauerhaft gespeichert.
                     </p>
 
                     <dl class="row mb-0">
@@ -138,15 +139,11 @@
             </div>
         }
 
-        @if (rememberedProjectStates.Count > 0)
+        @if (RememberedProjectStates.Count > 0)
         {
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">Gemerkte Projektstände</h5>
-
-                    <p class="text-muted">
-                        Diese Projektstände sind nur für diese Sitzung gemerkt und noch nicht dauerhaft gespeichert.
-                    </p>
 
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
@@ -159,7 +156,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var projectState in rememberedProjectStates.Take(5))
+                                @foreach (var projectState in RememberedProjectStates.Take(5))
                                 {
                                     <tr>
                                         <td>@projectState.ProjectName</td>
@@ -173,7 +170,7 @@
                     </div>
 
                     <div class="d-flex gap-2 flex-wrap mt-3">
-                        @if (rememberedProjectStates.Count >= 2)
+                        @if (RememberedProjectStates.Count >= 2)
                         {
                             <button class="btn btn-outline-primary" @onclick="CompareLatestProjectStates">
                                 Letzte 2 Projektstände vergleichen
@@ -185,7 +182,7 @@
                         </button>
                     </div>
 
-                    @if (rememberedProjectStates.Count > 5)
+                    @if (RememberedProjectStates.Count > 5)
                     {
                         <p class="text-muted small mt-3 mb-0">
                             Es werden erstmal nur die letzten 5 gemerkten Projektstände angezeigt.
@@ -194,157 +191,11 @@
                 </div>
             </div>
         }
-        @if (comparisonResult is not null)
-        {
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Vergleich</h5>
 
-                    <p class="text-muted">
-                        Verglichen wurden die letzten zwei gemerkten Projektstände.
-                    </p>
-
-                    @if (comparedOldProjectState is not null && comparedNewProjectState is not null)
-                    {
-                        <dl class="row mb-3">
-                            <dt class="col-sm-3">Alter Stand</dt>
-                            <dd class="col-sm-9">
-                                @comparedOldProjectState.ProjectName -
-                                @comparedOldProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")
-                            </dd>
-
-                            <dt class="col-sm-3">Neuer Stand</dt>
-                            <dd class="col-sm-9">
-                                @comparedNewProjectState.ProjectName -
-                                @comparedNewProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")
-                            </dd>
-                        </dl>
-                    }
-
-                    <dl class="row mb-0">
-                        <dt class="col-sm-3">Neue Dateien</dt>
-                        <dd class="col-sm-9">@comparisonResult.NewFileCount</dd>
-
-                        <dt class="col-sm-3">Geänderte Dateien</dt>
-                        <dd class="col-sm-9">@comparisonResult.ChangedFileCount</dd>
-
-                        <dt class="col-sm-3">Gelöschte Dateien</dt>
-                        <dd class="col-sm-9">@comparisonResult.DeletedFileCount</dd>
-
-                        <dt class="col-sm-3">Unveränderte Dateien</dt>
-                        <dd class="col-sm-9">@comparisonResult.UnchangedFileCount</dd>
-
-                        <dt class="col-sm-3">Änderungen gesamt</dt>
-                        <dd class="col-sm-9">@comparisonResult.TotalChangeCount</dd>
-                    </dl>
-
-                    @if (comparisonResult.TotalChangeCount == 0)
-                    {
-                        <div class="alert alert-success mt-3 mb-0">
-                            Keine Änderungen gefunden.
-                        </div>
-                    }
-                    else
-                    {
-                        @if (comparisonResult.NewFilePaths.Count > 0)
-                        {
-                            <div class="mt-4">
-                                <h6>Neue Dateien</h6>
-
-                                <ul class="mb-0">
-                                    @foreach (var filePath in comparisonResult.NewFilePaths.Take(ComparisonFileLimit))
-                                    {
-                                        <li>@filePath</li>
-                                    }
-                                </ul>
-
-                                @if (comparisonResult.NewFilePaths.Count > ComparisonFileLimit)
-                                {
-                                    <p class="text-muted small mt-2 mb-0">
-                                        Es werden erstmal nur die ersten @ComparisonFileLimit neuen Dateien angezeigt.
-                                    </p>
-                                }
-                            </div>
-                        }
-
-                        @if (comparisonResult.ChangedFiles.Count > 0)
-                        {
-                            <div class="mt-3">
-                                <h6>Geänderte Dateien</h6>
-
-                                <div class="table-responsive">
-                                    <table class="table table-sm align-middle mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Datei</th>
-                                                <th>Änderung</th>
-                                                <th>Alte Größe</th>
-                                                <th>Neue Größe</th>
-                                                <th>Alt geändert am</th>
-                                                <th>Neu geändert am</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var changedFile in comparisonResult.ChangedFiles.Take(ComparisonFileLimit))
-                                            {
-                                                <tr>
-                                                    <td>
-                                                        <code>@changedFile.RelativePath</code>
-                                                    </td>
-                                                    <td>
-                                                        @if (changedFile.SizeChanged)
-                                                        {
-                                                            <span class="badge bg-warning text-dark me-1">Größe</span>
-                                                        }
-
-                                                        @if (changedFile.LastChangedAtChanged)
-                                                        {
-                                                            <span class="badge bg-info text-dark">Datum</span>
-                                                        }
-                                                    </td>
-                                                    <td>@FormatFileSize(changedFile.OldSizeInBytes)</td>
-                                                    <td>@FormatFileSize(changedFile.NewSizeInBytes)</td>
-                                                    <td>@changedFile.OldLastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
-                                                    <td>@changedFile.NewLastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                @if (comparisonResult.ChangedFiles.Count > ComparisonFileLimit)
-                                {
-                                    <p class="text-muted small mt-2 mb-0">
-                                        Es werden nur die ersten @ComparisonFileLimit geänderten Dateien angezeigt.
-                                    </p>
-                                }
-                            </div>
-                        }
-
-                        @if (comparisonResult.DeletedFilePaths.Count > 0)
-                        {
-                            <div class="mt-4">
-                                <h6>Gelöschte Dateien</h6>
-
-                                <ul class="mb-0">
-                                    @foreach (var filePath in comparisonResult.DeletedFilePaths.Take(ComparisonFileLimit))
-                                    {
-                                        <li>@filePath</li>
-                                    }
-                                </ul>
-
-                                @if (comparisonResult.DeletedFilePaths.Count > ComparisonFileLimit)
-                                {
-                                    <p class="text-muted small mt-2 mb-0">
-                                        Es werden erstmal nur die ersten @ComparisonFileLimit gelöschten Dateien angezeigt.
-                                    </p>
-                                }
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        }
+        <ProjectStateComparisonView ComparisonResult="comparisonResult"
+                                    OldProjectState="comparedOldProjectState"
+                                    NewProjectState="comparedNewProjectState"
+                                    FileLimit="ComparisonFileLimit" />
 
         @if (scanResult.WarningCount > 0)
         {
@@ -519,7 +370,7 @@
     private string? infoMessage;
     private ProjectFolderScanResult? scanResult;
     private ProjectState? preparedProjectState;
-    private IReadOnlyList<ProjectState> rememberedProjectStates => ProjectStateMemoryStore.ProjectStates;
+    private IReadOnlyList<ProjectState> RememberedProjectStates => ProjectStateMemoryStore.ProjectStates;
     private ProjectStateComparisonResult? comparisonResult;
     private ProjectState? comparedOldProjectState;
     private ProjectState? comparedNewProjectState;
@@ -622,7 +473,7 @@
             return false;
         }
 
-        return rememberedProjectStates
+        return RememberedProjectStates
             .Any(projectState => projectState.Id == preparedProjectState.Id);
     }
 
@@ -639,13 +490,13 @@
 
     private void CompareLatestProjectStates()
     {
-        if (rememberedProjectStates.Count < 2)
+        if (RememberedProjectStates.Count < 2)
         {
             return;
         }
 
-        var newState = rememberedProjectStates[0];
-        var oldState = rememberedProjectStates[1];
+        var newState = RememberedProjectStates[0];
+        var oldState = RememberedProjectStates[1];
 
         if (!IsSameProjectFolder(oldState, newState))
         {
@@ -663,8 +514,8 @@
     }
 
     private static bool IsSameProjectFolder(
-    ProjectState oldState,
-    ProjectState newState)
+        ProjectState oldState,
+        ProjectState newState)
     {
         string oldPath = NormalizeFolderPath(oldState.RootPath);
         string newPath = NormalizeFolderPath(newState.RootPath);

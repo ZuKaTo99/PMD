@@ -1,0 +1,28 @@
+@namespace PMD.App.Features.Scanner.Components
+
+@if (FilePaths.Count > 0)
+{
+    <ul class="mb-2">
+        @foreach (string filePath in FilePaths.Take(FileLimit))
+        {
+            <li>
+                <code>@filePath</code>
+            </li>
+        }
+    </ul>
+
+    @if (FilePaths.Count > FileLimit)
+    {
+        <p class="text-muted small">
+            Es werden nur die ersten @FileLimit Dateien angezeigt.
+        </p>
+    }
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string> FilePaths { get; set; } = Array.Empty<string>();
+
+    [Parameter]
+    public int FileLimit { get; set; } = 20;
+}
