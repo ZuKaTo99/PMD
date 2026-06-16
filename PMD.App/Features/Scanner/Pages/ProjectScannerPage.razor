@@ -1,8 +1,11 @@
 @page "/projektpruefung"
 @using Microsoft.AspNetCore.Components.Web
 @using CommunityToolkit.Maui.Storage
+@using PMD.App.Application.ProjectStates
+@using PMD.App.Domain.ProjectStates
 @inject IProjectFolderScanner ProjectFolderScanner
 @inject IFolderPicker FolderPicker
+
 
 <PageTitle>PMD - Projektprüfung</PageTitle>
 
@@ -91,6 +94,33 @@
                 </dl>
             </div>
         </div>
+
+        @if (preparedProjectState is not null)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Projektstand vorbereitet</h5>
+
+                    <p class="text-muted">
+                        Aus der Projektprüfung wurde ein projektstand vorbereitet. Er wird noch nihct Gespeichert.
+                    </p>
+
+                    <dl class="row mb-0">
+                        <dt class"col-sm-3">Projektname</dt>
+                        <dd class="col-sm-9">@preparedProjectState.ProjectName</dd>
+
+                        <dt class="col-sm-3">Dateien</dt>
+                        <dd class="col-sm-9">@preparedProjectState.Files.Count</dd>
+
+                        <dt class="col-sm-3">Erstellt am</dt>
+                        <dd class="col-sm-9">@preparedProjectState.CreatedAt.ToString("dd.mm.yyyy HH:mm:ss")</dd>
+
+                        <dt class="col-sm-3">Gesamtgröße</dt>
+                        <dd class="col-sm-9">@FormatFileSize(preparedProjectState.TotalSizeInBytes)</dd>
+                    </dl>
+                </div>
+            </div>
+        }
 
         @if (scanResult.WarningCount > 0)
         {
@@ -262,10 +292,12 @@
     private string folderPath = string.Empty;
     private string? errorMessage;
     private ProjectFolderScanResult? scanResult;
+    private ProjectState? preparedProjectState;
 
     private async Task PickFolderAsync()
     {
         errorMessage = null;
+        preparedProjectState = null;
 
         try
         {
@@ -291,6 +323,7 @@
     {
         errorMessage = null;
         scanResult = null;
+        preparedProjectState = null;
         folderPath = folderPath.Trim();
 
         if (string.IsNullOrWhiteSpace(folderPath))
@@ -308,6 +341,10 @@
         try
         {
             scanResult = ProjectFolderScanner.ScanFolder(folderPath);
+
+            preparedProjectState = ProjectStateBuilder.CreateFromScanResult(
+                scanResult.ProjectName,
+                scanResult);
         }
         catch (Exception ex)
         {
