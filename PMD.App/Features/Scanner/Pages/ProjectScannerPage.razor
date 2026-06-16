@@ -120,8 +120,10 @@
                     </dl>
 
                     <div class="mt-3">
-                        <button class="btn btn-outline-primary" @onclick="RememberPreparedProjectState">
-                            Projektstand merken
+                        <button class="btn btn-outline-primary"
+                                disabled="@IsPreparedProjectStateRemembered()"
+                                @onclick="RememberPreparedProjectState">
+                            @(IsPreparedProjectStateRemembered() ? "Bereits gemerkt" : "Projektstand merken")
                         </button>
                     </div>
                 </div>
@@ -162,14 +164,18 @@
                         </table>
                     </div>
 
-                    @if (rememberedProjectStates.Count >= 2)
-                    {
-                        <div class="mt-3">
+                    <div class="d-flex gap-2 flex-wrap mt-3">
+                        @if (rememberedProjectStates.Count >= 2)
+                        {
                             <button class="btn btn-outline-primary" @onclick="CompareLatestProjectStates">
                                 Letzte 2 Projektstände vergleichen
                             </button>
-                        </div>
-                    }
+                        }
+
+                        <button class="btn btn-outline-danger" @onclick="ClearRememberedProjectStates">
+                            Gemerkte Stände leeren
+                        </button>
+                    </div>
 
                     @if (rememberedProjectStates.Count > 5)
                     {
@@ -559,6 +565,27 @@
         comparisonResult = null;
         comparedOldProjectState = null;
         comparedNewProjectState = null;
+    }
+
+    private bool IsPreparedProjectStateRemembered()
+    {
+        if (preparedProjectState is null)
+        {
+            return false;
+        }
+
+        return rememberedProjectStates
+            .Any(projectState => projectState.Id == preparedProjectState.Id);
+    }
+
+    private void ClearRememberedProjectStates()
+    {
+        rememberedProjectStates.Clear();
+
+        comparisonResult = null;
+        comparedOldProjectState = null;
+        comparedNewProjectState = null;
+        errorMessage = null;
     }
 
     private void CompareLatestProjectStates()
