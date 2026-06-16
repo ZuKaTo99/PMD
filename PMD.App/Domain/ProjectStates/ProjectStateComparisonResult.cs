@@ -25,4 +25,6 @@ public sealed class ProjectStateComparisonResult
     public List<string> ChangedFilePaths { get; init; } = new();
 
     public List<string> DeletedFilePaths { get; init; } = new();
+
+    public List<ProjectStateChangedFile> ChangedFiles { get; init; } = new();
 }
