@@ -53,6 +53,13 @@
         </div>
     </div>
 
+    @if (!string.IsNullOrWhiteSpace(infoMessage))
+    {
+        <div class="alert alert-success mt-3 mb-0">
+            @infoMessage
+        </div>
+    }
+
     @if (scanResult is not null)
     {
         <div class="card mb-4">
@@ -475,6 +482,7 @@
 
     private string folderPath = string.Empty;
     private string? errorMessage;
+    private string? infoMessage;
     private ProjectFolderScanResult? scanResult;
     private ProjectState? preparedProjectState;
     private readonly List<ProjectState> rememberedProjectStates = new();
@@ -485,6 +493,7 @@
     private async Task PickFolderAsync()
     {
         errorMessage = null;
+        infoMessage = null;
         preparedProjectState = null;
         comparisonResult = null;
         comparedOldProjectState = null;
@@ -498,6 +507,7 @@
             {
                 folderPath = result.Folder.Path;
                 scanResult = null;
+                infoMessage = "Ordner wurde ausgewählt.";
             }
             else if (result.Exception is not null)
             {
@@ -513,6 +523,7 @@
     private void ScanProjectFolder()
     {
         errorMessage = null;
+        infoMessage = null;
         scanResult = null;
         preparedProjectState = null;
         comparisonResult = null;
@@ -539,6 +550,8 @@
             preparedProjectState = ProjectStateBuilder.CreateFromScanResult(
                 scanResult.ProjectName,
                 scanResult);
+
+            infoMessage = "Projektprüfung abgeschlossen. Projektstand wurde vorbereitet.";
         }
         catch (Exception ex)
         {
@@ -558,6 +571,7 @@
 
         if (alreadyRemembered)
         {
+            infoMessage = "Dieser Projektstand wurde bereits gemerkt.";
             return;
         }
 
@@ -565,6 +579,7 @@
         comparisonResult = null;
         comparedOldProjectState = null;
         comparedNewProjectState = null;
+        infoMessage = "Projektstand wurde gemerkt.";
     }
 
     private bool IsPreparedProjectStateRemembered()
@@ -586,6 +601,7 @@
         comparedOldProjectState = null;
         comparedNewProjectState = null;
         errorMessage = null;
+        infoMessage = "Gemerkte Stände wurden geleert.";
     }
 
     private void CompareLatestProjectStates()
@@ -601,6 +617,7 @@
         if (!IsSameProjectFolder(oldState, newState))
         {
             comparisonResult = null;
+            infoMessage = null;
             errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden";
             return;
         }
@@ -609,6 +626,7 @@
         comparedOldProjectState = oldState;
         comparedNewProjectState = newState;
         comparisonResult = ProjectStateComparer.Compare(oldState, newState);
+        infoMessage = "Vergleich wurde erstellt.";
     }
 
     private static bool IsSameProjectFolder(
