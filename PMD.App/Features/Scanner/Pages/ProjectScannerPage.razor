@@ -276,6 +276,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Datei</th>
+                                                <th>Änderung</th>
                                                 <th>Alte Größe</th>
                                                 <th>Neue Größe</th>
                                                 <th>Alt geändert am</th>
@@ -288,6 +289,17 @@
                                                 <tr>
                                                     <td>
                                                         <code>@changedFile.RelativePath</code>
+                                                    </td>
+                                                    <td>
+                                                        @if (changedFile.SizeChanged)
+                                                        {
+                                                            <span class="badge bg-warning text-dark me-1">Größe</span>
+                                                        }
+
+                                                        @if (changedFile.LastChangedAtChanged)
+                                                        {
+                                                            <span class="badge bg-info text-dark">Datum</span>
+                                                        }
                                                     </td>
                                                     <td>@FormatFileSize(changedFile.OldSizeInBytes)</td>
                                                     <td>@FormatFileSize(changedFile.NewSizeInBytes)</td>
