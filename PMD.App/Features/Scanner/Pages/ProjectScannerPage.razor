@@ -5,6 +5,7 @@
 @using PMD.App.Domain.ProjectStates
 @inject IProjectFolderScanner ProjectFolderScanner
 @inject IFolderPicker FolderPicker
+@inject IProjectStateMemoryStore ProjectStateMemoryStore
 
 
 <PageTitle>PMD - Projektprüfung</PageTitle>
@@ -518,7 +519,7 @@
     private string? infoMessage;
     private ProjectFolderScanResult? scanResult;
     private ProjectState? preparedProjectState;
-    private readonly List<ProjectState> rememberedProjectStates = new();
+    private IReadOnlyList<ProjectState> rememberedProjectStates => ProjectStateMemoryStore.ProjectStates;
     private ProjectStateComparisonResult? comparisonResult;
     private ProjectState? comparedOldProjectState;
     private ProjectState? comparedNewProjectState;
@@ -599,19 +600,18 @@
             return;
         }
 
-        bool alreadyRemembered = rememberedProjectStates
-            .Any(projectState => projectState.Id == preparedProjectState.Id);
+        bool wasRemembered = ProjectStateMemoryStore.Remember(preparedProjectState);
 
-        if (alreadyRemembered)
+        if (!wasRemembered)
         {
             infoMessage = "Dieser Projektstand wurde bereits gemerkt.";
             return;
         }
 
-        rememberedProjectStates.Insert(0, preparedProjectState);
         comparisonResult = null;
         comparedOldProjectState = null;
         comparedNewProjectState = null;
+        errorMessage = null;
         infoMessage = "Projektstand wurde gemerkt.";
     }
 
@@ -628,7 +628,7 @@
 
     private void ClearRememberedProjectStates()
     {
-        rememberedProjectStates.Clear();
+        ProjectStateMemoryStore.Clear();
 
         comparisonResult = null;
         comparedOldProjectState = null;

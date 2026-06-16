@@ -3,6 +3,8 @@ using PMD.App.Application.Scanner;
 using PMD.App.Infrastructure.Scanner;
 using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Storage;
+using PMD.App.Application.ProjectStates;
+using PMD.App.Infrastructure.ProjectStates;
 
 namespace PMD.App;
 
@@ -22,6 +24,7 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
 
+        builder.Services.AddSingleton<IProjectStateMemoryStore, ProjectStateMemoryStore>();
         builder.Services.AddSingleton<IProjectFolderScanner, ProjectFolderScanner>();
         builder.Services.AddSingleton<IFolderPicker>(FolderPicker.Default);
 
