@@ -266,22 +266,43 @@
                             </div>
                         }
 
-                        @if (comparisonResult.ChangedFilePaths.Count > 0)
+                        @if (comparisonResult.ChangedFiles.Count > 0)
                         {
-                            <div class="mt-4">
+                            <div class="mt-3">
                                 <h6>Geänderte Dateien</h6>
 
-                                <ul class="mb-0">
-                                    @foreach (var filePath in comparisonResult.ChangedFilePaths.Take(ComparisonFileLimit))
-                                    {
-                                        <li>@filePath</li>
-                                    }
-                                </ul>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Datei</th>
+                                                <th>Alte Größe</th>
+                                                <th>Neue Größe</th>
+                                                <th>Alt geändert am</th>
+                                                <th>Neu geändert am</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var changedFile in comparisonResult.ChangedFiles.Take(ComparisonFileLimit))
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <code>@changedFile.RelativePath</code>
+                                                    </td>
+                                                    <td>@FormatFileSize(changedFile.OldSizeInBytes)</td>
+                                                    <td>@FormatFileSize(changedFile.NewSizeInBytes)</td>
+                                                    <td>@changedFile.OldLastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                                    <td>@changedFile.NewLastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                                @if (comparisonResult.ChangedFilePaths.Count > ComparisonFileLimit)
+                                @if (comparisonResult.ChangedFiles.Count > ComparisonFileLimit)
                                 {
                                     <p class="text-muted small mt-2 mb-0">
-                                        Es werden erstmal nur die ersten @ComparisonFileLimit geänderten Dateien angezeigt.
+                                        Es werden nur die ersten @ComparisonFileLimit geänderten Dateien angezeigt.
                                     </p>
                                 }
                             </div>

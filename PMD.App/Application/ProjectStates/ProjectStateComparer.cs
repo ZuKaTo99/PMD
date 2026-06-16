@@ -35,29 +35,35 @@ public static class ProjectStateComparer
             .OrderBy(path => path)
             .ToList();
 
-        var changedFilePaths = new List<string>();
-        int unchangedFileCount = 0;
-
-        foreach (var newFileEntry in newFilesByPath)
-        {
-            if (!oldFilesByPath.TryGetValue(newFileEntry.Key, out var oldFile))
+        var changedFiles = oldFilesByPath
+            .Where(oldFilePair =>
+                newFilesByPath.TryGetValue(oldFilePair.Key, out var newFile)
+                && HasFileChanged(oldFilePair.Value, newFile))
+            .Select(oldFilePair =>
             {
-                continue;
-            }
+                var oldFile = oldFilePair.Value;
+                var newFile = newFilesByPath[oldFilePair.Key];
 
-            if (HasFileChanged(oldFile, newFileEntry.Value))
-            {
-                changedFilePaths.Add(newFileEntry.Value.RelativePath);
-            }
-            else
-            {
-                unchangedFileCount++;
-            }
-        }
-
-        changedFilePaths = changedFilePaths
-            .OrderBy(path => path)
+                return new ProjectStateChangedFile
+                {
+                    RelativePath = newFile.RelativePath,
+                    OldSizeInBytes = oldFile.SizeInBytes,
+                    NewSizeInBytes = newFile.SizeInBytes,
+                    OldLastChangedAt = oldFile.LastChangedAt,
+                    NewLastChangedAt = newFile.LastChangedAt
+                };
+            })
+            .OrderBy(file => file.RelativePath)
             .ToList();
+
+        var changedFilePaths = changedFiles
+            .Select(file => file.RelativePath)
+            .ToList();
+
+        var unchangedFileCount = oldFilesByPath
+            .Count(oldFilePair =>
+                newFilesByPath.TryGetValue(oldFilePair.Key, out var newFile)
+                && !HasFileChanged(oldFilePair.Value, newFile));
 
         return new ProjectStateComparisonResult
         {
@@ -69,7 +75,8 @@ public static class ProjectStateComparer
             UnchangedFileCount = unchangedFileCount,
             NewFilePaths = newFilePaths,
             ChangedFilePaths = changedFilePaths,
-            DeletedFilePaths = deletedFilePaths
+            DeletedFilePaths = deletedFilePaths,
+            ChangedFiles = changedFiles
         };
     }
 
