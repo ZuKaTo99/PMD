@@ -110,18 +110,18 @@
                     <h5 class="card-title">Projektstand vorbereitet</h5>
 
                     <p class="text-muted">
-                        Aus der Projektprüfung wurde ein projektstand vorbereitet. Er wird noch nihct Gespeichert.
+                        Aus der Projektprüfung wurde ein projektstand vorbereitet. Er wird noch nicht dauerhaft Gespeichert.
                     </p>
 
                     <dl class="row mb-0">
-                        <dt class"col-sm-3">Projektname</dt>
+                        <dt class="col-sm-3">Projektname</dt>
                         <dd class="col-sm-9">@preparedProjectState.ProjectName</dd>
 
                         <dt class="col-sm-3">Dateien</dt>
                         <dd class="col-sm-9">@preparedProjectState.Files.Count</dd>
 
                         <dt class="col-sm-3">Erstellt am</dt>
-                        <dd class="col-sm-9">@preparedProjectState.CreatedAt.ToString("dd.mm.yyyy HH:mm:ss")</dd>
+                        <dd class="col-sm-9">@preparedProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
 
                         <dt class="col-sm-3">Gesamtgröße</dt>
                         <dd class="col-sm-9">@FormatFileSize(preparedProjectState.TotalSizeInBytes)</dd>
@@ -651,7 +651,7 @@
         {
             comparisonResult = null;
             infoMessage = null;
-            errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden";
+            errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden.";
             return;
         }
 
