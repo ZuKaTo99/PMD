@@ -172,16 +172,6 @@
         infoMessage = "Projektstand wurde gemerkt.";
     }
 
-    private bool IsPreparedProjectStateRemembered()
-    {
-        if (preparedProjectState is null)
-        {
-            return false;
-        }
-
-        return RememberedProjectStates
-            .Any(projectState => projectState.Id == preparedProjectState.Id);
-    }
 
     private void ClearRememberedProjectStates()
     {
@@ -219,14 +209,4 @@
         infoMessage = "Vergleich wurde erstellt.";
     }
 
-
-    private int GetDisplayedFileCount()
-    {
-        if (scanResult is null)
-        {
-            return 0;
-        }
-
-        return Math.Min(scanResult.FileCount, DisplayedFileLimit);
-    }
 }
