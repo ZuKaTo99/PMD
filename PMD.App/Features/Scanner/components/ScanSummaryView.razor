@@ -30,10 +30,14 @@
                 </dd>
 
                 <dt class="col-sm-3">Gesamtgröße</dt>
-                <dd class="col-sm-9">@FormatFileSize(ScanResult.TotalSizeInBytes)</dd>
+                <dd class="col-sm-9">
+                    @ScannerDisplayFormatter.FormatFileSize(ScanResult.TotalSizeInBytes)
+                </dd>
 
                 <dt class="col-sm-3">Prüfdauer</dt>
-                <dd class="col-sm-9">@FormatScanDuration(ScanResult.ScanDuration)</dd>
+                <dd class="col-sm-9">
+                    @ScannerDisplayFormatter.FormatScanDuration(ScanResult.ScanDuration)
+                </dd>
 
                 <dt class="col-sm-3">Übersprungene Ordner</dt>
                 <dd class="col-sm-9">@ScanResult.IgnoredFolderCount</dd>
@@ -51,40 +55,4 @@
 
     [Parameter]
     public int DisplayedFileCount { get; set; }
-
-    private static string FormatScanDuration(TimeSpan duration)
-    {
-        if (duration.TotalMilliseconds < 1000)
-        {
-            return $"{duration.TotalMilliseconds:0} ms";
-        }
-
-        return $"{duration.TotalSeconds:0.0} Sekunden";
-    }
-
-    private static string FormatFileSize(long sizeInBytes)
-    {
-        if (sizeInBytes < 1024)
-        {
-            return $"{sizeInBytes} B";
-        }
-
-        double sizeInKb = sizeInBytes / 1024d;
-
-        if (sizeInKb < 1024)
-        {
-            return $"{sizeInKb:0.0} KB";
-        }
-
-        double sizeInMb = sizeInKb / 1024d;
-
-        if (sizeInMb < 1024)
-        {
-            return $"{sizeInMb:0.0} MB";
-        }
-
-        double sizeInGb = sizeInMb / 1024d;
-
-        return $"{sizeInGb:0.0} GB";
-    }
 }

@@ -23,7 +23,9 @@
                 <dd class="col-sm-9">@PreparedProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
 
                 <dt class="col-sm-3">Gesamtgröße</dt>
-                <dd class="col-sm-9">@FormatFileSize(PreparedProjectState.TotalSizeInBytes)</dd>
+                <dd class="col-sm-9">
+                    @ScannerDisplayFormatter.FormatFileSize(PreparedProjectState.TotalSizeInBytes)
+                </dd>
             </dl>
 
             <div class="mt-3">
@@ -46,30 +48,4 @@
 
     [Parameter]
     public EventCallback OnRememberProjectState { get; set; }
-
-    private static string FormatFileSize(long sizeInBytes)
-    {
-        if (sizeInBytes < 1024)
-        {
-            return $"{sizeInBytes} B";
-        }
-
-        double sizeInKb = sizeInBytes / 1024d;
-
-        if (sizeInKb < 1024)
-        {
-            return $"{sizeInKb:0.0} KB";
-        }
-
-        double sizeInMb = sizeInKb / 1024d;
-
-        if (sizeInMb < 1024)
-        {
-            return $"{sizeInMb:0.0} MB";
-        }
-
-        double sizeInGb = sizeInMb / 1024d;
-
-        return $"{sizeInGb:0.0} GB";
-    }
 }
