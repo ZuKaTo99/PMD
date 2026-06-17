@@ -1,0 +1,101 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectStates
+
+@if (ProjectStates.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Gemerkte Projektstände</h2>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Diese Projektstände sind aktuell nur für diese laufende Sitzung gemerkt.
+            </p>
+
+            <div class="table-responsive mb-3">
+                <table class="table table-sm table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nr.</th>
+                            <th>Projekt</th>
+                            <th>Projektordner</th>
+                            <th>Erstellt am</th>
+                            <th>Geprüft am</th>
+                            <th>Dateien</th>
+                            <th>Größe</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (var i = 0; i < ProjectStates.Count; i++)
+                        {
+                            var projectState = ProjectStates[i];
+
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>@projectState.ProjectName</td>
+                                <td>
+                                    <code>@projectState.RootPath</code>
+                                </td>
+                                <td>@projectState.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>@projectState.ScannedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>@projectState.FileCount</td>
+                                <td>@FormatBytes(projectState.TotalSizeInBytes)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <button class="btn btn-primary me-2"
+                    disabled="@(ProjectStates.Count < 2)"
+                    @onclick="OnCompareLatestProjectStates">
+                Letzte 2 Projektstände vergleichen
+            </button>
+
+            <button class="btn btn-outline-danger"
+                    @onclick="OnClearRememberedProjectStates">
+                Gemerkte Stände leeren
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ProjectState> ProjectStates { get; set; } = Array.Empty<ProjectState>();
+
+    [Parameter]
+    public EventCallback OnCompareLatestProjectStates { get; set; }
+
+    [Parameter]
+    public EventCallback OnClearRememberedProjectStates { get; set; }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes} B";
+        }
+
+        var kilobytes = bytes / 1024.0;
+
+        if (kilobytes < 1024)
+        {
+            return $"{kilobytes:0.##} KB";
+        }
+
+        var megabytes = kilobytes / 1024.0;
+
+        if (megabytes < 1024)
+        {
+            return $"{megabytes:0.##} MB";
+        }
+
+        var gigabytes = megabytes / 1024.0;
+
+        return $"{gigabytes:0.##} GB";
+    }
+}

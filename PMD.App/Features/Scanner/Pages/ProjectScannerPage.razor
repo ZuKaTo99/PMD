@@ -139,58 +139,12 @@
             </div>
         }
 
-        @if (RememberedProjectStates.Count > 0)
-        {
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Gemerkte Projektstände</h5>
-
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Projektname</th>
-                                    <th>Erstellt am</th>
-                                    <th>Dateien</th>
-                                    <th>Gesamtgröße</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var projectState in RememberedProjectStates.Take(5))
-                                {
-                                    <tr>
-                                        <td>@projectState.ProjectName</td>
-                                        <td>@projectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
-                                        <td>@projectState.FileCount</td>
-                                        <td>@FormatFileSize(projectState.TotalSizeInBytes)</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="d-flex gap-2 flex-wrap mt-3">
-                        @if (RememberedProjectStates.Count >= 2)
-                        {
-                            <button class="btn btn-outline-primary" @onclick="CompareLatestProjectStates">
-                                Letzte 2 Projektstände vergleichen
-                            </button>
-                        }
-
-                        <button class="btn btn-outline-danger" @onclick="ClearRememberedProjectStates">
-                            Gemerkte Stände leeren
-                        </button>
-                    </div>
-
-                    @if (RememberedProjectStates.Count > 5)
-                    {
-                        <p class="text-muted small mt-3 mb-0">
-                            Es werden erstmal nur die letzten 5 gemerkten Projektstände angezeigt.
-                        </p>
-                    }
-                </div>
-            </div>
-        }
+        
+            <RememberedProjectStatesList 
+                ProjectStates="RememberedProjectStates"
+                OnCompareLatestProjectStates="CompareLatestProjectStates"
+                OnClearRememberedProjectStates="ClearRememberedProjectStates" />
+        
 
         <ProjectStateComparisonView ComparisonResult="comparisonResult"
                                     OldProjectState="comparedOldProjectState"
