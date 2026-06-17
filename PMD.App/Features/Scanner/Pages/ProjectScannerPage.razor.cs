@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Scanner;
 using PMD.App.Domain.ProjectStates;
+using PMD.App.Domain.Scanner;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -20,6 +21,22 @@ public partial class ProjectScannerPage
 
     [Inject]
     private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } = default!;
+
+
+    private const int DisplayedFileLimit = 50;
+    private const int ComparisonFileLimit = 20;
+
+    private string folderPath = string.Empty;
+    private string? errorMessage;
+    private string? infoMessage;
+    private ProjectFolderScanResult? scanResult;
+    private ProjectState? preparedProjectState;
+    private IReadOnlyList<ProjectState> RememberedProjectStates => ProjectStateMemoryStore.ProjectStates;
+    private ProjectStateComparisonResult? comparisonResult;
+    private ProjectState? comparedOldProjectState;
+    private ProjectState? comparedNewProjectState;
+
+
 
     private async Task PickFolderAsync()
     {
