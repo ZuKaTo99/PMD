@@ -1,10 +1,82 @@
 ﻿using PMD.App.Application.ProjectStates;
 using PMD.App.Domain.ProjectStates;
+using System.IO;
+using System.Linq;
+using System.Threading;
 
 namespace PMD.App.Features.Scanner.Pages;
 
 public partial class ProjectScannerPage
 {
+    private async Task PickFolderAsync()
+    {
+        errorMessage = null;
+        infoMessage = null;
+        preparedProjectState = null;
+        comparisonResult = null;
+        comparedOldProjectState = null;
+        comparedNewProjectState = null;
+
+        try
+        {
+            var result = await FolderPicker.PickAsync(CancellationToken.None);
+
+            if (result.IsSuccessful && result.Folder is not null)
+            {
+                folderPath = result.Folder.Path;
+                scanResult = null;
+                infoMessage = "Ordner wurde ausgewählt.";
+            }
+            else if (result.Exception is not null)
+            {
+                errorMessage = $"Der Ordner konnte nicht ausgewählt werden: {result.Exception.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Der Ordner konnte nicht ausgewählt werden: {ex.Message}";
+        }
+    }
+
+    private void ScanProjectFolder()
+    {
+        errorMessage = null;
+        infoMessage = null;
+        scanResult = null;
+        preparedProjectState = null;
+        comparisonResult = null;
+        comparedOldProjectState = null;
+        comparedNewProjectState = null;
+        folderPath = folderPath.Trim();
+
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            errorMessage = "Bitte geben Sie zuerst einen Projektordner an.";
+            return;
+        }
+
+        if (!Directory.Exists(folderPath))
+        {
+            errorMessage = "Der angegebene Projektordner wurde nicht gefunden.";
+            return;
+        }
+
+        try
+        {
+            scanResult = ProjectFolderScanner.ScanFolder(folderPath);
+
+            preparedProjectState = ProjectStateBuilder.CreateFromScanResult(
+                scanResult.ProjectName,
+                scanResult);
+
+            infoMessage = "Projektprüfung abgeschlossen. Projektstand wurde vorbereitet.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Die Projektprüfung konnte nicht abgeschlossen werden: {ex.Message}";
+        }
+    }
+
     private void RememberPreparedProjectState()
     {
         if (preparedProjectState is null)
