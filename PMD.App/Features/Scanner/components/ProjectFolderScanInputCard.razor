@@ -1,0 +1,62 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Projektordner prüfen</h5>
+
+        <p class="card-text">
+            Wähle einen Projektordner aus oder trage den vollständigen Pfad manuell ein.
+        </p>
+
+        <div class="mb-3">
+            <label class="form-label" for="folder-path">Projektordner</label>
+            <input id="folder-path"
+                   class="form-control"
+                   placeholder="C:\Users\sakar.birkan\source\repos\PMD V0.4"
+                   value="@FolderPath"
+                   @oninput="OnFolderPathInputChanged" />
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-secondary" @onclick="OnPickFolder">
+                Ordner auswählen
+            </button>
+
+            <button class="btn btn-primary" @onclick="OnScanProjectFolder">
+                Projekt prüfen
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="alert alert-danger mt-3 mb-0">
+                @ErrorMessage
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string FolderPath { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> FolderPathChanged { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public EventCallback OnPickFolder { get; set; }
+
+    [Parameter]
+    public EventCallback OnScanProjectFolder { get; set; }
+
+    private async Task OnFolderPathInputChanged(ChangeEventArgs e)
+    {
+        FolderPath = e.Value?.ToString() ?? string.Empty;
+
+        await FolderPathChanged.InvokeAsync(FolderPath);
+    }
+}
