@@ -151,28 +151,12 @@
                                     NewProjectState="comparedNewProjectState"
                                     FileLimit="ComparisonFileLimit" />
 
-        @if (scanResult.WarningCount > 0)
-        {
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Hinweise</h5>
 
-                    <ul class="mb-0">
-                        @foreach (var warning in scanResult.Warnings.Take(20))
-                        {
-                            <li>@warning</li>
-                        }
-                    </ul>
+         <ScannerWarningsList 
+              Warnings="scanResult.Warnings"
+              WarningLimit="20" />
 
-                    @if (scanResult.WarningCount > 20)
-                    {
-                        <p class="text-muted small mt-3 mb-0">
-                            Es werden erstmal nur die ersten 20 Hinweise angezeigt.
-                        </p>
-                    }
-                </div>
-            </div>
-        }
+
 
         @if (scanResult.IgnoredFolderCount > 0)
         {

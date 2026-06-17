@@ -1,0 +1,33 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+
+@if (Warnings.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Hinweise</h5>
+
+            <ul class="mb-0">
+                @foreach (var warning in Warnings.Take(WarningLimit))
+                {
+                    <li>@warning</li>
+                }
+
+                @if (Warnings.Count > WarningLimit)
+                {
+                    <li>
+                        Weitere Hinweise wurden nicht angezeigt.
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string> Warnings { get; set; } = Array.Empty<string>();
+
+    [Parameter]
+    public int WarningLimit { get; set; } = 20;
+}
