@@ -35,6 +35,8 @@ public partial class ProjectScannerPage
     private ProjectStateComparisonResult? comparisonResult;
     private ProjectState? comparedOldProjectState;
     private ProjectState? comparedNewProjectState;
+    private Guid? selectedOldProjectStateId;
+    private Guid? selectedNewProjectStateId;
 
 
 
@@ -133,6 +135,9 @@ public partial class ProjectScannerPage
     {
         ProjectStateMemoryStore.Clear();
 
+        selectedOldProjectStateId = null;
+        selectedNewProjectStateId = null;
+
         comparisonResult = null;
         comparedOldProjectState = null;
         comparedNewProjectState = null;
@@ -153,6 +158,70 @@ public partial class ProjectScannerPage
         if (!IsSameProjectFolder(oldState, newState))
         {
             comparisonResult = null;
+            infoMessage = null;
+            errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden.";
+            return;
+        }
+
+        errorMessage = null;
+        comparedOldProjectState = oldState;
+        comparedNewProjectState = newState;
+        comparisonResult = ProjectStateComparer.Compare(oldState, newState);
+        infoMessage = "Vergleich wurde erstellt.";
+    }
+
+    private ProjectState? GetSelectedOldProjectState()
+    {
+        if (selectedOldProjectStateId is null)
+        {
+            return null;
+        }
+
+        return RememberedProjectStates
+            .FirstOrDefault(projectState => projectState.Id == selectedOldProjectStateId);
+    }
+
+    private ProjectState? GetSelectedNewProjectState()
+    {
+        if (selectedNewProjectStateId is null)
+        {
+            return null;
+        }
+
+        return RememberedProjectStates
+            .FirstOrDefault(projectState => projectState.Id == selectedNewProjectStateId);
+    }
+
+    private void CompareSelectedProjectStates()
+    {
+        ProjectState? oldState = GetSelectedOldProjectState();
+        ProjectState? newState = GetSelectedNewProjectState();
+
+        if (oldState is null || newState is null)
+        {
+            comparisonResult = null;
+            comparedOldProjectState = null;
+            comparedNewProjectState = null;
+            infoMessage = null;
+            errorMessage = "Bitte wählen Sie zuerst einen alten und einen neuen Projektstand aus.";
+            return;
+        }
+
+        if (oldState.Id == newState.Id)
+        {
+            comparisonResult = null;
+            comparedOldProjectState = null;
+            comparedNewProjectState = null;
+            infoMessage = null;
+            errorMessage = "Bitte wählen Sie zwei unterschiedliche Projektstände aus.";
+            return;
+        }
+
+        if (!IsSameProjectFolder(oldState, newState))
+        {
+            comparisonResult = null;
+            comparedOldProjectState = null;
+            comparedNewProjectState = null;
             infoMessage = null;
             errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden.";
             return;

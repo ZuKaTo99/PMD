@@ -1,11 +1,6 @@
 @page "/projektpruefung"
-@using Microsoft.AspNetCore.Components.Web
-@using CommunityToolkit.Maui.Storage
-@using PMD.App.Features.Scanner.Components
-
-
 @namespace PMD.App.Features.Scanner.Pages
-
+@using PMD.App.Features.Scanner.Components
 
 <PageTitle>PMD - Projektprüfung</PageTitle>
 
@@ -23,44 +18,44 @@
     @if (scanResult is not null)
     {
         <ScanSummaryView 
-            ScanResult="scanResult"
+            ScanResult="@scanResult"
             DisplayedFileCount="@GetDisplayedFileCount()" />
 
         <PreparedProjectStateView 
-            PreparedProjectState="preparedProjectState"
+            PreparedProjectState="@preparedProjectState"
             IsAlreadyRemembered="@IsPreparedProjectStateRemembered()"
             OnRememberProjectState="RememberPreparedProjectState" />
 
         <RememberedProjectStatesList 
-            ProjectStates="RememberedProjectStates"
+            ProjectStates="@RememberedProjectStates"
             OnCompareLatestProjectStates="CompareLatestProjectStates"
             OnClearRememberedProjectStates="ClearRememberedProjectStates" />
 
         <ProjectStateComparisonView 
-            ComparisonResult="comparisonResult"
-            OldProjectState="comparedOldProjectState"
-            NewProjectState="comparedNewProjectState"
-            FileLimit="ComparisonFileLimit" />
+            ComparisonResult="@comparisonResult"
+            OldProjectState="@comparedOldProjectState"
+            NewProjectState="@comparedNewProjectState"
+            FileLimit="@ComparisonFileLimit" />
 
         <ScannerWarningsList 
-            Warnings="scanResult.Warnings"
+            Warnings="@scanResult.Warnings"
             WarningLimit="20" />
 
         <IgnoredFoldersList 
-            Folders="scanResult.IgnoredFolders"
-            TotalFolderCount="scanResult.IgnoredFolderCount"
+            Folders="@scanResult.IgnoredFolders"
+            TotalFolderCount="@scanResult.IgnoredFolderCount"
             FolderLimit="20" />
 
         <FileTypeStatsTable 
-            Files="scanResult.Files"
+            Files="@scanResult.Files"
             FileTypeLimit="10" />
 
         <LargestFilesTable 
-            Files="scanResult.Files"
+            Files="@scanResult.Files"
             FileLimit="10" />
 
         <FoundFilesTable 
-            Files="scanResult.Files"
-            FileLimit="DisplayedFileLimit" />
+            Files="@scanResult.Files"
+            FileLimit="@DisplayedFileLimit" />
     }
 </div>
