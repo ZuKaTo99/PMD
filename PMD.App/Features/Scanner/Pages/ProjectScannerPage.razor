@@ -11,13 +11,7 @@
 <PageTitle>PMD - Projektprüfung</PageTitle>
 
 <div class="container-fluid pmd-scanner-page">
-    <div class="mb-4">
-        <div class="text-muted small mb-1">PMD - Projektprüfung</div>
-        <h1>Projektprüfung</h1>
-        <p class="text-muted mb-0">
-            Hier kannst du einen Projektordner prüfen lassen.
-        </p>
-    </div>
+    <ProjectScannerPageHeader />
 
     <ProjectFolderScanInputCard 
         @bind-FolderPath="folderPath"
