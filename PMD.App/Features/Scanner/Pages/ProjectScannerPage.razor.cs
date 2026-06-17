@@ -1,4 +1,7 @@
-﻿using PMD.App.Application.ProjectStates;
+﻿using CommunityToolkit.Maui.Storage;
+using Microsoft.AspNetCore.Components;
+using PMD.App.Application.ProjectStates;
+using PMD.App.Application.Scanner;
 using PMD.App.Domain.ProjectStates;
 using System.IO;
 using System.Linq;
@@ -8,6 +11,16 @@ namespace PMD.App.Features.Scanner.Pages;
 
 public partial class ProjectScannerPage
 {
+
+    [Inject]
+    private IProjectFolderScanner ProjectFolderScanner { get; set; } = default!;
+
+    [Inject]
+    private IFolderPicker FolderPicker { get; set; } = default!;
+
+    [Inject]
+    private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } = default!;
+
     private async Task PickFolderAsync()
     {
         errorMessage = null;
