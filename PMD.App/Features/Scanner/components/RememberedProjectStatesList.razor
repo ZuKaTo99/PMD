@@ -42,7 +42,7 @@
                                 <td>@projectState.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                                 <td>@projectState.ScannedAt.ToString("dd.MM.yyyy HH:mm")</td>
                                 <td>@projectState.FileCount</td>
-                                <td>@FormatBytes(projectState.TotalSizeInBytes)</td>
+                                <td>@ScannerDisplayFormatter.FormatFileSize(projectState.TotalSizeInBytes)</td>
                             </tr>
                         }
                     </tbody>
@@ -72,30 +72,4 @@
 
     [Parameter]
     public EventCallback OnClearRememberedProjectStates { get; set; }
-
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024)
-        {
-            return $"{bytes} B";
-        }
-
-        var kilobytes = bytes / 1024.0;
-
-        if (kilobytes < 1024)
-        {
-            return $"{kilobytes:0.##} KB";
-        }
-
-        var megabytes = kilobytes / 1024.0;
-
-        if (megabytes < 1024)
-        {
-            return $"{megabytes:0.##} MB";
-        }
-
-        var gigabytes = megabytes / 1024.0;
-
-        return $"{gigabytes:0.##} GB";
-    }
 }
