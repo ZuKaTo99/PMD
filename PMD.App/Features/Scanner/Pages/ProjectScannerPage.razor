@@ -1,4 +1,5 @@
 @page "/projektpruefung"
+@namespace PMD.App.Features.Scanner.Pages
 @using Microsoft.AspNetCore.Components.Web
 @using CommunityToolkit.Maui.Storage
 @using PMD.App.Application.ProjectStates
@@ -218,25 +219,6 @@
         infoMessage = "Vergleich wurde erstellt.";
     }
 
-    private static bool IsSameProjectFolder(
-        ProjectState oldState,
-        ProjectState newState)
-    {
-        string oldPath = NormalizeFolderPath(oldState.RootPath);
-        string newPath = NormalizeFolderPath(newState.RootPath);
-
-        return string.Equals(
-            oldPath,
-            newPath,
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string NormalizeFolderPath(string folderPath)
-    {
-        return folderPath
-            .Trim()
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    }
 
     private int GetDisplayedFileCount()
     {
