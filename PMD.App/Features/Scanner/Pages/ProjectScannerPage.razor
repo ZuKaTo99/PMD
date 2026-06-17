@@ -20,17 +20,12 @@
     </div>
 
     <ProjectFolderScanInputCard 
-    @bind-FolderPath="folderPath"
-    ErrorMessage="errorMessage"
-    OnPickFolder="PickFolderAsync"
-    OnScanProjectFolder="ScanProjectFolder" />
+        @bind-FolderPath="folderPath"
+        ErrorMessage="@errorMessage"
+        OnPickFolder="PickFolderAsync"
+        OnScanProjectFolder="ScanProjectFolder" />
 
-    @if (!string.IsNullOrWhiteSpace(infoMessage))
-    {
-        <div class="alert alert-success mt-3 mb-0">
-            @infoMessage
-        </div>
-    }
+    <ScannerInfoMessage Message="@infoMessage" />
 
     @if (scanResult is not null)
     {

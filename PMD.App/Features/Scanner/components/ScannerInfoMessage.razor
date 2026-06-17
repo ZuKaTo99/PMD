@@ -1,0 +1,14 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+
+@if (!string.IsNullOrWhiteSpace(Message))
+{
+    <div class="alert alert-success mt-3 mb-0">
+        @Message
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? Message { get; set; }
+}
