@@ -22,7 +22,7 @@
                         {
                             <tr>
                                 <td>@file.RelativePath</td>
-                                <td>@FormatFileSize(file.SizeInBytes)</td>
+                                <td>@ScannerDisplayFormatter.FormatFileSize(file.SizeInBytes)</td>
                                 <td>@file.LastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
                             </tr>
                         }
@@ -50,31 +50,5 @@
             .OrderByDescending(file => file.SizeInBytes)
             .ThenBy(file => file.RelativePath)
             .Take(FileLimit);
-    }
-
-    private static string FormatFileSize(long sizeInBytes)
-    {
-        if (sizeInBytes < 1024)
-        {
-            return $"{sizeInBytes} B";
-        }
-
-        double sizeInKb = sizeInBytes / 1024d;
-
-        if (sizeInKb < 1024)
-        {
-            return $"{sizeInKb:0.0} KB";
-        }
-
-        double sizeInMb = sizeInKb / 1024d;
-
-        if (sizeInMb < 1024)
-        {
-            return $"{sizeInMb:0.0} MB";
-        }
-
-        double sizeInGb = sizeInMb / 1024d;
-
-        return $"{sizeInGb:0.0} GB";
     }
 }

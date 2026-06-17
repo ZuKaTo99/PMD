@@ -30,8 +30,8 @@
                                 <td>
                                     <code>@file.RelativePath</code>
                                 </td>
-                                <td>@FormatExtension(file.Extension)</td>
-                                <td>@FormatBytes(file.SizeInBytes)</td>
+                                <td>@ScannerDisplayFormatter.FormatExtension(file.Extension)</td>
+                                <td>@ScannerDisplayFormatter.FormatFileSize(file.SizeInBytes)</td>
                                 <td>@file.LastChangedAt.ToString("dd.MM.yyyy HH:mm")</td>
                             </tr>
                         }
@@ -55,40 +55,4 @@
 
     [Parameter]
     public int FileLimit { get; set; } = 25;
-
-    private static string FormatExtension(string extension)
-    {
-        if (string.IsNullOrWhiteSpace(extension))
-        {
-            return "-";
-        }
-
-        return extension;
-    }
-
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024)
-        {
-            return $"{bytes} B";
-        }
-
-        var kilobytes = bytes / 1024.0;
-
-        if (kilobytes < 1024)
-        {
-            return $"{kilobytes:0.##} KB";
-        }
-
-        var megabytes = kilobytes / 1024.0;
-
-        if (megabytes < 1024)
-        {
-            return $"{megabytes:0.##} MB";
-        }
-
-        var gigabytes = megabytes / 1024.0;
-
-        return $"{gigabytes:0.##} GB";
-    }
 }
