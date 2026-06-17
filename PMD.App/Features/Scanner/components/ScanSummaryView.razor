@@ -1,0 +1,90 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.Scanner
+
+@if (ScanResult is not null)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Prüfergebnis</h5>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Projektname</dt>
+                <dd class="col-sm-9">@ScanResult.ProjectName</dd>
+
+                <dt class="col-sm-3">Projektordner</dt>
+                <dd class="col-sm-9">@ScanResult.RootPath</dd>
+
+                <dt class="col-sm-3">Geprüft am</dt>
+                <dd class="col-sm-9">@ScanResult.ScannedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+                <dt class="col-sm-3">Dateien</dt>
+                <dd class="col-sm-9">@ScanResult.FileCount</dd>
+
+                <dt class="col-sm-3">Geprüfte Ordner</dt>
+                <dd class="col-sm-9">@ScanResult.ScannedFolderCount</dd>
+
+                <dt class="col-sm-3">Angezeigt</dt>
+                <dd class="col-sm-9">
+                    @DisplayedFileCount von @ScanResult.FileCount Dateien
+                </dd>
+
+                <dt class="col-sm-3">Gesamtgröße</dt>
+                <dd class="col-sm-9">@FormatFileSize(ScanResult.TotalSizeInBytes)</dd>
+
+                <dt class="col-sm-3">Prüfdauer</dt>
+                <dd class="col-sm-9">@FormatScanDuration(ScanResult.ScanDuration)</dd>
+
+                <dt class="col-sm-3">Übersprungene Ordner</dt>
+                <dd class="col-sm-9">@ScanResult.IgnoredFolderCount</dd>
+
+                <dt class="col-sm-3">Hinweise</dt>
+                <dd class="col-sm-9">@ScanResult.WarningCount</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ProjectFolderScanResult? ScanResult { get; set; }
+
+    [Parameter]
+    public int DisplayedFileCount { get; set; }
+
+    private static string FormatScanDuration(TimeSpan duration)
+    {
+        if (duration.TotalMilliseconds < 1000)
+        {
+            return $"{duration.TotalMilliseconds:0} ms";
+        }
+
+        return $"{duration.TotalSeconds:0.0} Sekunden";
+    }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024)
+        {
+            return $"{sizeInBytes} B";
+        }
+
+        double sizeInKb = sizeInBytes / 1024d;
+
+        if (sizeInKb < 1024)
+        {
+            return $"{sizeInKb:0.0} KB";
+        }
+
+        double sizeInMb = sizeInKb / 1024d;
+
+        if (sizeInMb < 1024)
+        {
+            return $"{sizeInMb:0.0} MB";
+        }
+
+        double sizeInGb = sizeInMb / 1024d;
+
+        return $"{sizeInGb:0.0} GB";
+    }
+}

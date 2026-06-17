@@ -1,0 +1,75 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectStates
+
+@if (PreparedProjectState is not null)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Projektstand vorbereitet</h5>
+
+            <p class="text-muted">
+                Aus der Projektprüfung wurde ein Projektstand vorbereitet. Er wird noch nicht dauerhaft gespeichert.
+            </p>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Projektname</dt>
+                <dd class="col-sm-9">@PreparedProjectState.ProjectName</dd>
+
+                <dt class="col-sm-3">Dateien</dt>
+                <dd class="col-sm-9">@PreparedProjectState.Files.Count</dd>
+
+                <dt class="col-sm-3">Erstellt am</dt>
+                <dd class="col-sm-9">@PreparedProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+                <dt class="col-sm-3">Gesamtgröße</dt>
+                <dd class="col-sm-9">@FormatFileSize(PreparedProjectState.TotalSizeInBytes)</dd>
+            </dl>
+
+            <div class="mt-3">
+                <button class="btn btn-outline-primary"
+                        disabled="@IsAlreadyRemembered"
+                        @onclick="OnRememberProjectState">
+                    @(IsAlreadyRemembered ? "Bereits gemerkt" : "Projektstand merken")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ProjectState? PreparedProjectState { get; set; }
+
+    [Parameter]
+    public bool IsAlreadyRemembered { get; set; }
+
+    [Parameter]
+    public EventCallback OnRememberProjectState { get; set; }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024)
+        {
+            return $"{sizeInBytes} B";
+        }
+
+        double sizeInKb = sizeInBytes / 1024d;
+
+        if (sizeInKb < 1024)
+        {
+            return $"{sizeInKb:0.0} KB";
+        }
+
+        double sizeInMb = sizeInKb / 1024d;
+
+        if (sizeInMb < 1024)
+        {
+            return $"{sizeInMb:0.0} MB";
+        }
+
+        double sizeInGb = sizeInMb / 1024d;
+
+        return $"{sizeInGb:0.0} GB";
+    }
+}

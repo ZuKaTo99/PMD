@@ -8,7 +8,6 @@
 @inject IFolderPicker FolderPicker
 @inject IProjectStateMemoryStore ProjectStateMemoryStore
 
-
 <PageTitle>PMD - Projektprüfung</PageTitle>
 
 <div class="container-fluid pmd-scanner-page">
@@ -64,238 +63,46 @@
 
     @if (scanResult is not null)
     {
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Prüfergebnis</h5>
+        <ScanSummaryView 
+            ScanResult="scanResult"
+            DisplayedFileCount="@GetDisplayedFileCount()" />
 
-                <dl class="row mb-0">
-                    <dt class="col-sm-3">Projektname</dt>
-                    <dd class="col-sm-9">@scanResult.ProjectName</dd>
+        <PreparedProjectStateView 
+            PreparedProjectState="preparedProjectState"
+            IsAlreadyRemembered="@IsPreparedProjectStateRemembered()"
+            OnRememberProjectState="RememberPreparedProjectState" />
 
-                    <dt class="col-sm-3">Projektordner</dt>
-                    <dd class="col-sm-9">@scanResult.RootPath</dd>
+        <RememberedProjectStatesList 
+            ProjectStates="RememberedProjectStates"
+            OnCompareLatestProjectStates="CompareLatestProjectStates"
+            OnClearRememberedProjectStates="ClearRememberedProjectStates" />
 
-                    <dt class="col-sm-3">Geprüft am</dt>
-                    <dd class="col-sm-9">@scanResult.ScannedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+        <ProjectStateComparisonView 
+            ComparisonResult="comparisonResult"
+            OldProjectState="comparedOldProjectState"
+            NewProjectState="comparedNewProjectState"
+            FileLimit="ComparisonFileLimit" />
 
-                    <dt class="col-sm-3">Dateien</dt>
-                    <dd class="col-sm-9">@scanResult.FileCount</dd>
+        <ScannerWarningsList 
+            Warnings="scanResult.Warnings"
+            WarningLimit="20" />
 
-                    <dt class="col-sm-3">Geprüfte Ordner</dt>
-                    <dd class="col-sm-9">@scanResult.ScannedFolderCount</dd>
+        <IgnoredFoldersList 
+            Folders="scanResult.IgnoredFolders"
+            TotalFolderCount="scanResult.IgnoredFolderCount"
+            FolderLimit="20" />
 
-                    <dt class="col-sm-3">Angezeigt</dt>
-                    <dd class="col-sm-9">
-                        @GetDisplayedFileCount() von @scanResult.FileCount Dateien
-                    </dd>
+        <FileTypeStatsTable 
+            Files="scanResult.Files"
+            FileTypeLimit="10" />
 
-                    <dt class="col-sm-3">Gesamtgröße</dt>
-                    <dd class="col-sm-9">@FormatFileSize(scanResult.TotalSizeInBytes)</dd>
+        <LargestFilesTable 
+            Files="scanResult.Files"
+            FileLimit="10" />
 
-                    <dt class="col-sm-3">Prüfdauer</dt>
-                    <dd class="col-sm-9">@FormatScanDuration(scanResult.ScanDuration)</dd>
-
-                    <dt class="col-sm-3">Übersprungene Ordner</dt>
-                    <dd class="col-sm-9">@scanResult.IgnoredFolderCount</dd>
-
-                    <dt class="col-sm-3">Hinweise</dt>
-                    <dd class="col-sm-9">@scanResult.WarningCount</dd>
-                </dl>
-            </div>
-        </div>
-
-        @if (preparedProjectState is not null)
-        {
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Projektstand vorbereitet</h5>
-
-                    <p class="text-muted">
-                        Aus der Projektprüfung wurde ein Projektstand vorbereitet. Er wird noch nicht dauerhaft gespeichert.
-                    </p>
-
-                    <dl class="row mb-0">
-                        <dt class="col-sm-3">Projektname</dt>
-                        <dd class="col-sm-9">@preparedProjectState.ProjectName</dd>
-
-                        <dt class="col-sm-3">Dateien</dt>
-                        <dd class="col-sm-9">@preparedProjectState.Files.Count</dd>
-
-                        <dt class="col-sm-3">Erstellt am</dt>
-                        <dd class="col-sm-9">@preparedProjectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
-
-                        <dt class="col-sm-3">Gesamtgröße</dt>
-                        <dd class="col-sm-9">@FormatFileSize(preparedProjectState.TotalSizeInBytes)</dd>
-                    </dl>
-
-                    <div class="mt-3">
-                        <button class="btn btn-outline-primary"
-                                disabled="@IsPreparedProjectStateRemembered()"
-                                @onclick="RememberPreparedProjectState">
-                            @(IsPreparedProjectStateRemembered() ? "Bereits gemerkt" : "Projektstand merken")
-                        </button>
-                    </div>
-                </div>
-            </div>
-        }
-
-        
-            <RememberedProjectStatesList 
-                ProjectStates="RememberedProjectStates"
-                OnCompareLatestProjectStates="CompareLatestProjectStates"
-                OnClearRememberedProjectStates="ClearRememberedProjectStates" />
-        
-
-        <ProjectStateComparisonView ComparisonResult="comparisonResult"
-                                    OldProjectState="comparedOldProjectState"
-                                    NewProjectState="comparedNewProjectState"
-                                    FileLimit="ComparisonFileLimit" />
-
-
-         <ScannerWarningsList 
-              Warnings="scanResult.Warnings"
-              WarningLimit="20" />
-
-
-
-        @if (scanResult.IgnoredFolderCount > 0)
-        {
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Übersprungene Ordner</h5>
-
-                    <ul class="mb-0">
-                        @foreach (var folder in scanResult.IgnoredFolders.Take(20))
-                        {
-                            <li>@folder</li>
-                        }
-                    </ul>
-
-                    @if (scanResult.IgnoredFolderCount > 20)
-                    {
-                        <p class="text-muted small mt-3 mb-0">
-                            Es werden erstmal nur die ersten 20 übersprungenen Ordner angezeigt.
-                        </p>
-                    }
-                </div>
-            </div>
-        }
-
-        @if (scanResult.Files.Count > 0)
-        {
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Dateitypen</h5>
-
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Dateityp</th>
-                                    <th>Dateien</th>
-                                    <th>Gesamtgröße</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var fileType in GetFileTypeStats())
-                                {
-                                    <tr>
-                                        <td>@fileType.Extension</td>
-                                        <td>@fileType.Count</td>
-                                        <td>@FormatFileSize(fileType.SizeInBytes)</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <p class="text-muted small mt-3 mb-0">
-                        Es werden die häufigsten Dateitypen angezeigt.
-                    </p>
-                </div>
-            </div>
-        }
-
-        @if (scanResult.Files.Count > 0)
-        {
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Größte Dateien</h5>
-
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Datei</th>
-                                    <th>Größe</th>
-                                    <th>Geändert</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var file in GetLargestFiles())
-                                {
-                                    <tr>
-                                        <td>@file.RelativePath</td>
-                                        <td>@FormatFileSize(file.SizeInBytes)</td>
-                                        <td>@file.LastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <p class="text-muted small mt-3 mb-0">
-                        Es werden die 10 größten Dateien im geprüften Projektordner angezeigt.
-                    </p>
-                </div>
-            </div>
-        }
-
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Gefundene Dateien</h5>
-
-                @if (scanResult.Files.Count == 0)
-                {
-                    <p class="text-muted mb-0">
-                        Keine Dateien gefunden.
-                    </p>
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Datei</th>
-                                    <th>Endung</th>
-                                    <th>Größe</th>
-                                    <th>Geändert</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var file in scanResult.Files.Take(DisplayedFileLimit))
-                                {
-                                    <tr>
-                                        <td>@file.RelativePath</td>
-                                        <td>@file.Extension</td>
-                                        <td>@FormatFileSize(file.SizeInBytes)</td>
-                                        <td>@file.LastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    @if (scanResult.Files.Count > DisplayedFileLimit)
-                    {
-                        <p class="text-muted small mt-3 mb-0">
-                            Es werden erstmal nur die ersten @DisplayedFileLimit Dateien angezeigt.
-                        </p>
-                    }
-                }
-            </div>
-        </div>
+        <FoundFilesTable 
+            Files="scanResult.Files"
+            FileLimit="DisplayedFileLimit" />
     }
 </div>
 
@@ -480,78 +287,4 @@
 
         return Math.Min(scanResult.FileCount, DisplayedFileLimit);
     }
-
-    private IEnumerable<FileTypeStat> GetFileTypeStats()
-    {
-        if (scanResult is null)
-        {
-            return Enumerable.Empty<FileTypeStat>();
-        }
-
-        return scanResult.Files
-            .GroupBy(file => string.IsNullOrWhiteSpace(file.Extension)
-                ? "Ohne Endung"
-                : file.Extension.ToLowerInvariant())
-            .Select(group => new FileTypeStat(
-                group.Key,
-                group.Count(),
-                group.Sum(file => file.SizeInBytes)))
-            .OrderByDescending(fileType => fileType.Count)
-            .ThenBy(fileType => fileType.Extension)
-            .Take(10);
-    }
-
-    private IEnumerable<ProjectFileEntry> GetLargestFiles()
-    {
-        if (scanResult is null)
-        {
-            return Enumerable.Empty<ProjectFileEntry>();
-        }
-
-        return scanResult.Files
-            .OrderByDescending(file => file.SizeInBytes)
-            .ThenBy(file => file.RelativePath)
-            .Take(10);
-    }
-
-    private static string FormatScanDuration(TimeSpan duration)
-    {
-        if (duration.TotalMilliseconds < 1000)
-        {
-            return $"{duration.TotalMilliseconds:0} ms";
-        }
-
-        return $"{duration.TotalSeconds:0.0} Sekunden";
-    }
-
-    private static string FormatFileSize(long sizeInBytes)
-    {
-        if (sizeInBytes < 1024)
-        {
-            return $"{sizeInBytes} B";
-        }
-
-        double sizeInKb = sizeInBytes / 1024d;
-
-        if (sizeInKb < 1024)
-        {
-            return $"{sizeInKb:0.0} KB";
-        }
-
-        double sizeInMb = sizeInKb / 1024d;
-
-        if (sizeInMb < 1024)
-        {
-            return $"{sizeInMb:0.0} MB";
-        }
-
-        double sizeInGb = sizeInMb / 1024d;
-
-        return $"{sizeInGb:0.0} GB";
-    }
-
-    private sealed record FileTypeStat(
-        string Extension,
-        int Count,
-        long SizeInBytes);
 }

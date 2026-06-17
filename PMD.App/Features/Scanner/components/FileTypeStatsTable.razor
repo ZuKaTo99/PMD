@@ -1,0 +1,92 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.Scanner
+
+@if (Files.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Dateitypen</h5>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Dateityp</th>
+                            <th>Dateien</th>
+                            <th>Gesamtgröße</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var fileType in GetFileTypeStats())
+                        {
+                            <tr>
+                                <td>@fileType.Extension</td>
+                                <td>@fileType.Count</td>
+                                <td>@FormatFileSize(fileType.SizeInBytes)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-muted small mt-3 mb-0">
+                Es werden die häufigsten Dateitypen angezeigt.
+            </p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ProjectFileEntry> Files { get; set; } = Array.Empty<ProjectFileEntry>();
+
+    [Parameter]
+    public int FileTypeLimit { get; set; } = 10;
+
+    private IEnumerable<FileTypeStat> GetFileTypeStats()
+    {
+        return Files
+            .GroupBy(file => string.IsNullOrWhiteSpace(file.Extension)
+                ? "Ohne Endung"
+                : file.Extension.ToLowerInvariant())
+            .Select(group => new FileTypeStat(
+                group.Key,
+                group.Count(),
+                group.Sum(file => file.SizeInBytes)))
+            .OrderByDescending(fileType => fileType.Count)
+            .ThenBy(fileType => fileType.Extension)
+            .Take(FileTypeLimit);
+    }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024)
+        {
+            return $"{sizeInBytes} B";
+        }
+
+        double sizeInKb = sizeInBytes / 1024d;
+
+        if (sizeInKb < 1024)
+        {
+            return $"{sizeInKb:0.0} KB";
+        }
+
+        double sizeInMb = sizeInKb / 1024d;
+
+        if (sizeInMb < 1024)
+        {
+            return $"{sizeInMb:0.0} MB";
+        }
+
+        double sizeInGb = sizeInMb / 1024d;
+
+        return $"{sizeInGb:0.0} GB";
+    }
+
+    private sealed record FileTypeStat(
+        string Extension,
+        int Count,
+        long SizeInBytes);
+}

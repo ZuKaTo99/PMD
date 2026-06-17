@@ -1,0 +1,36 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+
+@if (TotalFolderCount > 0)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Übersprungene Ordner</h5>
+
+            <ul class="mb-0">
+                @foreach (var folder in Folders.Take(FolderLimit))
+                {
+                    <li>@folder</li>
+                }
+            </ul>
+
+            @if (TotalFolderCount > FolderLimit)
+            {
+                <p class="text-muted small mt-3 mb-0">
+                    Es werden erstmal nur die ersten @FolderLimit übersprungenen Ordner angezeigt.
+                </p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string> Folders { get; set; } = Array.Empty<string>();
+
+    [Parameter]
+    public int TotalFolderCount { get; set; }
+
+    [Parameter]
+    public int FolderLimit { get; set; } = 20;
+}
