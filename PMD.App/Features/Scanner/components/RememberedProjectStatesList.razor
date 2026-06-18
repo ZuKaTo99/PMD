@@ -62,7 +62,13 @@
                         </div>
                     </div>
 
-                    @if (HasSelectedDifferentProjectFolders)
+                    @if (HasSelectedSameProjectState)
+                    {
+                        <div class="text-warning small mt-2">
+                            Bitte wählen Sie zwei unterschiedliche Projektstände aus.
+                        </div>
+                    }
+                    else if (HasSelectedDifferentProjectFolders)
                     {
                         <div class="text-danger small mt-2">
                             Bitte wählen Sie zwei Projektstände aus demselben Projektordner aus.
@@ -158,6 +164,11 @@
                 && IsSameProjectFolder(oldState, newState);
         }
     }
+
+    private bool HasSelectedSameProjectState =>
+    SelectedOldProjectStateId is not null
+    && SelectedNewProjectStateId is not null
+    && SelectedOldProjectStateId == SelectedNewProjectStateId;
 
     private bool HasSelectedDifferentProjectFolders
     {
