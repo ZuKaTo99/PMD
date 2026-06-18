@@ -124,11 +124,28 @@ public partial class ProjectScannerPage
             return;
         }
 
+        SelectPreparedProjectStateForComparison();
+
         comparisonResult = null;
         comparedOldProjectState = null;
         comparedNewProjectState = null;
         errorMessage = null;
         infoMessage = "Projektstand wurde gemerkt.";
+    }
+
+    private void SelectPreparedProjectStateForComparison()
+    {
+        if (preparedProjectState is null)
+        {
+            return;
+        }
+
+        selectedNewProjectStateId = preparedProjectState.Id;
+
+        selectedOldProjectStateId = RememberedProjectStates
+            .Where(projectState => projectState.Id != preparedProjectState.Id)
+            .FirstOrDefault(projectState => IsSameProjectFolder(projectState, preparedProjectState))
+            ?.Id;
     }
 
     private void ClearRememberedProjectStates()
