@@ -28,7 +28,12 @@
 
         <RememberedProjectStatesList 
             ProjectStates="@RememberedProjectStates"
+            SelectedOldProjectStateId="@selectedOldProjectStateId"
+            SelectedOldProjectStateIdChanged="@((Guid? value) => selectedOldProjectStateId = value)"
+            SelectedNewProjectStateId="@selectedNewProjectStateId"
+            SelectedNewProjectStateIdChanged="@((Guid? value) => selectedNewProjectStateId = value)"
             OnCompareLatestProjectStates="CompareLatestProjectStates"
+            OnCompareSelectedProjectStates="CompareSelectedProjectStates"
             OnClearRememberedProjectStates="ClearRememberedProjectStates" />
 
         <ProjectStateComparisonView 

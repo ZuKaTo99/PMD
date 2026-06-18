@@ -14,6 +14,55 @@
                 Diese Projektstände sind aktuell nur für diese laufende Sitzung gemerkt.
             </p>
 
+            @if (ProjectStates.Count >= 2)
+            {
+                <div class="border rounded p-3 mb-3">
+                    <h3 class="h6 mb-3">Projektstände auswählen</h3>
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label">Alter Stand</label>
+                            <select class="form-select form-select-sm"
+                                    value="@FormatProjectStateId(SelectedOldProjectStateId)"
+                                    @onchange="OnSelectedOldProjectStateChanged">
+                                <option value="">Bitte auswählen</option>
+
+                                @foreach (var projectState in ProjectStates)
+                                {
+                                    <option value="@projectState.Id">
+                                        @BuildProjectStateOptionText(projectState)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label">Neuer Stand</label>
+                            <select class="form-select form-select-sm"
+                                    value="@FormatProjectStateId(SelectedNewProjectStateId)"
+                                    @onchange="OnSelectedNewProjectStateChanged">
+                                <option value="">Bitte auswählen</option>
+
+                                @foreach (var projectState in ProjectStates)
+                                {
+                                    <option value="@projectState.Id">
+                                        @BuildProjectStateOptionText(projectState)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-primary btn-sm"
+                                    disabled="@(!CanCompareSelectedProjectStates)"
+                                    @onclick="OnCompareSelectedProjectStates">
+                                Auswahl vergleichen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <div class="table-responsive mb-3">
                 <table class="table table-sm table-striped align-middle">
                     <thead>
@@ -49,7 +98,7 @@
                 </table>
             </div>
 
-            <button class="btn btn-primary me-2"
+            <button class="btn btn-outline-primary me-2"
                     disabled="@(ProjectStates.Count < 2)"
                     @onclick="OnCompareLatestProjectStates">
                 Letzte 2 Projektstände vergleichen
@@ -68,8 +117,63 @@
     public IReadOnlyList<ProjectState> ProjectStates { get; set; } = Array.Empty<ProjectState>();
 
     [Parameter]
+    public Guid? SelectedOldProjectStateId { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid?> SelectedOldProjectStateIdChanged { get; set; }
+
+    [Parameter]
+    public Guid? SelectedNewProjectStateId { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid?> SelectedNewProjectStateIdChanged { get; set; }
+
+    [Parameter]
     public EventCallback OnCompareLatestProjectStates { get; set; }
 
     [Parameter]
+    public EventCallback OnCompareSelectedProjectStates { get; set; }
+
+    [Parameter]
     public EventCallback OnClearRememberedProjectStates { get; set; }
+
+    private bool CanCompareSelectedProjectStates =>
+        ProjectStates.Count >= 2
+        && SelectedOldProjectStateId is not null
+        && SelectedNewProjectStateId is not null
+        && SelectedOldProjectStateId != SelectedNewProjectStateId;
+
+    private async Task OnSelectedOldProjectStateChanged(ChangeEventArgs args)
+    {
+        SelectedOldProjectStateId = ParseProjectStateId(args.Value?.ToString());
+
+        await SelectedOldProjectStateIdChanged.InvokeAsync(SelectedOldProjectStateId);
+    }
+
+    private async Task OnSelectedNewProjectStateChanged(ChangeEventArgs args)
+    {
+        SelectedNewProjectStateId = ParseProjectStateId(args.Value?.ToString());
+
+        await SelectedNewProjectStateIdChanged.InvokeAsync(SelectedNewProjectStateId);
+    }
+
+    private static Guid? ParseProjectStateId(string? value)
+    {
+        if (Guid.TryParse(value, out var projectStateId))
+        {
+            return projectStateId;
+        }
+
+        return null;
+    }
+
+    private static string FormatProjectStateId(Guid? projectStateId)
+    {
+        return projectStateId?.ToString() ?? string.Empty;
+    }
+
+    private static string BuildProjectStateOptionText(ProjectState projectState)
+    {
+        return $"{projectState.ProjectName} - {projectState.CreatedAt:dd.MM.yyyy HH:mm} - {projectState.FileCount} Dateien";
+    }
 }
