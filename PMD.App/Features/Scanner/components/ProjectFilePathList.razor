@@ -1,22 +1,38 @@
 @namespace PMD.App.Features.Scanner.Components
+@using System.Linq
 
 @if (FilePaths.Count > 0)
 {
-    <ul class="mb-2">
-        @foreach (string filePath in FilePaths.Take(FileLimit))
-        {
-            <li>
-                <code>@filePath</code>
-            </li>
-        }
-    </ul>
+    <div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="text-muted small">
+                Angezeigt: @DisplayedFileCount von @FilePaths.Count Dateien
+            </div>
 
-    @if (FilePaths.Count > FileLimit)
-    {
-        <p class="text-muted small">
-            Es werden nur die ersten @FileLimit Dateien angezeigt.
-        </p>
-    }
+            @if (HiddenFileCount > 0)
+            {
+                <span class="badge bg-secondary">
+                    +@HiddenFileCount weitere
+                </span>
+            }
+        </div>
+
+        <ul class="list-group list-group-flush border rounded mb-2">
+            @foreach (string filePath in FilePaths.Take(FileLimit))
+            {
+                <li class="list-group-item py-2">
+                    <code class="small">@filePath</code>
+                </li>
+            }
+        </ul>
+
+        @if (HiddenFileCount > 0)
+        {
+            <p class="text-muted small mb-0">
+                Es werden nur die ersten @FileLimit Dateien angezeigt.
+            </p>
+        }
+    </div>
 }
 
 @code {
@@ -25,4 +41,10 @@
 
     [Parameter]
     public int FileLimit { get; set; } = 20;
+
+    private int DisplayedFileCount =>
+        Math.Min(FilePaths.Count, FileLimit);
+
+    private int HiddenFileCount =>
+        Math.Max(0, FilePaths.Count - FileLimit);
 }
