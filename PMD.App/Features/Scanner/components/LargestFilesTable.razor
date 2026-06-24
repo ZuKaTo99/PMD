@@ -1,28 +1,66 @@
 @namespace PMD.App.Features.Scanner.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.Scanner
+@using System.Linq
 
 @if (Files.Count > 0)
 {
     <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">Größte Dateien</h2>
+                    <div class="text-muted small">
+                        Diese Dateien belegen im geprüften Projektordner den meisten Speicherplatz.
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge bg-secondary">
+                        @DisplayedFileCount von @Files.Count Dateien
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <div class="card-body">
-            <h5 class="card-title">Größte Dateien</h5>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="text-muted small">
+                    Angezeigt: @DisplayedFileCount größte Dateien
+                </div>
+
+                @if (HiddenFileCount > 0)
+                {
+                    <span class="badge bg-secondary">
+                        +@HiddenFileCount weitere Dateien
+                    </span>
+                }
+            </div>
 
             <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+                <table class="table table-sm table-striped table-hover align-middle mb-2">
                     <thead>
                         <tr>
                             <th>Datei</th>
                             <th>Größe</th>
-                            <th>Geändert</th>
+                            <th>Geändert am</th>
                         </tr>
                     </thead>
+
                     <tbody>
-                        @foreach (var file in GetLargestFiles())
+                        @foreach (ProjectFileEntry file in GetLargestFiles())
                         {
                             <tr>
-                                <td>@file.RelativePath</td>
-                                <td>@ScannerDisplayFormatter.FormatFileSize(file.SizeInBytes)</td>
+                                <td>
+                                    <code class="small">@file.RelativePath</code>
+                                </td>
+
+                                <td>
+                                    <span class="fw-semibold">
+                                        @ScannerDisplayFormatter.FormatFileSize(file.SizeInBytes)
+                                    </span>
+                                </td>
+
                                 <td>@file.LastChangedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
                             </tr>
                         }
@@ -30,8 +68,8 @@
                 </table>
             </div>
 
-            <p class="text-muted small mt-3 mb-0">
-                Es werden die @FileLimit größten Dateien im geprüften Projektordner angezeigt.
+            <p class="text-muted small mb-0">
+                Die Liste zeigt die größten Dateien zuerst.
             </p>
         </div>
     </div>
@@ -43,6 +81,12 @@
 
     [Parameter]
     public int FileLimit { get; set; } = 10;
+
+    private int DisplayedFileCount =>
+        Math.Min(Files.Count, FileLimit);
+
+    private int HiddenFileCount =>
+        Math.Max(0, Files.Count - FileLimit);
 
     private IEnumerable<ProjectFileEntry> GetLargestFiles()
     {
