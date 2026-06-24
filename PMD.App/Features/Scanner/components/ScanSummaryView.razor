@@ -5,46 +5,111 @@
 @if (ScanResult is not null)
 {
     <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">Prüfergebnis</h2>
+                    <div class="text-muted small">
+                        Der Projektordner wurde geprüft. Hier siehst du die wichtigsten Werte.
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge bg-secondary">
+                        @ScanResult.FileCount Dateien
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <div class="card-body">
-            <h5 class="card-title">Prüfergebnis</h5>
+            <div class="border rounded p-3 mb-4">
+                <div class="text-muted small mb-1">Projekt</div>
+                <div class="fw-semibold">@ScanResult.ProjectName</div>
 
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Projektname</dt>
-                <dd class="col-sm-9">@ScanResult.ProjectName</dd>
+                <div class="text-muted small mt-3 mb-1">Projektordner</div>
+                <code class="small">@ScanResult.RootPath</code>
+            </div>
 
-                <dt class="col-sm-3">Projektordner</dt>
-                <dd class="col-sm-9">@ScanResult.RootPath</dd>
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Dateien</div>
+                        <div class="fs-4 fw-semibold">@ScanResult.FileCount</div>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">Geprüft am</dt>
-                <dd class="col-sm-9">@ScanResult.ScannedAt.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Gesamtgröße</div>
+                        <div class="fs-5 fw-semibold">
+                            @ScannerDisplayFormatter.FormatFileSize(ScanResult.TotalSizeInBytes)
+                        </div>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">Dateien</dt>
-                <dd class="col-sm-9">@ScanResult.FileCount</dd>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Geprüfte Ordner</div>
+                        <div class="fs-4 fw-semibold">@ScanResult.ScannedFolderCount</div>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">Geprüfte Ordner</dt>
-                <dd class="col-sm-9">@ScanResult.ScannedFolderCount</dd>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Übersprungen</div>
+                        <div class="fs-4 fw-semibold">@ScanResult.IgnoredFolderCount</div>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">Angezeigt</dt>
-                <dd class="col-sm-9">
-                    @DisplayedFileCount von @ScanResult.FileCount Dateien
-                </dd>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Hinweise</div>
+                        <div class="fs-4 fw-semibold">@ScanResult.WarningCount</div>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">Gesamtgröße</dt>
-                <dd class="col-sm-9">
-                    @ScannerDisplayFormatter.FormatFileSize(ScanResult.TotalSizeInBytes)
-                </dd>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Prüfdauer</div>
+                        <div class="fs-6 fw-semibold">
+                            @ScannerDisplayFormatter.FormatScanDuration(ScanResult.ScanDuration)
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <dt class="col-sm-3">Prüfdauer</dt>
-                <dd class="col-sm-9">
-                    @ScannerDisplayFormatter.FormatScanDuration(ScanResult.ScanDuration)
-                </dd>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Geprüft am</div>
+                        <div>@ScanResult.ScannedAt.ToString("dd.MM.yyyy HH:mm:ss")</div>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">Übersprungene Ordner</dt>
-                <dd class="col-sm-9">@ScanResult.IgnoredFolderCount</dd>
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">In der Liste angezeigt</div>
+                        <div>
+                            @DisplayedFileCount von @ScanResult.FileCount Dateien
+                        </div>
 
-                <dt class="col-sm-3">Hinweise</dt>
-                <dd class="col-sm-9">@ScanResult.WarningCount</dd>
-            </dl>
+                        @if (HasHiddenFiles)
+                        {
+                            <div class="text-muted small mt-1">
+                                Weitere @HiddenFileCount Dateien sind vorhanden, werden hier aber nicht angezeigt.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (ScanResult.WarningCount > 0)
+            {
+                <div class="alert alert-warning mt-4 mb-0">
+                    Es gibt Hinweise zur Prüfung. Die Details findest du im Hinweisbereich darunter.
+                </div>
+            }
         </div>
     </div>
 }
@@ -55,4 +120,13 @@
 
     [Parameter]
     public int DisplayedFileCount { get; set; }
+
+    private bool HasHiddenFiles =>
+        ScanResult is not null
+        && DisplayedFileCount < ScanResult.FileCount;
+
+    private int HiddenFileCount =>
+        ScanResult is null
+            ? 0
+            : Math.Max(0, ScanResult.FileCount - DisplayedFileCount);
 }
