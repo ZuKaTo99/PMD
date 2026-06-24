@@ -1,25 +1,64 @@
 @namespace PMD.App.Features.Scanner.Components
 @using Microsoft.AspNetCore.Components
+@using System.Linq
 
 @if (Warnings.Count > 0)
 {
     <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">Hinweise</h2>
+                    <div class="text-muted small">
+                        Bei der Projektprüfung gab es Hinweise, die du prüfen kannst.
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge bg-warning text-dark">
+                        @Warnings.Count Hinweise
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <div class="card-body">
-            <h5 class="card-title">Hinweise</h5>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="text-muted small">
+                    Angezeigt: @DisplayedWarningCount von @Warnings.Count Hinweisen
+                </div>
 
-            <ul class="mb-0">
-                @foreach (var warning in Warnings.Take(WarningLimit))
+                @if (HiddenWarningCount > 0)
                 {
-                    <li>@warning</li>
+                    <span class="badge bg-secondary">
+                        +@HiddenWarningCount weitere
+                    </span>
                 }
+            </div>
 
-                @if (Warnings.Count > WarningLimit)
+            <ul class="list-group list-group-flush border rounded mb-2">
+                @foreach (string warning in Warnings.Take(WarningLimit))
                 {
-                    <li>
-                        Weitere Hinweise wurden nicht angezeigt.
+                    <li class="list-group-item py-2">
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-warning text-dark align-self-start">
+                                Hinweis
+                            </span>
+
+                            <span class="small">
+                                @warning
+                            </span>
+                        </div>
                     </li>
                 }
             </ul>
+
+            @if (HiddenWarningCount > 0)
+            {
+                <p class="text-muted small mb-0">
+                    Es werden nur die ersten @WarningLimit Hinweise angezeigt.
+                </p>
+            }
         </div>
     </div>
 }
@@ -30,4 +69,10 @@
 
     [Parameter]
     public int WarningLimit { get; set; } = 20;
+
+    private int DisplayedWarningCount =>
+        Math.Min(Warnings.Count, WarningLimit);
+
+    private int HiddenWarningCount =>
+        Math.Max(0, Warnings.Count - WarningLimit);
 }
