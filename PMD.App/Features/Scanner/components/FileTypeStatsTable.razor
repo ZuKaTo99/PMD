@@ -1,15 +1,44 @@
 @namespace PMD.App.Features.Scanner.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.Scanner
+@using System.Linq
 
 @if (Files.Count > 0)
 {
     <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">Dateitypen</h2>
+                    <div class="text-muted small">
+                        Diese Übersicht zeigt, welche Dateitypen im geprüften Projektordner gefunden wurden.
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge bg-secondary">
+                        @FileTypeCount Dateitypen
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <div class="card-body">
-            <h5 class="card-title">Dateitypen</h5>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="text-muted small">
+                    Angezeigt: @DisplayedFileTypeCount von @FileTypeCount Dateitypen
+                </div>
+
+                @if (HiddenFileTypeCount > 0)
+                {
+                    <span class="badge bg-secondary">
+                        +@HiddenFileTypeCount weitere
+                    </span>
+                }
+            </div>
 
             <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+                <table class="table table-sm table-striped table-hover align-middle mb-2">
                     <thead>
                         <tr>
                             <th>Dateityp</th>
@@ -17,22 +46,44 @@
                             <th>Gesamtgröße</th>
                         </tr>
                     </thead>
+
                     <tbody>
-                        @foreach (var fileType in GetFileTypeStats())
+                        @foreach (FileTypeStat fileType in GetFileTypeStats())
                         {
                             <tr>
-                                <td>@fileType.Extension</td>
-                                <td>@fileType.Count</td>
-                                <td>@ScannerDisplayFormatter.FormatFileSize(fileType.SizeInBytes)</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        @fileType.Extension
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="fw-semibold">
+                                        @fileType.Count
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @ScannerDisplayFormatter.FormatFileSize(fileType.SizeInBytes)
+                                </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
 
-            <p class="text-muted small mt-3 mb-0">
-                Es werden die häufigsten Dateitypen angezeigt.
-            </p>
+            @if (HiddenFileTypeCount > 0)
+            {
+                <p class="text-muted small mb-0">
+                    Es werden nur die ersten @FileTypeLimit Dateitypen angezeigt.
+                </p>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">
+                    Die häufigsten Dateitypen stehen oben.
+                </p>
+            }
         </div>
     </div>
 }
@@ -44,7 +95,22 @@
     [Parameter]
     public int FileTypeLimit { get; set; } = 10;
 
+    private int FileTypeCount =>
+        GetAllFileTypeStats().Count;
+
+    private int DisplayedFileTypeCount =>
+        Math.Min(FileTypeCount, FileTypeLimit);
+
+    private int HiddenFileTypeCount =>
+        Math.Max(0, FileTypeCount - FileTypeLimit);
+
     private IEnumerable<FileTypeStat> GetFileTypeStats()
+    {
+        return GetAllFileTypeStats()
+            .Take(FileTypeLimit);
+    }
+
+    private List<FileTypeStat> GetAllFileTypeStats()
     {
         return Files
             .GroupBy(file => string.IsNullOrWhiteSpace(file.Extension)
@@ -56,7 +122,7 @@
                 group.Sum(file => file.SizeInBytes)))
             .OrderByDescending(fileType => fileType.Count)
             .ThenBy(fileType => fileType.Extension)
-            .Take(FileTypeLimit);
+            .ToList();
     }
 
     private sealed record FileTypeStat(
