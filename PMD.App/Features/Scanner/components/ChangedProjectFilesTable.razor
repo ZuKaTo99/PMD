@@ -1,52 +1,77 @@
 @namespace PMD.App.Features.Scanner.Components
 @using PMD.App.Domain.ProjectStates
+@using System.Linq
 
 @if (ChangedFiles.Count > 0)
 {
-    <div class="table-responsive">
-        <table class="table table-sm table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>Datei</th>
-                    <th>Änderung</th>
-                    <th>Alte Größe</th>
-                    <th>Neue Größe</th>
-                    <th>Alt geändert am</th>
-                    <th>Neu geändert am</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (ProjectStateChangedFile changedFile in ChangedFiles.Take(FileLimit))
-                {
+    <div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="text-muted small">
+                Angezeigt: @DisplayedChangedFileCount von @ChangedFiles.Count geänderten Dateien
+            </div>
+
+            @if (HiddenChangedFileCount > 0)
+            {
+                <span class="badge bg-secondary">
+                    +@HiddenChangedFileCount weitere
+                </span>
+            }
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-2">
+                <thead>
                     <tr>
-                        <td>@changedFile.RelativePath</td>
-                        <td>
-                            @if (changedFile.SizeChanged)
-                            {
-                                <span class="badge bg-warning text-dark me-1">Größe</span>
-                            }
-
-                            @if (changedFile.LastChangedAtChanged)
-                            {
-                                <span class="badge bg-info text-dark">Datum</span>
-                            }
-                        </td>
-                        <td>@FormatFileSize(changedFile.OldSizeInBytes)</td>
-                        <td>@FormatFileSize(changedFile.NewSizeInBytes)</td>
-                        <td>@FormatDateTime(changedFile.OldLastChangedAt)</td>
-                        <td>@FormatDateTime(changedFile.NewLastChangedAt)</td>
+                        <th>Datei</th>
+                        <th>Geändert</th>
+                        <th>Alte Größe</th>
+                        <th>Neue Größe</th>
+                        <th>Alt geändert am</th>
+                        <th>Neu geändert am</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </thead>
 
-    @if (ChangedFiles.Count > FileLimit)
-    {
-        <p class="text-muted small">
-            Es werden nur die ersten @FileLimit geänderten Dateien angezeigt.
-        </p>
-    }
+                <tbody>
+                    @foreach (ProjectStateChangedFile changedFile in ChangedFiles.Take(FileLimit))
+                    {
+                        <tr>
+                            <td>
+                                <code class="small">@changedFile.RelativePath</code>
+                            </td>
+
+                            <td>
+                                @if (changedFile.SizeChanged)
+                                {
+                                    <span class="badge bg-warning text-dark me-1">
+                                        Größe
+                                    </span>
+                                }
+
+                                @if (changedFile.LastChangedAtChanged)
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        Datum
+                                    </span>
+                                }
+                            </td>
+
+                            <td>@ScannerDisplayFormatter.FormatFileSize(changedFile.OldSizeInBytes)</td>
+                            <td>@ScannerDisplayFormatter.FormatFileSize(changedFile.NewSizeInBytes)</td>
+                            <td>@FormatDateTime(changedFile.OldLastChangedAt)</td>
+                            <td>@FormatDateTime(changedFile.NewLastChangedAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (HiddenChangedFileCount > 0)
+        {
+            <p class="text-muted small mb-0">
+                Es werden nur die ersten @FileLimit geänderten Dateien angezeigt.
+            </p>
+        }
+    </div>
 }
 
 @code {
@@ -56,33 +81,14 @@
     [Parameter]
     public int FileLimit { get; set; } = 20;
 
+    private int DisplayedChangedFileCount =>
+        Math.Min(ChangedFiles.Count, FileLimit);
+
+    private int HiddenChangedFileCount =>
+        Math.Max(0, ChangedFiles.Count - FileLimit);
+
     private static string FormatDateTime(DateTime value)
     {
         return value.ToString("dd.MM.yyyy HH:mm:ss");
-    }
-
-    private static string FormatFileSize(long sizeInBytes)
-    {
-        if (sizeInBytes < 1024)
-        {
-            return $"{sizeInBytes} B";
-        }
-
-        double sizeInKb = sizeInBytes / 1024d;
-
-        if (sizeInKb < 1024)
-        {
-            return $"{sizeInKb:0.##} KB";
-        }
-
-        double sizeInMb = sizeInKb / 1024d;
-
-        if (sizeInMb < 1024)
-        {
-            return $"{sizeInMb:0.##} MB";
-        }
-
-        double sizeInGb = sizeInMb / 1024d;
-        return $"{sizeInGb:0.##} GB";
     }
 }
