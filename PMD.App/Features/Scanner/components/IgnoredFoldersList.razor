@@ -1,23 +1,54 @@
 @namespace PMD.App.Features.Scanner.Components
 @using Microsoft.AspNetCore.Components
+@using System.Linq
 
 @if (TotalFolderCount > 0)
 {
     <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Übersprungene Ordner</h5>
+        <div class="card-header">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">Übersprungene Ordner</h2>
+                    <div class="text-muted small">
+                        Diese Ordner wurden bei der Projektprüfung bewusst nicht eingelesen.
+                    </div>
+                </div>
 
-            <ul class="mb-0">
-                @foreach (var folder in Folders.Take(FolderLimit))
+                <div>
+                    <span class="badge bg-secondary">
+                        @TotalFolderCount übersprungen
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="text-muted small">
+                    Angezeigt: @DisplayedFolderCount von @TotalFolderCount Ordnern
+                </div>
+
+                @if (HiddenFolderCount > 0)
                 {
-                    <li>@folder</li>
+                    <span class="badge bg-secondary">
+                        +@HiddenFolderCount weitere
+                    </span>
+                }
+            </div>
+
+            <ul class="list-group list-group-flush border rounded mb-2">
+                @foreach (string folder in Folders.Take(FolderLimit))
+                {
+                    <li class="list-group-item py-2">
+                        <code class="small">@folder</code>
+                    </li>
                 }
             </ul>
 
-            @if (TotalFolderCount > FolderLimit)
+            @if (HiddenFolderCount > 0)
             {
-                <p class="text-muted small mt-3 mb-0">
-                    Es werden erstmal nur die ersten @FolderLimit übersprungenen Ordner angezeigt.
+                <p class="text-muted small mb-0">
+                    Es werden nur die ersten @FolderLimit übersprungenen Ordner angezeigt.
                 </p>
             }
         </div>
@@ -33,4 +64,10 @@
 
     [Parameter]
     public int FolderLimit { get; set; } = 20;
+
+    private int DisplayedFolderCount =>
+        Math.Min(Folders.Count, FolderLimit);
+
+    private int HiddenFolderCount =>
+        Math.Max(0, TotalFolderCount - DisplayedFolderCount);
 }
