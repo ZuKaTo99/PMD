@@ -1,24 +1,39 @@
 @namespace PMD.App.Features.Scanner.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectStates
-@using System.Linq;
+@using System.Linq
 
 @if (ProjectStates.Count > 0)
 {
     <div class="card mb-4">
         <div class="card-header">
-            <h2 class="h5 mb-0">Gemerkte Projektstände</h2>
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">Gemerkte Projektstände</h2>
+                    <div class="text-muted small">
+                        Diese Projektstände sind aktuell nur für diese laufende Sitzung gemerkt.
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge bg-secondary">
+                        @ProjectStates.Count gemerkt
+                    </span>
+                </div>
+            </div>
         </div>
 
         <div class="card-body">
-            <p class="text-muted">
-                Diese Projektstände sind aktuell nur für diese laufende Sitzung gemerkt.
-            </p>
-
             @if (ProjectStates.Count >= 2)
             {
-                <div class="border rounded p-3 mb-3">
-                    <h3 class="h6 mb-3">Projektstände auswählen</h3>
+                <div class="border rounded p-3 mb-4">
+                    <div class="mb-3">
+                        <h3 class="h6 mb-1">Projektstände vergleichen</h3>
+                        <div class="text-muted small">
+                            Wähle links den älteren Stand und rechts den neueren Stand aus.
+                            Danach kannst du beide Projektstände miteinander vergleichen.
+                        </div>
+                    </div>
 
                     <div class="row g-3 align-items-end">
                         <div class="col-md-5">
@@ -35,6 +50,10 @@
                                     </option>
                                 }
                             </select>
+
+                            <div class="form-text">
+                                Der Stand, mit dem verglichen wird.
+                            </div>
                         </div>
 
                         <div class="col-md-5">
@@ -51,6 +70,10 @@
                                     </option>
                                 }
                             </select>
+
+                            <div class="form-text">
+                                Der Stand, der geprüft werden soll.
+                            </div>
                         </div>
 
                         <div class="col-md-2 d-grid">
@@ -64,18 +87,26 @@
 
                     @if (HasSelectedSameProjectState)
                     {
-                        <div class="text-warning small mt-2">
+                        <div class="alert alert-warning py-2 mt-3 mb-0">
                             Bitte wählen Sie zwei unterschiedliche Projektstände aus.
                         </div>
                     }
                     else if (HasSelectedDifferentProjectFolders)
                     {
-                        <div class="text-danger small mt-2">
+                        <div class="alert alert-danger py-2 mt-3 mb-0">
                             Bitte wählen Sie zwei Projektstände aus demselben Projektordner aus.
                         </div>
                     }
                 </div>
             }
+
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mb-2">
+                <h3 class="h6 mb-0">Aktuell gemerkte Stände</h3>
+
+                <div class="text-muted small">
+                    Die Stände verschwinden, wenn die App neu gestartet wird.
+                </div>
+            </div>
 
             <div class="table-responsive mb-3">
                 <table class="table table-sm table-striped align-middle">
@@ -112,16 +143,18 @@
                 </table>
             </div>
 
-            <button class="btn btn-outline-primary me-2"
-                    disabled="@(ProjectStates.Count < 2)"
-                    @onclick="OnCompareLatestProjectStates">
-                Letzte 2 Projektstände vergleichen
-            </button>
+            <div class="d-flex flex-column flex-md-row gap-2">
+                <button class="btn btn-outline-primary"
+                        disabled="@(ProjectStates.Count < 2)"
+                        @onclick="OnCompareLatestProjectStates">
+                    Letzte 2 Projektstände vergleichen
+                </button>
 
-            <button class="btn btn-outline-danger"
-                    @onclick="OnClearRememberedProjectStates">
-                Gemerkte Stände leeren
-            </button>
+                <button class="btn btn-outline-danger"
+                        @onclick="OnClearRememberedProjectStates">
+                    Gemerkte Stände leeren
+                </button>
+            </div>
         </div>
     </div>
 }
@@ -166,9 +199,9 @@
     }
 
     private bool HasSelectedSameProjectState =>
-    SelectedOldProjectStateId is not null
-    && SelectedNewProjectStateId is not null
-    && SelectedOldProjectStateId == SelectedNewProjectStateId;
+        SelectedOldProjectStateId is not null
+        && SelectedNewProjectStateId is not null
+        && SelectedOldProjectStateId == SelectedNewProjectStateId;
 
     private bool HasSelectedDifferentProjectFolders
     {
