@@ -144,7 +144,7 @@ public partial class ProjectScannerPage
 
         selectedOldProjectStateId = RememberedProjectStates
             .Where(projectState => projectState.Id != preparedProjectState.Id)
-            .FirstOrDefault(projectState => IsSameProjectFolder(projectState, preparedProjectState))
+            .FirstOrDefault(projectState => ProjectStateFolderMatcher.IsSameProjectFolder(projectState, preparedProjectState))
             ?.Id;
     }
 
@@ -172,7 +172,7 @@ public partial class ProjectScannerPage
         var newState = RememberedProjectStates[0];
         var oldState = RememberedProjectStates[1];
 
-        if (!IsSameProjectFolder(oldState, newState))
+        if (!ProjectStateFolderMatcher.IsSameProjectFolder(oldState, newState))
         {
             comparisonResult = null;
             infoMessage = null;
@@ -234,7 +234,7 @@ public partial class ProjectScannerPage
             return;
         }
 
-        if (!IsSameProjectFolder(oldState, newState))
+        if (!ProjectStateFolderMatcher.IsSameProjectFolder(oldState, newState))
         {
             comparisonResult = null;
             comparedOldProjectState = null;
@@ -272,23 +272,4 @@ public partial class ProjectScannerPage
         return Math.Min(scanResult.FileCount, DisplayedFileLimit);
     }
 
-    private static bool IsSameProjectFolder(
-        ProjectState oldState,
-        ProjectState newState)
-    {
-        string oldPath = NormalizeFolderPath(oldState.RootPath);
-        string newPath = NormalizeFolderPath(newState.RootPath);
-
-        return string.Equals(
-            oldPath,
-            newPath,
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string NormalizeFolderPath(string folderPath)
-    {
-        return folderPath
-            .Trim()
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    }
 }

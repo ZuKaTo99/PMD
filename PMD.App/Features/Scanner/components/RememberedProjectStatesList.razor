@@ -194,7 +194,7 @@
             return oldState is not null
                 && newState is not null
                 && oldState.Id != newState.Id
-                && IsSameProjectFolder(oldState, newState);
+                && ProjectStateFolderMatcher.IsSameProjectFolder(oldState, newState);
         }
     }
 
@@ -213,7 +213,7 @@
             return oldState is not null
                 && newState is not null
                 && oldState.Id != newState.Id
-                && !IsSameProjectFolder(oldState, newState);
+                && !ProjectStateFolderMatcher.IsSameProjectFolder(oldState, newState);
         }
     }
 
@@ -240,26 +240,6 @@
 
         return ProjectStates
             .FirstOrDefault(projectState => projectState.Id == projectStateId);
-    }
-
-    private static bool IsSameProjectFolder(
-        ProjectState oldState,
-        ProjectState newState)
-    {
-        string oldPath = NormalizeFolderPath(oldState.RootPath);
-        string newPath = NormalizeFolderPath(newState.RootPath);
-
-        return string.Equals(
-            oldPath,
-            newPath,
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string NormalizeFolderPath(string folderPath)
-    {
-        return folderPath
-            .Trim()
-            .TrimEnd('\\', '/');
     }
 
     private static Guid? ParseProjectStateId(string? value)
