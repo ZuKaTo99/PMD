@@ -39,15 +39,44 @@ public partial class ProjectScannerPage
     private Guid? selectedNewProjectStateId;
 
 
-
-    private async Task PickFolderAsync()
+    private void ClearMessages()
     {
         errorMessage = null;
         infoMessage = null;
+    }
+
+    private void ClearScanData()
+    {
+        scanResult = null;
         preparedProjectState = null;
+    }
+
+    private void ClearComparisonData()
+    {
         comparisonResult = null;
         comparedOldProjectState = null;
         comparedNewProjectState = null;
+    }
+
+    private void ShowInfoMessage(string message)
+    {
+        errorMessage = null;
+        infoMessage = message;
+    }
+
+    private void ShowErrorMessage(string message)
+    {
+        infoMessage = null;
+        errorMessage = message;
+    }
+
+
+
+    private async Task PickFolderAsync()
+    {
+        ClearMessages();
+        preparedProjectState = null;
+        ClearComparisonData();
 
         try
         {
@@ -57,39 +86,36 @@ public partial class ProjectScannerPage
             {
                 folderPath = result.Folder.Path;
                 scanResult = null;
-                infoMessage = "Ordner wurde ausgewählt.";
+                ShowInfoMessage("Ordner wurde ausgewählt.");
             }
             else if (result.Exception is not null)
             {
-                errorMessage = $"Der Ordner konnte nicht ausgewählt werden: {result.Exception.Message}";
+                ShowErrorMessage($"Der Ordner konnte nicht ausgewählt werden: {result.Exception.Message}");
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Der Ordner konnte nicht ausgewählt werden: {ex.Message}";
+            ShowErrorMessage($"Der Ordner konnte nicht ausgewählt werden: {ex.Message}");
         }
     }
 
     private void ScanProjectFolder()
     {
-        errorMessage = null;
-        infoMessage = null;
-        scanResult = null;
-        preparedProjectState = null;
-        comparisonResult = null;
-        comparedOldProjectState = null;
-        comparedNewProjectState = null;
+        ClearMessages();
+        ClearScanData();
+        ClearComparisonData();
+
         folderPath = folderPath.Trim();
 
         if (string.IsNullOrWhiteSpace(folderPath))
         {
-            errorMessage = "Bitte geben Sie zuerst einen Projektordner an.";
+            ShowErrorMessage("Bitte geben Sie zuerst einen Projektordner an.");
             return;
         }
 
         if (!Directory.Exists(folderPath))
         {
-            errorMessage = "Der angegebene Projektordner wurde nicht gefunden.";
+            ShowErrorMessage("Der angegebene Projektordner wurde nicht gefunden.");
             return;
         }
 
@@ -101,11 +127,11 @@ public partial class ProjectScannerPage
                 scanResult.ProjectName,
                 scanResult);
 
-            infoMessage = "Projektprüfung abgeschlossen. Projektstand wurde vorbereitet.";
+            ShowInfoMessage("Projektprüfung abgeschlossen. Projektstand wurde vorbereitet.");
         }
         catch (Exception ex)
         {
-            errorMessage = $"Die Projektprüfung konnte nicht abgeschlossen werden: {ex.Message}";
+            ShowErrorMessage($"Die Projektprüfung konnte nicht abgeschlossen werden: {ex.Message}");
         }
     }
 
@@ -126,11 +152,8 @@ public partial class ProjectScannerPage
 
         SelectPreparedProjectStateForComparison();
 
-        comparisonResult = null;
-        comparedOldProjectState = null;
-        comparedNewProjectState = null;
-        errorMessage = null;
-        infoMessage = "Projektstand wurde gemerkt.";
+        ClearComparisonData();
+        ShowInfoMessage("Projektstand wurde gemerkt.");
     }
 
     private void SelectPreparedProjectStateForComparison()
@@ -155,11 +178,8 @@ public partial class ProjectScannerPage
         selectedOldProjectStateId = null;
         selectedNewProjectStateId = null;
 
-        comparisonResult = null;
-        comparedOldProjectState = null;
-        comparedNewProjectState = null;
-        errorMessage = null;
-        infoMessage = "Gemerkte Stände wurden geleert.";
+        ClearComparisonData();
+        ShowInfoMessage("Gemerkte Stände wurden geleert.");
     }
 
     private void CompareLatestProjectStates()
@@ -174,17 +194,15 @@ public partial class ProjectScannerPage
 
         if (!ProjectStateFolderMatcher.IsSameProjectFolder(oldState, newState))
         {
-            comparisonResult = null;
-            infoMessage = null;
-            errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden.";
+            ClearComparisonData();
+            ShowErrorMessage("Es können nur Projektstände aus demselben Projektordner verglichen werden.");
             return;
         }
 
-        errorMessage = null;
         comparedOldProjectState = oldState;
         comparedNewProjectState = newState;
         comparisonResult = ProjectStateComparer.Compare(oldState, newState);
-        infoMessage = "Vergleich wurde erstellt.";
+        ShowInfoMessage("Vergleich wurde erstellt.");
     }
 
     private ProjectState? GetSelectedOldProjectState()
@@ -216,39 +234,29 @@ public partial class ProjectScannerPage
 
         if (oldState is null || newState is null)
         {
-            comparisonResult = null;
-            comparedOldProjectState = null;
-            comparedNewProjectState = null;
-            infoMessage = null;
-            errorMessage = "Bitte wählen Sie zuerst einen alten und einen neuen Projektstand aus.";
+            ClearComparisonData();
+            ShowErrorMessage("Bitte wählen Sie zuerst einen alten und einen neuen Projektstand aus.");
             return;
         }
 
         if (oldState.Id == newState.Id)
         {
-            comparisonResult = null;
-            comparedOldProjectState = null;
-            comparedNewProjectState = null;
-            infoMessage = null;
-            errorMessage = "Bitte wählen Sie zwei unterschiedliche Projektstände aus.";
+            ClearComparisonData();
+            ShowErrorMessage("Bitte wählen Sie zwei unterschiedliche Projektstände aus.");
             return;
         }
 
         if (!ProjectStateFolderMatcher.IsSameProjectFolder(oldState, newState))
         {
-            comparisonResult = null;
-            comparedOldProjectState = null;
-            comparedNewProjectState = null;
-            infoMessage = null;
-            errorMessage = "Es können nur Projektstände aus demselben Projektordner verglichen werden.";
+            ClearComparisonData();
+            ShowErrorMessage("Es können nur Projektstände aus demselben Projektordner verglichen werden.");
             return;
         }
 
-        errorMessage = null;
         comparedOldProjectState = oldState;
         comparedNewProjectState = newState;
         comparisonResult = ProjectStateComparer.Compare(oldState, newState);
-        infoMessage = "Vergleich wurde erstellt.";
+        ShowInfoMessage("Vergleich wurde erstellt.");
     }
 
     private bool IsPreparedProjectStateRemembered()
