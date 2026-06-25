@@ -107,8 +107,25 @@ public partial class RememberedProjectStatesList
         return projectStateId?.ToString() ?? string.Empty;
     }
 
-    private static string BuildProjectStateOptionText(ProjectState projectState)
+    private int GetProjectStateNumber(ProjectState projectState)
     {
-        return $"{projectState.ProjectName} - {projectState.CreatedAt:dd.MM.yyyy HH:mm} - {projectState.FileCount} Dateien";
+        for (var index = 0; index < ProjectStates.Count; index++)
+        {
+            if (ProjectStates[index].Id == projectState.Id)
+            {
+                return ProjectStates.Count - index;
+            }
+        }
+
+        return 0;
+    }
+
+    private string BuildProjectStateOptionText(ProjectState projectState)
+    {
+        int projectStateNumber = GetProjectStateNumber(projectState);
+
+        return ScannerDisplayFormatter.FormatProjectStateOptionText(
+            projectStateNumber,
+            projectState);
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace PMD.App.Features.Scanner.Components;
+﻿using PMD.App.Domain.ProjectStates;
+using System;
+
+namespace PMD.App.Features.Scanner.Components;
 
 public static class ScannerDisplayFormatter
 {
@@ -46,5 +49,26 @@ public static class ScannerDisplayFormatter
         }
 
         return extension;
+    }
+
+    public static string FormatProjectStateLabel(int projectStateNumber)
+    {
+        if (projectStateNumber <= 0)
+        {
+            return "Stand -";
+        }
+
+        return $"Stand {projectStateNumber}";
+    }
+
+    public static string FormatProjectStateOptionText(
+        int projectStateNumber,
+        ProjectState projectState)
+    {
+        ArgumentNullException.ThrowIfNull(projectState);
+
+        string projectStateLabel = FormatProjectStateLabel(projectStateNumber);
+
+        return $"{projectStateLabel} - {projectState.ProjectName} - {projectState.CreatedAt:dd.MM.yyyy HH:mm} - {projectState.FileCount} Dateien";
     }
 }

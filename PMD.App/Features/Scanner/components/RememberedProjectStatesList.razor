@@ -111,7 +111,7 @@
                 <table class="table table-sm table-striped align-middle">
                     <thead>
                         <tr>
-                            <th>Nr.</th>
+                            <th>Stand</th>
                             <th>Projekt</th>
                             <th>Projektordner</th>
                             <th>Erstellt am</th>
@@ -125,9 +125,10 @@
                         @for (var i = 0; i < ProjectStates.Count; i++)
                         {
                             var projectState = ProjectStates[i];
+                            var projectStateNumber = ProjectStates.Count - i;
 
                             <tr>
-                                <td>@(i + 1)</td>
+                                <td>@ScannerDisplayFormatter.FormatProjectStateLabel(projectStateNumber)</td>>
                                 <td>@projectState.ProjectName</td>
                                 <td>
                                     <code>@projectState.RootPath</code>
