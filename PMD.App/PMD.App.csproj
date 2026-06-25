@@ -78,7 +78,6 @@
       <Folder Include="Features\Dashboard\Components\" />
       <Folder Include="Features\Projects\Components\" />
       <Folder Include="Features\Projects\Pages\" />
-      <Folder Include="Features\Scanner\Components\" />
       <Folder Include="Infrastructure\Projects\" />
     </ItemGroup>
 
