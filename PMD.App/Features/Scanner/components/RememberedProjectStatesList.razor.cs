@@ -107,22 +107,12 @@ public partial class RememberedProjectStatesList
         return projectStateId?.ToString() ?? string.Empty;
     }
 
-    private int GetProjectStateNumber(ProjectState projectState)
-    {
-        for (var index = 0; index < ProjectStates.Count; index++)
-        {
-            if (ProjectStates[index].Id == projectState.Id)
-            {
-                return ProjectStates.Count - index;
-            }
-        }
-
-        return 0;
-    }
 
     private string BuildProjectStateOptionText(ProjectState projectState)
     {
-        int projectStateNumber = GetProjectStateNumber(projectState);
+        int projectStateNumber = ProjectStateDisplayHelper.GetProjectStateNumber(
+            ProjectStates,
+            projectState);
 
         return ScannerDisplayFormatter.FormatProjectStateOptionText(
             projectStateNumber,

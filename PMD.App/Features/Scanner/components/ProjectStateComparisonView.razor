@@ -25,13 +25,14 @@
             @if (OldProjectState is not null && NewProjectState is not null)
             {
                 <div class="alert alert-info mb-4">
-                    <div class="fw-semibold mb-2">Verglichen wird:</div>
+                    <div class="fw-semibold mb-2">Vergleich: @OldProjectStateLabel → @NewProjectStateLabel</div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="border rounded bg-white p-3 h-100">
                                 <div class="text-muted small mb-1">Alter Stand</div>
-                                <div class="fw-semibold">@OldProjectState.ProjectName</div>
+                                <div class="fw-semibold">@OldProjectStateLabel</div>
+                                <div>@OldProjectState.ProjectName</div>
                                 <div class="small">@FormatDateTime(OldProjectState.CreatedAt)</div>
                             </div>
                         </div>
@@ -39,7 +40,8 @@
                         <div class="col-md-6">
                             <div class="border rounded bg-white p-3 h-100">
                                 <div class="text-muted small mb-1">Neuer Stand</div>
-                                <div class="fw-semibold">@NewProjectState.ProjectName</div>
+                                <div class="fw-semibold">@NewProjectStateLabel</div>
+                                <div>@NewProjectState.ProjectName</div>
                                 <div class="small">@FormatDateTime(NewProjectState.CreatedAt)</div>
                             </div>
                         </div>
@@ -153,6 +155,12 @@
 
     [Parameter]
     public ProjectState? NewProjectState { get; set; }
+
+    [Parameter]
+    public string OldProjectStateLabel { get; set; } = "Alter Stand";
+
+    [Parameter]
+    public string NewProjectStateLabel { get; set; } = "Neuer Stand";
 
     [Parameter]
     public int FileLimit { get; set; } = 20;

@@ -40,7 +40,9 @@
             ComparisonResult="@comparisonResult"
             OldProjectState="@comparedOldProjectState"
             NewProjectState="@comparedNewProjectState"
-            FileLimit="@ComparisonFileLimit" />
+            OldProjectStateLabel="@GetProjectStateLabel(comparedOldProjectState)"
+            NewProjectStateLabel="@GetProjectStateLabel(comparedNewProjectState)"                      
+            ileLimit="@ComparisonFileLimit" />
 
         <ScannerWarningsList 
             Warnings="@scanResult.Warnings"

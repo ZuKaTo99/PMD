@@ -4,6 +4,7 @@ using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Scanner;
 using PMD.App.Domain.ProjectStates;
 using PMD.App.Domain.Scanner;
+using PMD.App.Features.Scanner.Components;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -268,6 +269,13 @@ public partial class ProjectScannerPage
 
         return RememberedProjectStates
             .Any(projectState => projectState.Id == preparedProjectState.Id);
+    }
+
+    private string GetProjectStateLabel(ProjectState? projectState)
+    {
+        return ProjectStateDisplayHelper.GetProjectStateLabel(
+            RememberedProjectStates,
+            projectState);
     }
 
     private int GetDisplayedFileCount()
