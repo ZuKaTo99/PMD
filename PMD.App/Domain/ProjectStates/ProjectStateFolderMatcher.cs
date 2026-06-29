@@ -12,19 +12,39 @@ public static class ProjectStateFolderMatcher
         ArgumentNullException.ThrowIfNull(firstState);
         ArgumentNullException.ThrowIfNull(secondState);
 
-        string firstPath = NormalizeFolderPath(firstState.RootPath);
-        string secondPath = NormalizeFolderPath(secondState.RootPath);
+        return IsSameProjectFolder(firstState, secondState.RootPath);
+    }
+
+    public static bool IsSameProjectFolder(
+        ProjectState projectState,
+        string rootPath)
+    {
+        ArgumentNullException.ThrowIfNull(projectState);
+        ArgumentException.ThrowIfNullOrWhiteSpace(rootPath);
+
+        string projectStateRootPath = NormalizeFolderPath(projectState.RootPath);
+        string comparedRootPath = NormalizeFolderPath(rootPath);
 
         return string.Equals(
-            firstPath,
-            secondPath,
+            projectStateRootPath,
+            comparedRootPath,
             StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeFolderPath(string folderPath)
     {
-        return folderPath
-            .Trim()
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        ArgumentException.ThrowIfNullOrWhiteSpace(folderPath);
+
+        string fullPath = Path.GetFullPath(folderPath.Trim());
+        string? root = Path.GetPathRoot(fullPath);
+
+        if (string.Equals(fullPath, root, StringComparison.OrdinalIgnoreCase))
+        {
+            return fullPath;
+        }
+
+        return fullPath.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar);
     }
 }

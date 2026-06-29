@@ -1,5 +1,6 @@
 @page "/projekte/{ProjectId:guid}"
 @namespace PMD.App.Features.Projects.Pages
+@using PMD.App.Features.Projects.Components
 
 <PageTitle>PMD - Projekt</PageTitle>
 
@@ -19,6 +20,8 @@
                 Hier entsteht die Projektansicht mit Ständen, Dateien, Vergleichen und später KI-Auswertung.
             </p>
         </div>
+
+        <ProjectStatesOverviewCard ProjectStates="@CurrentProjectStates" />
 
         <div class="card mb-4">
             <div class="card-header">
