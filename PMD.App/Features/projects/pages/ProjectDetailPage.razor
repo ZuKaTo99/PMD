@@ -52,8 +52,28 @@
             </div>
         </div>
 
-        <a class="btn btn-primary" href="projektpruefung">
-            Projekt erneut prüfen
-        </a>
+        @if (!string.IsNullOrWhiteSpace(InfoMessage))
+        {
+            <div class="alert alert-success">
+                @InfoMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @ErrorMessage
+            </div>
+        }
+
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-primary" @onclick="ScanCurrentProject">
+                Projekt erneut prüfen
+            </button>
+
+            <a class="btn btn-outline-secondary" href="projektpruefung">
+                Anderen Projektordner prüfen
+            </a>
+        </div>
     }
 </div>
