@@ -17,9 +17,11 @@
             <div class="text-muted small mb-1">PMD - Projekt</div>
             <h1>@CurrentProject.Name</h1>
             <p class="text-muted mb-0">
-                Hier entsteht die Projektansicht mit Ständen, Dateien, Vergleichen und später KI-Auswertung.
+                Hier entsteht die Projektansicht mit Projektverlauf, Dateien, Änderungen und später KI-Auswertung.
             </p>
         </div>
+
+        <LatestProjectCheckSummaryCard ProjectState="@LatestProjectState" />
 
         <ProjectStatesOverviewCard ProjectStates="@CurrentProjectStates" />
 
@@ -71,7 +73,7 @@
                 Projekt erneut prüfen
             </button>
 
-            <a class="btn btn-outline-secondary" href="projektpruefung">
+            <a class="btn btn-outline-secondary" href="/projektpruefung">
                 Anderen Projektordner prüfen
             </a>
         </div>

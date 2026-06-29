@@ -30,6 +30,8 @@ public partial class ProjectDetailPage
     protected IReadOnlyList<ProjectState> CurrentProjectStates { get; private set; } =
         Array.Empty<ProjectState>();
 
+    protected ProjectState? LatestProjectState => CurrentProjectStates.FirstOrDefault();
+
     protected string? InfoMessage { get; private set; }
 
     protected string? ErrorMessage { get; private set; }
@@ -98,6 +100,7 @@ public partial class ProjectDetailPage
             .Where(projectState => ProjectStateFolderMatcher.IsSameProjectFolder(
                 projectState,
                 CurrentProject.RootPath))
+            .OrderByDescending(projectState => projectState.ScannedAt)
             .ToList();
     }
 }

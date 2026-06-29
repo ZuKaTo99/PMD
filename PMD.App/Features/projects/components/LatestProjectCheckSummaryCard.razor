@@ -1,0 +1,75 @@
+@namespace PMD.App.Features.Projects.Components
+@using PMD.App.Domain.ProjectStates
+@using System.Linq
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Letzte Prüfung</h2>
+    </div>
+
+    <div class="card-body">
+        @if (ProjectState is null)
+        {
+            <p class="text-muted mb-0">
+                Für dieses Projekt wurde noch keine Prüfung gespeichert.
+            </p>
+        }
+        else
+        {
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Geprüft am</div>
+                        <div class="fw-semibold">@ProjectState.ScannedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Dateien</div>
+                        <div class="fw-semibold">@ProjectState.Files.Count</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Gesamtgröße</div>
+                        <div class="fw-semibold">@FormatFileSize(ProjectState.Files.Sum(file => file.SizeInBytes))</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Status</div>
+                        <div class="fw-semibold">Im Projektverlauf gespeichert</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ProjectState? ProjectState { get; set; }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024)
+        {
+            return $"{sizeInBytes} B";
+        }
+
+        if (sizeInBytes < 1024 * 1024)
+        {
+            return $"{sizeInBytes / 1024d:0.0} KB";
+        }
+
+        if (sizeInBytes < 1024 * 1024 * 1024)
+        {
+            return $"{sizeInBytes / 1024d / 1024d:0.0} MB";
+        }
+
+        return $"{sizeInBytes / 1024d / 1024d / 1024d:0.0} GB";
+    }
+}
