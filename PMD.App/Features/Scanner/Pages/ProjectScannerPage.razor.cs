@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Maui.Storage;
 using Microsoft.AspNetCore.Components;
+using PMD.App.Application.Projects;
+using PMD.App.Domain.Projects;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Scanner;
 using PMD.App.Domain.ProjectStates;
@@ -23,6 +25,9 @@ public partial class ProjectScannerPage
     [Inject]
     private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } = default!;
 
+    [Inject]
+    private IProjectMemoryStore ProjectMemoryStore { get; set; } = default!;
+
 
     private const int DisplayedFileLimit = 50;
     private const int ComparisonFileLimit = 20;
@@ -32,6 +37,7 @@ public partial class ProjectScannerPage
     private string? infoMessage;
     private ProjectFolderScanResult? scanResult;
     private ProjectState? preparedProjectState;
+    private Project? currentProject;
     private IReadOnlyList<ProjectState> RememberedProjectStates => ProjectStateMemoryStore.ProjectStates;
     private ProjectStateComparisonResult? comparisonResult;
     private ProjectState? comparedOldProjectState;
@@ -50,6 +56,7 @@ public partial class ProjectScannerPage
     {
         scanResult = null;
         preparedProjectState = null;
+        currentProject = null;
     }
 
     private void ClearComparisonData()
@@ -124,11 +131,16 @@ public partial class ProjectScannerPage
         {
             scanResult = ProjectFolderScanner.ScanFolder(folderPath);
 
+            currentProject = ProjectMemoryStore.RememberScannedProject(
+                scanResult.ProjectName,
+                scanResult.RootPath,
+                scanResult.ScannedAt);
+
             preparedProjectState = ProjectStateBuilder.CreateFromScanResult(
                 scanResult.ProjectName,
                 scanResult);
 
-            ShowInfoMessage("Projektprüfung abgeschlossen. Projektstand wurde vorbereitet.");
+            ShowInfoMessage("Projektprüfung abgeschlossen. Projekt " + currentProject.Name + " wurde in die Projektliste aufgenommen.");
         }
         catch (Exception ex)
         {

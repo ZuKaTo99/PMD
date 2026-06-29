@@ -75,7 +75,6 @@
       <Folder Include="Components\Shared\" />
       <Folder Include="Features\Dashboard\Components\" />
       <Folder Include="Features\Projects\Components\" />
-      <Folder Include="Features\Projects\Pages\" />
     </ItemGroup>
 
 </Project>

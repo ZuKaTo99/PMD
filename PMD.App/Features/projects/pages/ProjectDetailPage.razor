@@ -1,0 +1,56 @@
+@page "/projekte/{ProjectId:guid}"
+@namespace PMD.App.Features.Projects.Pages
+
+<PageTitle>PMD - Projekt</PageTitle>
+
+<div class="container-fluid">
+    @if (CurrentProject is null)
+    {
+        <div class="alert alert-warning">
+            Das Projekt wurde nicht gefunden. Es ist aktuell nur für diese laufende Sitzung verfügbar.
+        </div>
+    }
+    else
+    {
+        <div class="mb-4">
+            <div class="text-muted small mb-1">PMD - Projekt</div>
+            <h1>@CurrentProject.Name</h1>
+            <p class="text-muted mb-0">
+                Hier entsteht die Projektansicht mit Ständen, Dateien, Vergleichen und später KI-Auswertung.
+            </p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Projektinformationen</h2>
+            </div>
+
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="text-muted small">Projektordner</div>
+                    <code>@CurrentProject.RootPath</code>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="text-muted small">Angelegt am</div>
+                            <div>@CurrentProject.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="text-muted small">Zuletzt geprüft am</div>
+                            <div>@CurrentProject.LastScannedAt.ToString("dd.MM.yyyy HH:mm:ss")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <a class="btn btn-primary" href="projektpruefung">
+            Projekt erneut prüfen
+        </a>
+    }
+</div>

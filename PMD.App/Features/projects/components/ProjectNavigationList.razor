@@ -1,0 +1,42 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components.Routing
+@using PMD.App.Application.Projects
+@using PMD.App.Domain.Projects
+@inject IProjectMemoryStore ProjectMemoryStore
+@implements IDisposable
+
+@if (ProjectMemoryStore.Projects.Count > 0)
+{
+    <div class="nav-item px-3 mt-3">
+        <div class="text-white-50 small px-3 mb-1">
+            Meine Projekte
+        </div>
+    </div>
+
+    @foreach (Project project in ProjectMemoryStore.Projects)
+    {
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@($"projekte/{project.Id}")">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                @project.Name
+            </NavLink>
+        </div>
+    }
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        ProjectMemoryStore.ProjectsChanged += OnProjectsChanged;
+    }
+
+    private void OnProjectsChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ProjectMemoryStore.ProjectsChanged -= OnProjectsChanged;
+    }
+}

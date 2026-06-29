@@ -6,6 +6,8 @@ namespace PMD.App.Application.Projects;
 
 public interface IProjectMemoryStore
 {
+    event Action? ProjectsChanged;
+
     IReadOnlyList<Project> Projects { get; }
 
     Project RememberScannedProject(

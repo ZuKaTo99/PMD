@@ -11,6 +11,8 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
 {
     private readonly List<Project> projects = new();
 
+    public event Action? ProjectsChanged;
+
     public IReadOnlyList<Project> Projects => projects;
 
     public Project RememberScannedProject(
@@ -41,6 +43,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
             if (existingIndex >= 0)
             {
                 projects[existingIndex] = updatedProject;
+                ProjectsChanged?.Invoke();
             }
 
             return updatedProject;
@@ -56,6 +59,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
         };
 
         projects.Add(newProject);
+        ProjectsChanged?.Invoke();
 
         return newProject;
     }
@@ -84,6 +88,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
     public void Clear()
     {
         projects.Clear();
+        ProjectsChanged?.Invoke();
     }
 
     private static string NormalizeRootPath(string rootPath)
