@@ -17,8 +17,6 @@ public partial class RememberedProjectStatesList
         int projectStateNumber,
         ProjectState projectState)
     {
-        string projectStateLabel = ScannerDisplayFormatter.FormatProjectStateLabel(projectStateNumber);
-
-        return $"{projectStateLabel} · {projectState.ProjectName}";
+        return $"Prüfung {projectStateNumber} · {projectState.ProjectName}";
     }
 }

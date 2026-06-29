@@ -140,7 +140,9 @@ public partial class ProjectScannerPage
                 scanResult.ProjectName,
                 scanResult);
 
-            ShowInfoMessage("Projektprüfung abgeschlossen. Projekt " + currentProject.Name + " wurde in die Projektliste aufgenommen.");
+            ProjectStateMemoryStore.Remember(preparedProjectState);
+
+            ShowInfoMessage("Projektprüfung abgeschlossen. Die Prüfung wurde im Projektverlauf gespeichert.");
         }
         catch (Exception ex)
         {
@@ -192,7 +194,7 @@ public partial class ProjectScannerPage
         selectedNewProjectStateId = null;
 
         ClearComparisonData();
-        ShowInfoMessage("Gemerkte Stände wurden geleert.");
+        ShowInfoMessage("Projektverlauf dieser Sitzung wurde geleert.");
     }
 
     private void CompareLatestProjectStates()

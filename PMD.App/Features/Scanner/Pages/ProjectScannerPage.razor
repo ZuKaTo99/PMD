@@ -21,11 +21,6 @@
             ScanResult="@scanResult"
             DisplayedFileCount="@GetDisplayedFileCount()" />
 
-        <PreparedProjectStateView 
-            PreparedProjectState="@preparedProjectState"
-            IsAlreadyRemembered="@IsPreparedProjectStateRemembered()"
-            OnRememberProjectState="RememberPreparedProjectState" />
-
         <RememberedProjectStatesList 
             ProjectStates="@RememberedProjectStates"                         
             OnClearRememberedProjectStates="ClearRememberedProjectStates" />

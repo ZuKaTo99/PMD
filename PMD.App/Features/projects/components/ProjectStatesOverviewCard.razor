@@ -5,14 +5,14 @@
 
 <div class="card mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">Projektstände dieses Projekts</h2>
+        <h2 class="h5 mb-0">Projektverlauf dieses Projekts</h2>
     </div>
 
     <div class="card-body">
         @if (ProjectStates.Count == 0)
         {
             <div class="alert alert-info mb-0">
-                Für dieses Projekt ist noch kein Projektstand gemerkt.
+                Für dieses Projekt wurde in dieser Sitzung noch keine Prüfung gespeichert.
             </div>
         }
         else
@@ -25,7 +25,7 @@
                 <table class="table table-sm table-striped align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Stand</th>
+                            <th>Prüfung</th>
                             <th>Erstellt am</th>
                             <th>Dateien</th>
                             <th>Größe</th>
@@ -40,7 +40,7 @@
                             int projectStateNumber = ProjectStates.Count - index;
 
                             <tr>
-                                <td>@ScannerDisplayFormatter.FormatProjectStateLabel(projectStateNumber)</td>
+                                <td>Prüfung @projectStateNumber</td>
                                 <td>@projectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
                                 <td>@projectState.FileCount</td>
                                 <td>@ScannerDisplayFormatter.FormatFileSize(projectState.TotalSizeInBytes)</td>
