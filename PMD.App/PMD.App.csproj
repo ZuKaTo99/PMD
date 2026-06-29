@@ -71,14 +71,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Application\Projects\" />
       <Folder Include="Components\Navigation\" />
       <Folder Include="Components\Shared\" />
-      <Folder Include="Domain\Projects\" />
       <Folder Include="Features\Dashboard\Components\" />
       <Folder Include="Features\Projects\Components\" />
       <Folder Include="Features\Projects\Pages\" />
-      <Folder Include="Infrastructure\Projects\" />
     </ItemGroup>
 
 </Project>
