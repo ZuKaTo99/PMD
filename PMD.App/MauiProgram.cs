@@ -1,6 +1,8 @@
 using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Storage;
 using Microsoft.Extensions.Logging;
+using PMD.App.Application.Database;
+using PMD.App.Infrastructure.Database;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
 using PMD.App.Application.Scanner;
@@ -27,6 +29,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IProjectOverviewService, ProjectOverviewService>();
         builder.Services.AddSingleton<IProjectFolderScanner, ProjectFolderScanner>();
         builder.Services.AddSingleton<IFolderPicker>(FolderPicker.Default);
+        builder.Services.AddSingleton<IPmdDatabasePathProvider, PmdDatabasePathProvider>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
