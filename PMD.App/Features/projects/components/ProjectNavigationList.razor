@@ -52,8 +52,9 @@
             return "P";
         }
 
-        string[] parts = projectName
-            .Split(' ', '-', '_', '.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        string[] parts = projectName.Split(
+            new[] { '_', '-', ' ' },
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         if (parts.Length == 0)
         {
