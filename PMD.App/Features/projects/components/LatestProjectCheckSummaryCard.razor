@@ -20,7 +20,9 @@
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="border rounded p-3 h-100">
                         <div class="text-muted small">Geprüft am</div>
-                        <div class="fw-semibold">@ProjectState.ScannedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                        <div class="fw-semibold">
+                            @ProjectDisplayFormatter.FormatDateTime(ProjectState.ScannedAt)
+                        </div>
                     </div>
                 </div>
 
@@ -34,7 +36,9 @@
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="border rounded p-3 h-100">
                         <div class="text-muted small">Gesamtgröße</div>
-                        <div class="fw-semibold">@FormatFileSize(ProjectState.Files.Sum(file => file.SizeInBytes))</div>
+                        <div class="fw-semibold">
+                            @ProjectDisplayFormatter.FormatFileSize(ProjectState.Files.Sum(file => file.SizeInBytes))
+                        </div>
                     </div>
                 </div>
 
@@ -52,24 +56,4 @@
 @code {
     [Parameter]
     public ProjectState? ProjectState { get; set; }
-
-    private static string FormatFileSize(long sizeInBytes)
-    {
-        if (sizeInBytes < 1024)
-        {
-            return $"{sizeInBytes} B";
-        }
-
-        if (sizeInBytes < 1024 * 1024)
-        {
-            return $"{sizeInBytes / 1024d:0.0} KB";
-        }
-
-        if (sizeInBytes < 1024 * 1024 * 1024)
-        {
-            return $"{sizeInBytes / 1024d / 1024d:0.0} MB";
-        }
-
-        return $"{sizeInBytes / 1024d / 1024d / 1024d:0.0} GB";
-    }
 }

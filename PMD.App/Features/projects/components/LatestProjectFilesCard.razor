@@ -1,0 +1,71 @@
+@namespace PMD.App.Features.Projects.Components
+@using PMD.App.Domain.ProjectStates
+@using System.Linq
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Dateien der letzten Prüfung</h2>
+    </div>
+
+    <div class="card-body">
+        @if (ProjectState is null)
+        {
+            <p class="text-muted mb-0">
+                Es sind noch keine Dateien für dieses Projekt verfügbar.
+            </p>
+        }
+        else if (ProjectState.Files.Count == 0)
+        {
+            <p class="text-muted mb-0">
+                Bei der letzten Prüfung wurden keine Dateien gefunden.
+            </p>
+        }
+        else
+        {
+            <p class="text-muted">
+                Angezeigt werden die ersten 25 Dateien aus der letzten Prüfung.
+            </p>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Datei</th>
+                            <th>Typ</th>
+                            <th>Größe</th>
+                            <th>Geändert am</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var file in ProjectState.Files
+                            .OrderBy(file => file.RelativePath)
+                            .Take(25))
+                        {
+                            <tr>
+                                <td>
+                                    <code>@file.RelativePath</code>
+                                </td>
+                                <td>@ProjectDisplayFormatter.FormatExtension(file.Extension)</td>
+                                <td>@ProjectDisplayFormatter.FormatFileSize(file.SizeInBytes)</td>
+                                <td>@ProjectDisplayFormatter.FormatDateTime(file.LastChangedAt)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (ProjectState.Files.Count > 25)
+            {
+                <div class="text-muted small mt-2">
+                    Weitere Dateien werden später in einer eigenen Dateiansicht angezeigt.
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ProjectState? ProjectState { get; set; }
+}
