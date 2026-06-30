@@ -7,7 +7,7 @@
 
 <div class="card mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">Dateien</h2>
+        <h2 class="h5 mb-0">Größere Dateien</h2>
     </div>
 
     <div class="card-body">
@@ -17,13 +17,16 @@
         }
         else
         {
-            <div class="d-flex flex-column gap-2">
-                @foreach (var file in ProjectState.Files.OrderBy(file => file.RelativePath).Take(10))
+            <div class="row g-3">
+                @foreach (var file in ProjectState.Files
+                    .OrderByDescending(file => file.SizeInBytes)
+                    .ThenBy(file => file.RelativePath)
+                    .Take(6))
                 {
-                    <div class="border rounded p-2">
-                        <div class="text-truncate"><code>@file.RelativePath</code></div>
-                        <div class="text-muted small">
-                            @ProjectOverviewFormatter.FormatExtension(file.Extension) · @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes) · @ProjectOverviewFormatter.FormatDateTime(file.LastChangedAt)
+                    <div class="col-12 col-xl-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="text-truncate"><code>@file.RelativePath</code></div>
+                            <div class="text-muted small">@ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)</div>
                         </div>
                     </div>
                 }

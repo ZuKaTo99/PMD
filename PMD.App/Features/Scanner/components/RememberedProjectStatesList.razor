@@ -1,80 +1,8 @@
 @namespace PMD.App.Features.Scanner.Components
-@using PMD.App.Domain.ProjectStates
+@using Microsoft.AspNetCore.Components
+@using System.Collections.Generic
 
-@if (ProjectStates.Count > 0)
-{
-    <div class="card mb-4">
-        <div class="card-header">
-            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
-                <div>
-                    <h2 class="h5 mb-1">Projektverlauf dieser Sitzung</h2>
-                    <div class="text-muted small">
-                        Hier siehst du die gemerkten Prüfungen aus dieser laufenden Sitzung.
-                    </div>
-                </div>
-
-                <div>
-                    <span class="badge bg-secondary">
-                        @ProjectStates.Count Prüfungen
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-body">
-            <div class="d-flex flex-column gap-3">
-                @for (var i = 0; i < ProjectStates.Count; i++)
-                {
-                    ProjectState projectState = ProjectStates[i];
-                    int projectStateNumber = ProjectStates.Count - i;
-
-                    <div class="border rounded p-3">
-                        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
-                            <div>
-                                <div class="fw-semibold">
-                                    @BuildProjectStateTitle(projectStateNumber, projectState)
-                                </div>
-
-                                <div class="text-muted small">
-                                    Geprüft am @projectState.ScannedAt.ToString("dd.MM.yyyy HH:mm")
-                                </div>
-                            </div>
-
-                            <div>
-                                <span class="badge bg-light text-dark border">
-                                    @projectState.FileCount Dateien
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-4">
-                                <div class="text-muted small">Erstellt am</div>
-                                <div>@projectState.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="text-muted small">Gesamtgröße</div>
-                                <div>@ScannerDisplayFormatter.FormatFileSize(projectState.TotalSizeInBytes)</div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="text-muted small">Projektordner</div>
-                                <div class="text-truncate">
-                                    <code>@projectState.RootPath</code>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-
-            <div class="mt-3">
-                <button class="btn btn-outline-danger"
-                        @onclick="OnClearRememberedProjectStates">
-                    Verlauf dieser Sitzung leeren
-                </button>
-            </div>
-        </div>
-    </div>
+@code {
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
 }

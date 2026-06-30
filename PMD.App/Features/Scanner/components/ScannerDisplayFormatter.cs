@@ -39,4 +39,24 @@ public static class ScannerDisplayFormatter
 
         return $"{duration.TotalSeconds:0.0} Sekunden";
     }
+
+    public static string FormatExtension(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return "ohne Endung";
+        }
+
+        return extension;
+    }
+
+    public static string FormatProjectStateLabel(int projectStateNumber)
+    {
+        if (projectStateNumber <= 0)
+        {
+            return "Prüfung";
+        }
+
+        return $"Prüfung {projectStateNumber}";
+    }
 }

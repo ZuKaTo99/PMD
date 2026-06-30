@@ -1,0 +1,150 @@
+@namespace PMD.App.Features.Projects.Components
+@using System
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectStates
+@using System.Linq
+
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+            <div>
+                <h2 class="h5 mb-1">Projektanalyse</h2>
+                <div class="text-muted small">
+                    Kompakte Auswertung der letzten Prüfung, ohne die Projektseite zur Dateitabelle zu machen.
+                </div>
+            </div>
+
+            @if (ProjectState is not null)
+            {
+                <span class="badge bg-secondary align-self-start align-self-lg-center">
+                    Aus letzter Prüfung
+                </span>
+            }
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if (ProjectState is null)
+        {
+            <p class="text-muted mb-0">
+                Nach der ersten Prüfung kann PMD den Projektinhalt zusammenfassen.
+            </p>
+        }
+        else if (ProjectState.Files.Count == 0)
+        {
+            <p class="text-muted mb-0">
+                Bei der letzten Prüfung wurden keine Dateien gefunden.
+            </p>
+        }
+        else
+        {
+            <div class="row g-3">
+                <div class="col-12 col-xl-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold mb-2">Häufige Dateitypen</div>
+
+                        @foreach (var fileType in GetFileTypeSummaries())
+                        {
+                            <div class="d-flex justify-content-between gap-3 mb-1">
+                                <span>@fileType.Extension</span>
+                                <span class="text-muted">@fileType.FileCount Dateien</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-12 col-xl-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold mb-2">Größere Dateien</div>
+
+                        @foreach (var file in GetLargestFiles())
+                        {
+                            <div class="mb-2">
+                                <div class="text-truncate">
+                                    <code>@file.RelativePath</code>
+                                </div>
+                                <div class="text-muted small">
+                                    @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-12 col-xl-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold mb-2">Prüfung</div>
+
+                        <div class="d-flex justify-content-between gap-3 mb-1">
+                            <span class="text-muted">Prüfdauer</span>
+                            <span>@ProjectOverviewFormatter.FormatDuration(ProjectState.ScanDuration)</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between gap-3 mb-1">
+                            <span class="text-muted">Geprüfte Ordner</span>
+                            <span>@ProjectState.ScannedFolderCount</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between gap-3 mb-1">
+                            <span class="text-muted">Übersprungene Ordner</span>
+                            <span>@ProjectState.IgnoredFolderCount</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between gap-3">
+                            <span class="text-muted">Hinweise</span>
+                            <span>@ProjectState.WarningCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-light border mt-3 mb-0">
+                Die Daten bleiben erhalten. Ausführliche Dateien-, Code- und Änderungsansichten werden später als eigene Bereiche aufgebaut.
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ProjectState? ProjectState { get; set; }
+
+    private IReadOnlyList<FileTypeSummary> GetFileTypeSummaries()
+    {
+        if (ProjectState is null)
+        {
+            return Array.Empty<FileTypeSummary>();
+        }
+
+        return ProjectState.Files
+            .GroupBy(file => ProjectOverviewFormatter.FormatExtension(file.Extension))
+            .Select(group => new FileTypeSummary(
+                group.Key,
+                group.Count(),
+                group.Sum(file => file.SizeInBytes)))
+            .OrderByDescending(fileType => fileType.FileCount)
+            .ThenBy(fileType => fileType.Extension)
+            .Take(5)
+            .ToList();
+    }
+
+    private IReadOnlyList<ProjectStateFile> GetLargestFiles()
+    {
+        if (ProjectState is null)
+        {
+            return Array.Empty<ProjectStateFile>();
+        }
+
+        return ProjectState.Files
+            .OrderByDescending(file => file.SizeInBytes)
+            .ThenBy(file => file.RelativePath)
+            .Take(4)
+            .ToList();
+    }
+
+    private sealed record FileTypeSummary(
+        string Extension,
+        int FileCount,
+        long TotalSizeInBytes);
+}

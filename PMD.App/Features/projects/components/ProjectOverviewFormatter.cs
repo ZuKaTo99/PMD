@@ -35,6 +35,16 @@ internal static class ProjectOverviewFormatter
         return dateTime.ToString("dd.MM.yyyy HH:mm");
     }
 
+    public static string FormatExtension(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return "ohne Endung";
+        }
+
+        return extension;
+    }
+
     public static string FormatDuration(TimeSpan duration)
     {
         if (duration.TotalMilliseconds < 1000)

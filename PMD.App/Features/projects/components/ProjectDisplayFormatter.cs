@@ -11,17 +11,23 @@ internal static class ProjectDisplayFormatter
             return $"{sizeInBytes} B";
         }
 
-        if (sizeInBytes < 1024 * 1024)
+        double sizeInKb = sizeInBytes / 1024d;
+
+        if (sizeInKb < 1024)
         {
-            return $"{sizeInBytes / 1024d:0.0} KB";
+            return $"{sizeInKb:0.0} KB";
         }
 
-        if (sizeInBytes < 1024 * 1024 * 1024)
+        double sizeInMb = sizeInKb / 1024d;
+
+        if (sizeInMb < 1024)
         {
-            return $"{sizeInBytes / 1024d / 1024d:0.0} MB";
+            return $"{sizeInMb:0.0} MB";
         }
 
-        return $"{sizeInBytes / 1024d / 1024d / 1024d:0.0} GB";
+        double sizeInGb = sizeInMb / 1024d;
+
+        return $"{sizeInGb:0.0} GB";
     }
 
     public static string FormatDateTime(DateTime dateTime)
@@ -33,7 +39,7 @@ internal static class ProjectDisplayFormatter
     {
         if (string.IsNullOrWhiteSpace(extension))
         {
-            return "ohne Typ";
+            return "ohne Endung";
         }
 
         return extension;

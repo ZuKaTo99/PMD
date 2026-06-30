@@ -1,59 +1,34 @@
 @namespace PMD.App.Features.Projects.Components
+@using System
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectStates
 @using System.Linq
 
 <div class="card mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">Dateitypen der letzten Prüfung</h2>
+        <h2 class="h5 mb-0">Dateitypen</h2>
     </div>
 
     <div class="card-body">
-        @if (ProjectState is null)
+        @if (ProjectState is null || ProjectState.Files.Count == 0)
         {
-            <p class="text-muted mb-0">
-                Es sind noch keine Dateitypen für dieses Projekt verfügbar.
-            </p>
-        }
-        else if (ProjectState.Files.Count == 0)
-        {
-            <p class="text-muted mb-0">
-                Bei der letzten Prüfung wurden keine Dateien gefunden.
-            </p>
+            <p class="text-muted mb-0">Noch keine Dateitypen verfügbar.</p>
         }
         else
         {
-            <p class="text-muted">
-                Diese Übersicht zeigt, welche Dateitypen im Projekt aktuell am häufigsten vorkommen.
-            </p>
-
             <div class="row g-3">
                 @foreach (var fileType in GetFileTypeSummaries())
                 {
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Dateityp</div>
-                            <div class="fw-semibold mb-2">@fileType.Extension</div>
-
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Dateien</span>
-                                <span>@fileType.FileCount</span>
-                            </div>
-
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Größe</span>
-                                <span>@ProjectDisplayFormatter.FormatFileSize(fileType.TotalSizeInBytes)</span>
-                            </div>
+                            <div class="fw-semibold">@fileType.Extension</div>
+                            <div class="text-muted small">@fileType.FileCount Dateien</div>
+                            <div class="text-muted small">@ProjectOverviewFormatter.FormatFileSize(fileType.TotalSizeInBytes)</div>
                         </div>
                     </div>
                 }
             </div>
-
-            @if (GetAllFileTypeCount() > 8)
-            {
-                <div class="text-muted small mt-2">
-                    Weitere Dateitypen werden später in einer ausführlichen Dateiansicht angezeigt.
-                </div>
-            }
         }
     </div>
 </div>
@@ -70,7 +45,7 @@
         }
 
         return ProjectState.Files
-            .GroupBy(file => ProjectDisplayFormatter.FormatExtension(file.Extension))
+            .GroupBy(file => ProjectOverviewFormatter.FormatExtension(file.Extension))
             .Select(group => new FileTypeSummary(
                 group.Key,
                 group.Count(),
@@ -79,19 +54,6 @@
             .ThenBy(fileType => fileType.Extension)
             .Take(8)
             .ToList();
-    }
-
-    private int GetAllFileTypeCount()
-    {
-        if (ProjectState is null)
-        {
-            return 0;
-        }
-
-        return ProjectState.Files
-            .Select(file => ProjectDisplayFormatter.FormatExtension(file.Extension))
-            .Distinct()
-            .Count();
     }
 
     private sealed record FileTypeSummary(
