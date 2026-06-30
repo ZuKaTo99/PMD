@@ -15,6 +15,8 @@ public sealed class ProjectStateRecord
 
     public string RootPath { get; set; } = string.Empty;
 
+    public DateTime CreatedAt { get; set; }
+
     public DateTime ScannedAt { get; set; }
 
     public int FileCount { get; set; }

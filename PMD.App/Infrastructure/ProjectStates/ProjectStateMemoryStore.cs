@@ -10,7 +10,18 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
 {
     private const int MaxRememberedProjectStates = 50;
 
-    private readonly List<ProjectState> projectStates = new();
+    private readonly IProjectStateRepository projectStateRepository;
+    private readonly List<ProjectState> projectStates;
+
+    public ProjectStateMemoryStore(IProjectStateRepository projectStateRepository)
+    {
+        this.projectStateRepository = projectStateRepository;
+
+        projectStates = projectStateRepository
+            .GetAll()
+            .Take(MaxRememberedProjectStates)
+            .ToList();
+    }
 
     public event Action? ProjectStatesChanged;
 
@@ -37,6 +48,8 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
                 projectStates.Count - MaxRememberedProjectStates);
         }
 
+        projectStateRepository.Save(projectState);
+
         ProjectStatesChanged?.Invoke();
         return true;
     }
@@ -44,6 +57,7 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
     public void Clear()
     {
         projectStates.Clear();
+        projectStateRepository.DeleteAll();
         ProjectStatesChanged?.Invoke();
     }
 }
