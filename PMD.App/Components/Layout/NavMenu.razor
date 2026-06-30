@@ -2,7 +2,10 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">PMD</a>
+        <a class="navbar-brand" href="">
+            <span class="brand-mark" aria-hidden="true">P</span>
+            <span class="brand-text">PMD</span>
+        </a>
     </div>
 </div>
 
@@ -10,16 +13,20 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Übersicht
-            </NavLink>
-        </div>
+        <div class="navigation-group">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
+                    <span>Übersicht</span>
+                </NavLink>
+            </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="projektpruefung">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Projektprüfung
-            </NavLink>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="projektpruefung">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                    <span>Projektprüfung</span>
+                </NavLink>
+            </div>
         </div>
 
         <ProjectNavigationList />

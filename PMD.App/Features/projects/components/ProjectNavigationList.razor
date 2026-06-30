@@ -1,5 +1,6 @@
 @namespace PMD.App.Features.Projects.Components
 @using Microsoft.AspNetCore.Components.Routing
+@using System
 @using PMD.App.Application.Projects
 @using PMD.App.Domain.Projects
 @inject IProjectMemoryStore ProjectMemoryStore
@@ -7,20 +8,25 @@
 
 @if (ProjectMemoryStore.Projects.Count > 0)
 {
-    <section class="project-navigation-section">
-        <div class="project-navigation-title">
-            Meine Projekte
+    <section class="project-navigation-section" aria-label="Meine Projekte">
+        <div class="project-navigation-header">
+            <span>Meine Projekte</span>
+            <span class="project-navigation-count">@ProjectMemoryStore.Projects.Count</span>
         </div>
 
         <div class="project-navigation-list">
             @foreach (Project project in ProjectMemoryStore.Projects)
             {
-                <NavLink class="project-navigation-link" href="@($"projekte/{project.Id}")">
-                    <span class="project-navigation-icon" aria-hidden="true">P</span>
+                <NavLink class="project-navigation-card" href="@($"projekte/{project.Id}")" title="@project.RootPath">
+                    <span class="project-navigation-marker" aria-hidden="true">
+                        @GetProjectInitials(project.Name)
+                    </span>
 
                     <span class="project-navigation-content">
                         <span class="project-navigation-name">@project.Name</span>
-                        <span class="project-navigation-path">@GetShortProjectPath(project.RootPath)</span>
+                        <span class="project-navigation-meta">
+                            Geprüft @FormatNavigationDate(project.LastScannedAt)
+                        </span>
                     </span>
                 </NavLink>
             }
@@ -39,22 +45,32 @@
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private static string GetShortProjectPath(string rootPath)
+    private static string GetProjectInitials(string projectName)
     {
-        if (string.IsNullOrWhiteSpace(rootPath))
+        if (string.IsNullOrWhiteSpace(projectName))
         {
-            return "Projektordner";
+            return "P";
         }
 
-        string normalizedPath = rootPath.TrimEnd('\\', '/');
-        string folderName = System.IO.Path.GetFileName(normalizedPath);
+        string[] parts = projectName
+            .Split(' ', '-', '_', '.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        if (string.IsNullOrWhiteSpace(folderName))
+        if (parts.Length == 0)
         {
-            return "Projektordner";
+            return projectName[..1].ToUpperInvariant();
         }
 
-        return folderName;
+        if (parts.Length == 1)
+        {
+            return parts[0][..1].ToUpperInvariant();
+        }
+
+        return string.Concat(parts[0][..1], parts[1][..1]).ToUpperInvariant();
+    }
+
+    private static string FormatNavigationDate(DateTime dateTime)
+    {
+        return dateTime.ToString("dd.MM. HH:mm");
     }
 
     public void Dispose()

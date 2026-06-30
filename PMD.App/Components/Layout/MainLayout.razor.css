@@ -10,9 +10,12 @@ main {
 
 .sidebar {
     background:
-        radial-gradient(circle at top left, rgba(45, 127, 249, 0.24), transparent 35%),
-        linear-gradient(180deg, #071733 0%, #11155a 48%, #3a0647 100%);
-    box-shadow: 1px 0 0 rgba(255, 255, 255, 0.06);
+        radial-gradient(circle at 20% 8%, rgba(68, 144, 255, 0.32), transparent 32%),
+        radial-gradient(circle at 80% 100%, rgba(166, 76, 255, 0.28), transparent 36%),
+        linear-gradient(180deg, #071833 0%, #111b57 45%, #340744 100%);
+    box-shadow:
+        1px 0 0 rgba(255, 255, 255, 0.07),
+        18px 0 42px rgba(10, 12, 24, 0.08);
 }
 
 .top-row {
@@ -55,7 +58,7 @@ main {
     }
 
     .sidebar {
-        width: 280px;
+        width: 300px;
         height: 100vh;
         position: sticky;
         top: 0;
