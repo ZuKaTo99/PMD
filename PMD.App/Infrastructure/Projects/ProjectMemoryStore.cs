@@ -9,7 +9,14 @@ namespace PMD.App.Infrastructure.Projects;
 
 public sealed class ProjectMemoryStore : IProjectMemoryStore
 {
-    private readonly List<Project> projects = new();
+    private readonly IProjectRepository projectRepository;
+    private readonly List<Project> projects;
+
+    public ProjectMemoryStore(IProjectRepository projectRepository)
+    {
+        this.projectRepository = projectRepository;
+        projects = projectRepository.GetAll().ToList();
+    }
 
     public event Action? ProjectsChanged;
 
@@ -43,8 +50,10 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
             if (existingIndex >= 0)
             {
                 projects[existingIndex] = updatedProject;
-                ProjectsChanged?.Invoke();
             }
+
+            projectRepository.Save(updatedProject);
+            ProjectsChanged?.Invoke();
 
             return updatedProject;
         }
@@ -59,6 +68,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
         };
 
         projects.Add(newProject);
+        projectRepository.Save(newProject);
         ProjectsChanged?.Invoke();
 
         return newProject;
@@ -88,6 +98,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
     public void Clear()
     {
         projects.Clear();
+        projectRepository.DeleteAll();
         ProjectsChanged?.Invoke();
     }
 

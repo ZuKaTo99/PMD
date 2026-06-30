@@ -33,6 +33,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPmdDatabasePathProvider, PmdDatabasePathProvider>();
         builder.Services.AddSingleton<IPmdDatabaseInitializer, PmdDatabaseInitializer>();
         builder.Services.AddSingleton<IPmdDatabaseConnectionFactory, PmdDatabaseConnectionFactory>();
+        builder.Services.AddSingleton<IProjectRepository, SqliteProjectRepository>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
