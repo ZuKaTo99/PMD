@@ -1,11 +1,24 @@
 @namespace PMD.App.Features.Projects.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectStates
-@using PMD.App.Features.Scanner.Components
 
 <div class="card mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">Projektverlauf dieses Projekts</h2>
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+            <div>
+                <h2 class="h5 mb-1">Projektverlauf</h2>
+                <div class="text-muted small">
+                    Gespeicherte Prüfungen dieses Projekts in dieser Sitzung.
+                </div>
+            </div>
+
+            @if (ProjectStates.Count > 0)
+            {
+                <span class="badge bg-secondary align-self-start align-self-lg-center">
+                    @ProjectStates.Count Prüfungen
+                </span>
+            }
+        </div>
     </div>
 
     <div class="card-body">
@@ -17,39 +30,49 @@
         }
         else
         {
-            <p class="text-muted">
-                Diese Projektstände sind aktuell nur für diese laufende Sitzung gemerkt.
-            </p>
+            <div class="d-flex flex-column gap-3">
+                @for (var index = 0; index < ProjectStates.Count; index++)
+                {
+                    ProjectState projectState = ProjectStates[index];
+                    int projectStateNumber = ProjectStates.Count - index;
 
-            <div class="table-responsive">
-                <table class="table table-sm table-striped align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Prüfung</th>
-                            <th>Erstellt am</th>
-                            <th>Dateien</th>
-                            <th>Größe</th>
-                            <th>Dauer</th>
-                            <th>Hinweise</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (var index = 0; index < ProjectStates.Count; index++)
-                        {
-                            ProjectState projectState = ProjectStates[index];
-                            int projectStateNumber = ProjectStates.Count - index;
+                    <div class="border rounded p-3">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                            <div>
+                                <div class="fw-semibold">Prüfung @projectStateNumber</div>
+                                <div class="text-muted small">
+                                    Geprüft am @ProjectOverviewFormatter.FormatDateTime(projectState.ScannedAt)
+                                </div>
+                            </div>
 
-                            <tr>
-                                <td>Prüfung @projectStateNumber</td>
-                                <td>@projectState.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
-                                <td>@projectState.FileCount</td>
-                                <td>@ScannerDisplayFormatter.FormatFileSize(projectState.TotalSizeInBytes)</td>
-                                <td>@ScannerDisplayFormatter.FormatScanDuration(projectState.ScanDuration)</td>
-                                <td>@projectState.WarningCount</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="badge bg-light text-dark border">
+                                    @projectState.FileCount Dateien
+                                </span>
+                                <span class="badge bg-light text-dark border">
+                                    @ProjectOverviewFormatter.FormatFileSize(projectState.TotalSizeInBytes)
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-4">
+                                <div class="text-muted small">Prüfdauer</div>
+                                <div>@ProjectOverviewFormatter.FormatDuration(projectState.ScanDuration)</div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="text-muted small">Hinweise</div>
+                                <div>@projectState.WarningCount</div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="text-muted small">Übersprungene Ordner</div>
+                                <div>@projectState.IgnoredFolderCount</div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         }
     </div>

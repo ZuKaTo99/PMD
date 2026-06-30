@@ -1,9 +1,13 @@
-﻿namespace PMD.App.Domain.Scanner;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace PMD.App.Domain.Scanner;
 
 public sealed class ProjectFolderScanResult
 {
-
     public string ProjectName { get; init; } = string.Empty;
+
     public string RootPath { get; init; } = string.Empty;
 
     public DateTime ScannedAt { get; init; } = DateTime.Now;

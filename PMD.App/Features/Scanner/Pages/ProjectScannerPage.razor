@@ -17,33 +17,8 @@
 
     @if (scanResult is not null)
     {
-        <ScanSummaryView 
-            ScanResult="@scanResult"
-            DisplayedFileCount="@GetDisplayedFileCount()" />
+        <ScanSummaryView ScanResult="@scanResult" />
 
-        <RememberedProjectStatesList 
-            ProjectStates="@RememberedProjectStates"                         
-            OnClearRememberedProjectStates="ClearRememberedProjectStates" />
-
-        <ScannerWarningsList 
-            Warnings="@scanResult.Warnings"
-            WarningLimit="20" />
-
-        <IgnoredFoldersList 
-            Folders="@scanResult.IgnoredFolders"
-            TotalFolderCount="@scanResult.IgnoredFolderCount"
-            FolderLimit="20" />
-
-        <FileTypeStatsTable 
-            Files="@scanResult.Files"
-            FileTypeLimit="10" />
-
-        <LargestFilesTable 
-            Files="@scanResult.Files"
-            FileLimit="10" />
-
-        <FoundFilesTable 
-            Files="@scanResult.Files"
-            FileLimit="@DisplayedFileLimit" />
+        <ProjectScanResultActionCard Project="@currentProject" />
     }
 </div>

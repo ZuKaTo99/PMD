@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMD.App.Domain.ProjectStates;
@@ -7,7 +7,7 @@ public sealed class ProjectStateComparisonResult
 {
     public Guid OldProjectStateId { get; init; }
 
-    public Guid NewProjectStateId { get; init;}
+    public Guid NewProjectStateId { get; init; }
 
     public int NewFileCount { get; init; }
 

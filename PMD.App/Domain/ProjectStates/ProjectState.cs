@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMD.App.Domain.ProjectStates;
@@ -6,6 +6,8 @@ namespace PMD.App.Domain.ProjectStates;
 public sealed class ProjectState
 {
     public Guid Id { get; init; } = Guid.NewGuid();
+
+    public Guid ProjectId { get; init; }
 
     public string ProjectName { get; init; } = string.Empty;
 

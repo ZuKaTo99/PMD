@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace PMD.App.Domain.ProjectStates;
 
@@ -6,7 +6,7 @@ public sealed class ProjectStateChangedFile
 {
     public string RelativePath { get; init; } = string.Empty;
 
-    public long OldSizeInBytes {  get; init; }
+    public long OldSizeInBytes { get; init; }
 
     public long NewSizeInBytes { get; init; }
 

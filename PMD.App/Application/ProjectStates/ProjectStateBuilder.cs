@@ -1,7 +1,7 @@
-﻿using System;
-using System.Linq;
 using PMD.App.Domain.ProjectStates;
 using PMD.App.Domain.Scanner;
+using System;
+using System.Linq;
 
 namespace PMD.App.Application.ProjectStates;
 
@@ -9,7 +9,8 @@ public static class ProjectStateBuilder
 {
     public static ProjectState CreateFromScanResult(
         string projectName,
-        ProjectFolderScanResult scanResult)
+        ProjectFolderScanResult scanResult,
+        Guid? projectId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
         ArgumentNullException.ThrowIfNull(scanResult);
@@ -19,6 +20,7 @@ public static class ProjectStateBuilder
         return new ProjectState
         {
             Id = projectStateId,
+            ProjectId = projectId ?? Guid.Empty,
             ProjectName = projectName.Trim(),
             RootPath = scanResult.RootPath,
             CreatedAt = DateTime.Now,

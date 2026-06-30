@@ -4,7 +4,7 @@
 
 <PageTitle>PMD - Projekt</PageTitle>
 
-<div class="container-fluid">
+<div class="container-fluid pmd-project-page">
     @if (CurrentProject is null)
     {
         <div class="alert alert-warning">
@@ -15,45 +15,22 @@
     {
         <div class="mb-4">
             <div class="text-muted small mb-1">PMD - Projekt</div>
-            <h1>@CurrentProject.Name</h1>
-            <p class="text-muted mb-0">
-                Hier entsteht die Projektansicht mit Projektverlauf, Dateien, Änderungen und später KI-Auswertung.
-            </p>
-        </div>
-
-        <LatestProjectCheckSummaryCard ProjectState="@LatestProjectState" />
-
-        <LatestProjectFileTypesCard ProjectState="@LatestProjectState" />
-
-        <LatestProjectFilesCard ProjectState="@LatestProjectState" />
-
-        <ProjectStatesOverviewCard ProjectStates="@CurrentProjectStates" />
-
-        <div class="card mb-4">
-            <div class="card-header">
-                <h2 class="h5 mb-0">Projektinformationen</h2>
-            </div>
-
-            <div class="card-body">
-                <div class="mb-3">
-                    <div class="text-muted small">Projektordner</div>
-                    <code>@CurrentProject.RootPath</code>
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div>
+                    <h1>@CurrentProject.Name</h1>
+                    <p class="text-muted mb-0">
+                        Projektzentrale mit aktuellem Status, Verlauf, Änderungen und später KI-Auswertung.
+                    </p>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Angelegt am</div>
-                            <div>@CurrentProject.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</div>
-                        </div>
-                    </div>
+                <div class="d-flex gap-2 flex-wrap align-self-xl-start">
+                    <button class="btn btn-primary" @onclick="ScanCurrentProject">
+                        Projekt erneut prüfen
+                    </button>
 
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Zuletzt geprüft am</div>
-                            <div>@CurrentProject.LastScannedAt.ToString("dd.MM.yyyy HH:mm:ss")</div>
-                        </div>
-                    </div>
+                    <a class="btn btn-outline-secondary" href="/projektpruefung">
+                        Anderen Projektordner prüfen
+                    </a>
                 </div>
             </div>
         </div>
@@ -72,14 +49,17 @@
             </div>
         }
 
-        <div class="d-flex gap-2 flex-wrap">
-            <button class="btn btn-primary" @onclick="ScanCurrentProject">
-                Projekt erneut prüfen
-            </button>
+        <LatestProjectCheckSummaryCard ProjectState="@LatestProjectState" />
 
-            <a class="btn btn-outline-secondary" href="/projektpruefung">
-                Anderen Projektordner prüfen
-            </a>
-        </div>
+        <ProjectChangeSummaryCard 
+            LatestProjectState="@LatestProjectState"
+            PreviousProjectState="@PreviousProjectState"
+            ChangeSummary="@ChangesSinceLastCheck" />
+
+        <ProjectStatesOverviewCard ProjectStates="@CurrentProjectStates" />
+
+        <ProjectNextAreasCard />
+
+        <ProjectInformationCard Project="@CurrentProject" />
     }
 </div>

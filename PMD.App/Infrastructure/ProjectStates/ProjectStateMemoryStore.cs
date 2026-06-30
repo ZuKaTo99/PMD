@@ -1,16 +1,18 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Domain.ProjectStates;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PMD.App.Infrastructure.ProjectStates;
 
 public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
 {
-    private const int MaxRememberedProjectStates = 5;
+    private const int MaxRememberedProjectStates = 50;
 
     private readonly List<ProjectState> projectStates = new();
+
+    public event Action? ProjectStatesChanged;
 
     public IReadOnlyList<ProjectState> ProjectStates => projectStates;
 
@@ -35,11 +37,13 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
                 projectStates.Count - MaxRememberedProjectStates);
         }
 
+        ProjectStatesChanged?.Invoke();
         return true;
     }
 
     public void Clear()
     {
         projectStates.Clear();
+        ProjectStatesChanged?.Invoke();
     }
 }

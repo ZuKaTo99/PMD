@@ -1,8 +1,8 @@
 using System;
 
-namespace PMD.App.Features.Scanner.Components;
+namespace PMD.App.Features.Projects.Components;
 
-public static class ScannerDisplayFormatter
+internal static class ProjectOverviewFormatter
 {
     public static string FormatFileSize(long sizeInBytes)
     {
@@ -30,7 +30,12 @@ public static class ScannerDisplayFormatter
         return $"{sizeInGb:0.0} GB";
     }
 
-    public static string FormatScanDuration(TimeSpan duration)
+    public static string FormatDateTime(DateTime dateTime)
+    {
+        return dateTime.ToString("dd.MM.yyyy HH:mm");
+    }
+
+    public static string FormatDuration(TimeSpan duration)
     {
         if (duration.TotalMilliseconds < 1000)
         {

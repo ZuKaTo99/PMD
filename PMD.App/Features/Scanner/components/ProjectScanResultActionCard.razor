@@ -1,0 +1,28 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.Projects
+
+@if (Project is not null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Projekt wurde aufgenommen</h2>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Das Projekt ist jetzt links unter <strong>Meine Projekte</strong> sichtbar.
+                Öffne die Projektseite, um Status, Verlauf und Änderungen zu sehen.
+            </p>
+
+            <a class="btn btn-primary" href="@($"/projekte/{Project.Id}")">
+                Projekt öffnen
+            </a>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Project? Project { get; set; }
+}

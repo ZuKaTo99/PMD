@@ -1,10 +1,24 @@
 @namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectStates
-@using System.Linq
 
 <div class="card mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">Letzte Prüfung</h2>
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+            <div>
+                <h2 class="h5 mb-1">Aktueller Projektstatus</h2>
+                <div class="text-muted small">
+                    Die wichtigsten Informationen aus der letzten Prüfung.
+                </div>
+            </div>
+
+            @if (ProjectState is not null)
+            {
+                <span class="badge bg-success align-self-start align-self-lg-center">
+                    Geprüft
+                </span>
+            }
+        </div>
     </div>
 
     <div class="card-body">
@@ -19,35 +33,40 @@
             <div class="row g-3">
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="text-muted small">Geprüft am</div>
+                        <div class="text-muted small">Zuletzt geprüft</div>
                         <div class="fw-semibold">
-                            @ProjectDisplayFormatter.FormatDateTime(ProjectState.ScannedAt)
+                            @ProjectOverviewFormatter.FormatDateTime(ProjectState.ScannedAt)
                         </div>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="text-muted small">Dateien</div>
-                        <div class="fw-semibold">@ProjectState.Files.Count</div>
+                        <div class="text-muted small">Dateien erkannt</div>
+                        <div class="fw-semibold">@ProjectState.FileCount</div>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="text-muted small">Gesamtgröße</div>
+                        <div class="text-muted small">Projektgröße</div>
                         <div class="fw-semibold">
-                            @ProjectDisplayFormatter.FormatFileSize(ProjectState.Files.Sum(file => file.SizeInBytes))
+                            @ProjectOverviewFormatter.FormatFileSize(ProjectState.TotalSizeInBytes)
                         </div>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="text-muted small">Status</div>
-                        <div class="fw-semibold">Im Projektverlauf gespeichert</div>
+                        <div class="text-muted small">Hinweise</div>
+                        <div class="fw-semibold">@ProjectState.WarningCount</div>
                     </div>
                 </div>
+            </div>
+
+            <div class="alert alert-light border mt-3 mb-0">
+                Diese Prüfung ist im Projektverlauf gespeichert und kann später für Änderungen,
+                Dateien, Code-Ansicht und KI-Auswertung genutzt werden.
             </div>
         }
     </div>
