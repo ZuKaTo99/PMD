@@ -7,21 +7,25 @@
 
 @if (ProjectMemoryStore.Projects.Count > 0)
 {
-    <div class="nav-item px-3 mt-3">
-        <div class="text-white-50 small px-3 mb-1">
+    <section class="project-navigation-section">
+        <div class="project-navigation-title">
             Meine Projekte
         </div>
-    </div>
 
-    @foreach (Project project in ProjectMemoryStore.Projects)
-    {
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@($"projekte/{project.Id}")">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
-                @project.Name
-            </NavLink>
+        <div class="project-navigation-list">
+            @foreach (Project project in ProjectMemoryStore.Projects)
+            {
+                <NavLink class="project-navigation-link" href="@($"projekte/{project.Id}")">
+                    <span class="project-navigation-icon" aria-hidden="true">P</span>
+
+                    <span class="project-navigation-content">
+                        <span class="project-navigation-name">@project.Name</span>
+                        <span class="project-navigation-path">@GetShortProjectPath(project.RootPath)</span>
+                    </span>
+                </NavLink>
+            }
         </div>
-    }
+    </section>
 }
 
 @code {
@@ -33,6 +37,24 @@
     private void OnProjectsChanged()
     {
         _ = InvokeAsync(StateHasChanged);
+    }
+
+    private static string GetShortProjectPath(string rootPath)
+    {
+        if (string.IsNullOrWhiteSpace(rootPath))
+        {
+            return "Projektordner";
+        }
+
+        string normalizedPath = rootPath.TrimEnd('\\', '/');
+        string folderName = System.IO.Path.GetFileName(normalizedPath);
+
+        if (string.IsNullOrWhiteSpace(folderName))
+        {
+            return "Projektordner";
+        }
+
+        return folderName;
     }
 
     public void Dispose()

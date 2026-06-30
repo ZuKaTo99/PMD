@@ -85,7 +85,7 @@ public sealed class ProjectOverviewService : IProjectOverviewService
             return ProjectContentSummary.Empty;
         }
 
-        var frequentFileTypes = latestProjectState.Files
+        var allFileTypes = latestProjectState.Files
             .GroupBy(file => NormalizeExtension(file.Extension))
             .Select(group => new ProjectFileTypeSummary(
                 group.Key,
@@ -93,24 +93,19 @@ public sealed class ProjectOverviewService : IProjectOverviewService
                 group.Sum(file => file.SizeInBytes)))
             .OrderByDescending(fileType => fileType.FileCount)
             .ThenBy(fileType => fileType.Extension)
+            .ToList();
+
+        var frequentFileTypes = allFileTypes
             .Take(8)
             .ToList();
 
-        int differentFileTypeCount = latestProjectState.Files
-            .Select(file => NormalizeExtension(file.Extension))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
+        int differentFileTypeCount = allFileTypes.Count;
 
         var largerFiles = latestProjectState.Files
             .OrderByDescending(file => file.SizeInBytes)
             .ThenBy(file => file.RelativePath)
             .Take(5)
-            .Select(file => new ProjectFileHighlight(
-                file.FileName,
-                file.RelativePath,
-                NormalizeExtension(file.Extension),
-                file.SizeInBytes,
-                file.LastChangedAt))
+            .Select(CreateFileHighlight)
             .ToList();
 
         int codeFileCount = CountFilesByCategory(latestProjectState, CodeExtensions);
@@ -122,7 +117,7 @@ public sealed class ProjectOverviewService : IProjectOverviewService
         return new ProjectContentSummary
         {
             ProfileLabel = BuildProfileLabel(latestProjectState, codeFileCount),
-            ShortDescription = BuildShortDescription(latestProjectState, frequentFileTypes, codeFileCount),
+            ShortDescription = BuildShortDescription(latestProjectState, allFileTypes, codeFileCount),
             FileCount = latestProjectState.FileCount,
             TotalSizeInBytes = latestProjectState.TotalSizeInBytes,
             ScannedFolderCount = latestProjectState.ScannedFolderCount,
@@ -135,8 +130,95 @@ public sealed class ProjectOverviewService : IProjectOverviewService
             TextFileCount = textFileCount,
             OtherFileCount = otherFileCount,
             FrequentFileTypes = frequentFileTypes,
+            AllFileTypes = allFileTypes,
+            FileGroups = CreateFileGroups(latestProjectState),
             LargerFiles = largerFiles
         };
+    }
+
+    private static IReadOnlyList<ProjectFileGroupSummary> CreateFileGroups(ProjectState projectState)
+    {
+        var codeFiles = GetFilesByCategory(projectState, FileCategory.Code);
+        var configFiles = GetFilesByCategory(projectState, FileCategory.Config);
+        var textFiles = GetFilesByCategory(projectState, FileCategory.Text);
+        var otherFiles = GetFilesByCategory(projectState, FileCategory.Other);
+
+        return new[]
+        {
+            CreateFileGroup(
+                "Code und Projekt",
+                "Quellcode, UI-Dateien und Projektdateien.",
+                codeFiles),
+            CreateFileGroup(
+                "Konfiguration",
+                "Einstellungen, Skripte und technische Begleitdateien.",
+                configFiles),
+            CreateFileGroup(
+                "Text und Doku",
+                "Dokumentation, Notizen und Textdateien.",
+                textFiles),
+            CreateFileGroup(
+                "Weitere Dateien",
+                "Dateien, die PMD aktuell keiner Hauptgruppe zuordnet.",
+                otherFiles)
+        };
+    }
+
+    private static ProjectFileGroupSummary CreateFileGroup(
+        string title,
+        string description,
+        IReadOnlyList<ProjectStateFile> files)
+    {
+        return new ProjectFileGroupSummary(
+            title,
+            description,
+            files.Count,
+            files
+                .Take(8)
+                .Select(CreateFileHighlight)
+                .ToList());
+    }
+
+    private static IReadOnlyList<ProjectStateFile> GetFilesByCategory(
+        ProjectState projectState,
+        FileCategory category)
+    {
+        return projectState.Files
+            .Where(file => GetFileCategory(file) == category)
+            .OrderBy(file => file.RelativePath)
+            .ToList();
+    }
+
+    private static FileCategory GetFileCategory(ProjectStateFile file)
+    {
+        string extension = NormalizeExtension(file.Extension);
+
+        if (CodeExtensions.Contains(extension))
+        {
+            return FileCategory.Code;
+        }
+
+        if (ConfigExtensions.Contains(extension))
+        {
+            return FileCategory.Config;
+        }
+
+        if (TextExtensions.Contains(extension))
+        {
+            return FileCategory.Text;
+        }
+
+        return FileCategory.Other;
+    }
+
+    private static ProjectFileHighlight CreateFileHighlight(ProjectStateFile file)
+    {
+        return new ProjectFileHighlight(
+            file.FileName,
+            file.RelativePath,
+            NormalizeExtension(file.Extension),
+            file.SizeInBytes,
+            file.LastChangedAt);
     }
 
     private static int CountFilesByCategory(
@@ -176,17 +258,17 @@ public sealed class ProjectOverviewService : IProjectOverviewService
 
     private static string BuildShortDescription(
         ProjectState projectState,
-        IReadOnlyList<ProjectFileTypeSummary> frequentFileTypes,
+        IReadOnlyList<ProjectFileTypeSummary> allFileTypes,
         int codeFileCount)
     {
-        string mainFileType = frequentFileTypes.FirstOrDefault()?.Extension ?? "unbekannte Dateien";
+        string mainFileType = allFileTypes.FirstOrDefault()?.Extension ?? "unbekannte Dateien";
 
         if (codeFileCount > 0)
         {
-            return $"PMD erkennt {projectState.FileCount} Dateien, davon {codeFileCount} Code- und Projektdateien. Häufigster Typ ist {mainFileType}.";
+            return $"PMD erkennt {projectState.FileCount} Dateien in {allFileTypes.Count} Dateitypen. Davon sind {codeFileCount} Code- und Projektdateien. Häufigster Typ ist {mainFileType}.";
         }
 
-        return $"PMD erkennt {projectState.FileCount} Dateien. Häufigster Typ ist {mainFileType}.";
+        return $"PMD erkennt {projectState.FileCount} Dateien in {allFileTypes.Count} Dateitypen. Häufigster Typ ist {mainFileType}.";
     }
 
     private static bool BelongsToProject(
@@ -208,5 +290,13 @@ public sealed class ProjectOverviewService : IProjectOverviewService
         return string.IsNullOrWhiteSpace(extension)
             ? "ohne Endung"
             : extension;
+    }
+
+    private enum FileCategory
+    {
+        Code,
+        Config,
+        Text,
+        Other
     }
 }

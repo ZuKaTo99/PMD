@@ -1,6 +1,7 @@
 @namespace PMD.App.Features.Projects.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Application.Projects
+@using System.Linq
 
 <div class="card mb-4">
     <div class="card-header">
@@ -8,7 +9,7 @@
             <div>
                 <h2 class="h5 mb-1">Projektinhalt</h2>
                 <div class="text-muted small">
-                    PMD fasst die Daten zusammen, ohne die Projektseite zur Dateiliste zu machen.
+                    PMD zeigt, welche Dateiarten und Dateigruppen im Projekt vorhanden sind, ohne daraus eine lange Dateitabelle zu machen.
                 </div>
             </div>
 
@@ -68,50 +69,104 @@
                 </div>
             </div>
 
-            <div class="row g-3">
-                <div class="col-12 col-xl-6">
-                    <div class="border rounded p-3 h-100">
-                        <div class="fw-semibold mb-2">Häufige Dateitypen</div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            @foreach (var fileType in summary.FrequentFileTypes)
-                            {
-                                <span class="badge bg-light text-dark border">
-                                    @fileType.Extension · @fileType.FileCount
-                                </span>
-                            }
+            <div class="border rounded p-3 mb-3">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mb-2">
+                    <div>
+                        <div class="fw-semibold">Alle Dateitypen</div>
+                        <div class="text-muted small">
+                            Alle erkannten Dateiendungen aus der letzten Prüfung.
                         </div>
                     </div>
+
+                    <span class="badge bg-light text-dark border align-self-start align-self-lg-center">
+                        @summary.DifferentFileTypeCount Dateitypen
+                    </span>
                 </div>
 
-                <div class="col-12 col-xl-6">
-                    <div class="border rounded p-3 h-100">
-                        <div class="fw-semibold mb-2">Größere Dateien erkannt</div>
-
-                        @if (summary.LargerFiles.Count == 0)
-                        {
-                            <div class="text-muted small">Keine Dateien vorhanden.</div>
-                        }
-                        else
-                        {
-                            <div class="d-flex flex-column gap-2">
-                                @foreach (var file in summary.LargerFiles)
-                                {
-                                    <div class="d-flex justify-content-between gap-3">
-                                        <span class="text-truncate">@file.FileName</span>
-                                        <span class="text-muted small text-nowrap">
-                                            @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
-                                        </span>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    @foreach (var fileType in summary.AllFileTypes)
+                    {
+                        <span class="badge bg-light text-dark border">
+                            @fileType.Extension · @fileType.FileCount
+                        </span>
+                    }
                 </div>
             </div>
 
+            <div class="border rounded p-3 mb-3">
+                <div class="fw-semibold mb-1">Dateien im Projekt</div>
+                <div class="text-muted small mb-3">
+                    PMD zeigt Beispiele nach Dateigruppe. Die vollständige Dateiansicht wird später als eigener Bereich geöffnet.
+                </div>
+
+                <div class="row g-3">
+                    @foreach (var fileGroup in summary.FileGroups.Where(group => group.FileCount > 0))
+                    {
+                        <div class="col-12 col-xl-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex justify-content-between gap-3 mb-1">
+                                    <div>
+                                        <div class="fw-semibold">@fileGroup.Title</div>
+                                        <div class="text-muted small">@fileGroup.Description</div>
+                                    </div>
+
+                                    <span class="badge bg-light text-dark border align-self-start">
+                                        @fileGroup.FileCount Dateien
+                                    </span>
+                                </div>
+
+                                <div class="d-flex flex-column gap-2 mt-3">
+                                    @foreach (var file in fileGroup.Files)
+                                    {
+                                        <div class="d-flex justify-content-between gap-3">
+                                            <code class="text-truncate">@file.RelativePath</code>
+                                            <span class="text-muted small text-nowrap">
+                                                @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (fileGroup.FileCount > fileGroup.Files.Count)
+                                {
+                                    <div class="text-muted small mt-2">
+                                        + @(fileGroup.FileCount - fileGroup.Files.Count) weitere Dateien in dieser Gruppe.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="border rounded p-3">
+                <div class="fw-semibold mb-2">Größere Dateien erkannt</div>
+
+                @if (summary.LargerFiles.Count == 0)
+                {
+                    <div class="text-muted small">Keine Dateien vorhanden.</div>
+                }
+                else
+                {
+                    <div class="row g-2">
+                        @foreach (var file in summary.LargerFiles)
+                        {
+                            <div class="col-12 col-lg-6">
+                                <div class="d-flex justify-content-between gap-3 border rounded p-2 h-100">
+                                    <span class="text-truncate">@file.FileName</span>
+                                    <span class="text-muted small text-nowrap">
+                                        @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
             <div class="alert alert-light border mt-3 mb-0">
-                Die ausführlichen Daten bleiben gespeichert. Eigene Bereiche für Dateien, Code und Änderungen
-                können darauf aufbauen, ohne die Projektzentrale zu überladen.
+                Die Daten bleiben vollständig erhalten. Details wie Dateiansicht, Codeansicht und spätere KI-Auswertung
+                bekommen eigene Bereiche, damit die Projektzentrale übersichtlich bleibt.
             </div>
         }
     </div>

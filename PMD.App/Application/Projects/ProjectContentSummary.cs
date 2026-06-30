@@ -35,6 +35,10 @@ public sealed class ProjectContentSummary
 
     public IReadOnlyList<ProjectFileTypeSummary> FrequentFileTypes { get; init; } = Array.Empty<ProjectFileTypeSummary>();
 
+    public IReadOnlyList<ProjectFileTypeSummary> AllFileTypes { get; init; } = Array.Empty<ProjectFileTypeSummary>();
+
+    public IReadOnlyList<ProjectFileGroupSummary> FileGroups { get; init; } = Array.Empty<ProjectFileGroupSummary>();
+
     public IReadOnlyList<ProjectFileHighlight> LargerFiles { get; init; } = Array.Empty<ProjectFileHighlight>();
 
     public bool HasData => FileCount > 0;
@@ -53,3 +57,9 @@ public sealed record ProjectFileHighlight(
     string Extension,
     long SizeInBytes,
     DateTime LastChangedAt);
+
+public sealed record ProjectFileGroupSummary(
+    string Title,
+    string Description,
+    int FileCount,
+    IReadOnlyList<ProjectFileHighlight> Files);

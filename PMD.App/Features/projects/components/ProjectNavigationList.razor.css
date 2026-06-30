@@ -1,0 +1,86 @@
+.project-navigation-section {
+    margin-top: 1.25rem;
+    padding: 0 0.75rem 1rem;
+}
+
+.project-navigation-title {
+    padding: 0 0.5rem 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.project-navigation-list {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.project-navigation-link {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 3.25rem;
+    padding: 0.65rem 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.7rem;
+    background: rgba(255, 255, 255, 0.07);
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.project-navigation-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.13);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateX(2px);
+}
+
+.project-navigation-link.active {
+    color: #ffffff;
+    background: rgba(45, 127, 249, 0.36);
+    border-color: rgba(255, 255, 255, 0.32);
+    box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.85);
+}
+
+.project-navigation-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 0.55rem;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.project-navigation-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.project-navigation-name {
+    overflow: hidden;
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 650;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-navigation-path {
+    overflow: hidden;
+    margin-top: 0.2rem;
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 0.76rem;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
