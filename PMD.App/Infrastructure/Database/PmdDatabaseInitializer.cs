@@ -1,26 +1,20 @@
 ﻿using PMD.App.Application.Database;
 using PMD.App.Infrastructure.Database.Entities;
-using SQLite;
-using SQLitePCL;
 
 namespace PMD.App.Infrastructure.Database;
 
 public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
 {
-    private readonly IPmdDatabasePathProvider databasePathProvider;
+    private readonly IPmdDatabaseConnectionFactory connectionFactory;
 
-    public PmdDatabaseInitializer(IPmdDatabasePathProvider databasePathProvider)
+    public PmdDatabaseInitializer(IPmdDatabaseConnectionFactory connectionFactory)
     {
-        this.databasePathProvider = databasePathProvider;
+        this.connectionFactory = connectionFactory;
     }
 
     public void Initialize()
     {
-        Batteries_V2.Init();
-
-        string databasePath = databasePathProvider.GetDatabasePath();
-
-        using var connection = new SQLiteConnection(databasePath);
+        using var connection = connectionFactory.CreateConnection();
 
         connection.CreateTable<ProjectRecord>();
         connection.CreateTable<ProjectStateRecord>();

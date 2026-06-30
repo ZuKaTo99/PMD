@@ -32,6 +32,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IFolderPicker>(FolderPicker.Default);
         builder.Services.AddSingleton<IPmdDatabasePathProvider, PmdDatabasePathProvider>();
         builder.Services.AddSingleton<IPmdDatabaseInitializer, PmdDatabaseInitializer>();
+        builder.Services.AddSingleton<IPmdDatabaseConnectionFactory, PmdDatabaseConnectionFactory>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
