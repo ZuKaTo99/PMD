@@ -12,6 +12,8 @@ public sealed class ProjectOverview
 
     public IReadOnlyList<ProjectState> ProjectStates { get; init; } = Array.Empty<ProjectState>();
 
+    public ProjectContentSummary ContentSummary { get; init; } = ProjectContentSummary.Empty;
+
     public ProjectState? LatestProjectState => ProjectStates.FirstOrDefault();
 
     public ProjectState? PreviousProjectState => ProjectStates.Skip(1).FirstOrDefault();

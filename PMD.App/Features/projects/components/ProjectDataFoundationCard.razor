@@ -1,0 +1,79 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.Projects
+
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+            <div>
+                <h2 class="h5 mb-1">Datenbasis</h2>
+                <div class="text-muted small">
+                    PMD bündelt Projekt, Verlauf, Dateien und Änderungen bereits für die nächste Ausbaustufe.
+                </div>
+            </div>
+
+            <span class="badge bg-secondary align-self-start align-self-lg-center">
+                SQLite vorbereitet
+            </span>
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if (Overview is null)
+        {
+            <p class="text-muted mb-0">
+                Noch keine Datenbasis verfügbar.
+            </p>
+        }
+        else
+        {
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold mb-1">Projekt</div>
+                        <div class="text-muted small">
+                            Name, Ordner, Anlagezeit und letzte Prüfung sind zentral gebündelt.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold mb-1">Projektverlauf</div>
+                        <div class="text-muted small">
+                            @Overview.ProjectStates.Count Prüfungen sind aktuell im Verlauf verfügbar.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold mb-1">Dateidaten</div>
+                        <div class="text-muted small">
+                            @Overview.ContentSummary.FileCount Dateien sind für spätere Datei- und Codeansichten vorbereitet.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold mb-1">Änderungen</div>
+                        <div class="text-muted small">
+                            Die letzten Prüfungen werden automatisch ausgewertet, sobald genug Verlauf vorhanden ist.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3 mb-0">
+                Aktuell liegt alles noch im Sitzungsspeicher. Der nächste große Schritt kann jetzt sauber sein:
+                SQLite als dauerhafte Speicherung für Projekte, Prüfungen und Dateien einbauen.
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ProjectOverview? Overview { get; set; }
+}

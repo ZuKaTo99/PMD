@@ -8,7 +8,7 @@
             <div>
                 <h2 class="h5 mb-1">Aktueller Projektstatus</h2>
                 <div class="text-muted small">
-                    Die wichtigsten Informationen aus der letzten Prüfung.
+                    Kurzer Überblick aus der letzten Prüfung.
                 </div>
             </div>
 
@@ -31,7 +31,7 @@
         else
         {
             <div class="row g-3">
-                <div class="col-12 col-md-6 col-xl-3">
+                <div class="col-12 col-md-6 col-xl-2">
                     <div class="border rounded p-3 h-100">
                         <div class="text-muted small">Zuletzt geprüft</div>
                         <div class="fw-semibold">
@@ -40,14 +40,14 @@
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6 col-xl-3">
+                <div class="col-6 col-md-4 col-xl-2">
                     <div class="border rounded p-3 h-100">
-                        <div class="text-muted small">Dateien erkannt</div>
+                        <div class="text-muted small">Dateien</div>
                         <div class="fw-semibold">@ProjectState.FileCount</div>
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6 col-xl-3">
+                <div class="col-6 col-md-4 col-xl-2">
                     <div class="border rounded p-3 h-100">
                         <div class="text-muted small">Projektgröße</div>
                         <div class="fw-semibold">
@@ -56,7 +56,23 @@
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6 col-xl-3">
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Geprüfte Ordner</div>
+                        <div class="fw-semibold">@ProjectState.ScannedFolderCount</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Prüfdauer</div>
+                        <div class="fw-semibold">
+                            @ProjectOverviewFormatter.FormatDuration(ProjectState.ScanDuration)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-xl-2">
                     <div class="border rounded p-3 h-100">
                         <div class="text-muted small">Hinweise</div>
                         <div class="fw-semibold">@ProjectState.WarningCount</div>
@@ -65,8 +81,8 @@
             </div>
 
             <div class="alert alert-light border mt-3 mb-0">
-                Diese Prüfung ist im Projektverlauf gespeichert und kann später für Änderungen,
-                Dateien, Code-Ansicht und KI-Auswertung genutzt werden.
+                Diese Prüfung bleibt im Projektverlauf erhalten und bildet die Grundlage für Änderungen,
+                Dateiansicht, Code-Auswertung, KI-Fragen und später SQLite.
             </div>
         }
     </div>

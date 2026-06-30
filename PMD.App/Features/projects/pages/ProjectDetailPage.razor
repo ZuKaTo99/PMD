@@ -19,7 +19,7 @@
                 <div>
                     <h1>@CurrentProject.Name</h1>
                     <p class="text-muted mb-0">
-                        Projektzentrale mit aktuellem Status, Verlauf, Änderungen und später KI-Auswertung.
+                        Projektzentrale mit Status, Verlauf, Projektinhalt, Änderungen und später KI-Auswertung.
                     </p>
                 </div>
 
@@ -51,12 +51,14 @@
 
         <LatestProjectCheckSummaryCard ProjectState="@LatestProjectState" />
 
-        <ProjectAnalysisSummaryCard ProjectState="@LatestProjectState" />
-
-        <ProjectChangeSummaryCard 
+        <ProjectChangeSummaryCard
             LatestProjectState="@LatestProjectState"
             PreviousProjectState="@PreviousProjectState"
             ChangeSummary="@ChangesSinceLastCheck" />
+
+        <ProjectAnalysisSummaryCard Overview="@CurrentOverview" />
+
+        <ProjectDataFoundationCard Overview="@CurrentOverview" />
 
         <ProjectStatesOverviewCard ProjectStates="@CurrentProjectStates" />
 
