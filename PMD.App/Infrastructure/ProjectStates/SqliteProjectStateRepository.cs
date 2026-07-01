@@ -18,29 +18,33 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
         this.connectionFactory = connectionFactory;
     }
 
-    public IReadOnlyList<ProjectState> GetAll()
+    public IReadOnlyList<ProjectState> GetLatest(int maxCount)
     {
         using var connection = connectionFactory.CreateConnection();
 
-        List<ProjectStateRecord> projectStateRecords = connection
+        List<ProjectStateRecord> records = connection
             .Table<ProjectStateRecord>()
             .OrderByDescending(record => record.ScannedAt)
+            .Take(maxCount)
             .ToList();
 
-        List<ProjectStateFileRecord> fileRecords = connection
-            .Table<ProjectStateFileRecord>()
+        return LoadProjectStatesWithFiles(records);
+    }
+
+    public IReadOnlyList<ProjectState> GetByProjectId(Guid projectId, int maxCount)
+    {
+        using var connection = connectionFactory.CreateConnection();
+
+        string projectIdText = projectId.ToString();
+
+        List<ProjectStateRecord> records = connection
+            .Table<ProjectStateRecord>()
+            .Where(record => record.ProjectId == projectIdText)
+            .OrderByDescending(record => record.ScannedAt)
+            .Take(maxCount)
             .ToList();
 
-        Dictionary<string, List<ProjectStateFileRecord>> filesByProjectStateId = fileRecords
-            .GroupBy(file => file.ProjectStateId)
-            .ToDictionary(
-                group => group.Key,
-                group => group.ToList(),
-                StringComparer.OrdinalIgnoreCase);
-
-        return projectStateRecords
-            .Select(record => MapToProjectState(record, filesByProjectStateId))
-            .ToList();
+        return LoadProjectStatesWithFiles(records);
     }
 
     public void Save(ProjectState projectState)
@@ -71,6 +75,38 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
 
         connection.DeleteAll<ProjectStateFileRecord>();
         connection.DeleteAll<ProjectStateRecord>();
+    }
+
+    private IReadOnlyList<ProjectState> LoadProjectStatesWithFiles(
+        IReadOnlyList<ProjectStateRecord> records)
+    {
+        if (records.Count == 0)
+        {
+            return Array.Empty<ProjectState>();
+        }
+
+        using var connection = connectionFactory.CreateConnection();
+
+        string[] projectStateIds = records
+            .Select(record => record.Id)
+            .ToArray();
+
+        string placeholders = string.Join(", ", projectStateIds.Select(_ => "?"));
+
+        List<ProjectStateFileRecord> fileRecords = connection.Query<ProjectStateFileRecord>(
+            $"SELECT * FROM ProjectStateFiles WHERE ProjectStateId IN ({placeholders})",
+            projectStateIds.Cast<object>().ToArray());
+
+        Dictionary<string, List<ProjectStateFileRecord>> filesByProjectStateId = fileRecords
+            .GroupBy(file => file.ProjectStateId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.ToList(),
+                StringComparer.OrdinalIgnoreCase);
+
+        return records
+            .Select(record => MapToProjectState(record, filesByProjectStateId))
+            .ToList();
     }
 
     private static ProjectState MapToProjectState(

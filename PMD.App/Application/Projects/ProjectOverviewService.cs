@@ -69,8 +69,8 @@ public sealed class ProjectOverviewService : IProjectOverviewService
 
     private IReadOnlyList<ProjectState> GetProjectStates(Project project)
     {
-        return projectStateStore.ProjectStates
-            .Where(projectState => BelongsToProject(projectState, project))
+        return projectStateStore
+            .GetByProjectId(project.Id, 50)
             .GroupBy(projectState => projectState.Id)
             .Select(group => group.First())
             .OrderByDescending(projectState => projectState.ScannedAt)

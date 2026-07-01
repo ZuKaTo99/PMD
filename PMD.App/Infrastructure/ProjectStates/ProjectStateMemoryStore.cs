@@ -18,14 +18,23 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
         this.projectStateRepository = projectStateRepository;
 
         projectStates = projectStateRepository
-            .GetAll()
-            .Take(MaxRememberedProjectStates)
+            .GetLatest(MaxRememberedProjectStates)
             .ToList();
     }
 
     public event Action? ProjectStatesChanged;
 
     public IReadOnlyList<ProjectState> ProjectStates => projectStates;
+
+    public IReadOnlyList<ProjectState> GetByProjectId(Guid projectId, int maxCount)
+    {
+        IReadOnlyList<ProjectState> loadedProjectStates =
+            projectStateRepository.GetByProjectId(projectId, maxCount);
+
+        MergeIntoMemory(loadedProjectStates);
+
+        return loadedProjectStates;
+    }
 
     public bool Remember(ProjectState projectState)
     {
@@ -59,5 +68,29 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
         projectStates.Clear();
         projectStateRepository.DeleteAll();
         ProjectStatesChanged?.Invoke();
+    }
+
+    private void MergeIntoMemory(IReadOnlyList<ProjectState> loadedProjectStates)
+    {
+        foreach (ProjectState loadedProjectState in loadedProjectStates)
+        {
+            bool alreadyRemembered = projectStates
+                .Any(existingProjectState => existingProjectState.Id == loadedProjectState.Id);
+
+            if (!alreadyRemembered)
+            {
+                projectStates.Add(loadedProjectState);
+            }
+        }
+
+        projectStates.Sort((first, second) =>
+            second.ScannedAt.CompareTo(first.ScannedAt));
+
+        if (projectStates.Count > MaxRememberedProjectStates)
+        {
+            projectStates.RemoveRange(
+                MaxRememberedProjectStates,
+                projectStates.Count - MaxRememberedProjectStates);
+        }
     }
 }
