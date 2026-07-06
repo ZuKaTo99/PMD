@@ -26,6 +26,19 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
 
     public IReadOnlyList<ProjectState> ProjectStates => projectStates;
 
+    public ProjectState? GetLatestByProjectId(Guid projectId)
+    {
+        ProjectState? loadedProjectState =
+            projectStateRepository.GetLatestByProjectId(projectId);
+
+        if (loadedProjectState is not null)
+        {
+            MergeIntoMemory(new[] { loadedProjectState });
+        }
+
+        return loadedProjectState;
+    }
+
     public IReadOnlyList<ProjectState> GetByProjectId(Guid projectId, int maxCount)
     {
         IReadOnlyList<ProjectState> loadedProjectStates =
@@ -34,6 +47,11 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
         MergeIntoMemory(loadedProjectStates);
 
         return loadedProjectStates;
+    }
+
+    public IReadOnlyList<ProjectStateFile> GetFilesByProjectStateId(Guid projectStateId)
+    {
+        return projectStateRepository.GetFilesByProjectStateId(projectStateId);
     }
 
     public bool Remember(ProjectState projectState)

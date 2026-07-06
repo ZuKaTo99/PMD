@@ -31,6 +31,27 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
         return LoadProjectStatesWithFiles(records);
     }
 
+    public ProjectState? GetLatestByProjectId(Guid projectId)
+    {
+        using var connection = connectionFactory.CreateConnection();
+
+        string projectIdText = projectId.ToString();
+
+        ProjectStateRecord? record = connection
+            .Table<ProjectStateRecord>()
+            .Where(record => record.ProjectId == projectIdText)
+            .OrderByDescending(record => record.ScannedAt)
+            .FirstOrDefault();
+
+        if (record is null)
+        {
+            return null;
+        }
+
+        return LoadProjectStatesWithFiles(new[] { record })
+            .FirstOrDefault();
+    }
+
     public IReadOnlyList<ProjectState> GetByProjectId(Guid projectId, int maxCount)
     {
         using var connection = connectionFactory.CreateConnection();
@@ -45,6 +66,21 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
             .ToList();
 
         return LoadProjectStatesWithFiles(records);
+    }
+
+    public IReadOnlyList<ProjectStateFile> GetFilesByProjectStateId(Guid projectStateId)
+    {
+        using var connection = connectionFactory.CreateConnection();
+
+        string projectStateIdText = projectStateId.ToString();
+
+        return connection
+            .Table<ProjectStateFileRecord>()
+            .Where(record => record.ProjectStateId == projectStateIdText)
+            .OrderBy(record => record.RelativePath)
+            .ToList()
+            .Select(record => MapToProjectStateFile(projectStateId, record))
+            .ToList();
     }
 
     public void Save(ProjectState projectState)

@@ -8,7 +8,11 @@ public interface IProjectStateRepository
 {
     IReadOnlyList<ProjectState> GetLatest(int maxCount);
 
+    ProjectState? GetLatestByProjectId(Guid projectId);
+
     IReadOnlyList<ProjectState> GetByProjectId(Guid projectId, int maxCount);
+
+    IReadOnlyList<ProjectStateFile> GetFilesByProjectStateId(Guid projectStateId);
 
     void Save(ProjectState projectState);
 
