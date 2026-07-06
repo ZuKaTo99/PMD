@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
+using PMD.App.Application.ProjectChanges;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
+using PMD.App.Domain.ProjectChanges;
 using PMD.App.Domain.ProjectStates;
 using PMD.App.Domain.Projects;
 using PMD.App.Features.Projects.Components;
@@ -20,6 +22,9 @@ public partial class ProjectChangesPage
     [Inject]
     private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } = default!;
 
+    [Inject]
+    private IProjectChangesService ProjectChangesService { get; set; } = default!;
+
     [Parameter]
     public Guid ProjectId { get; set; }
 
@@ -28,6 +33,8 @@ public partial class ProjectChangesPage
     protected IReadOnlyList<ProjectState> ProjectStates { get; private set; } =
         Array.Empty<ProjectState>();
 
+    protected ProjectChangesResult? ChangesResult { get; private set; }
+
     protected ProjectState? LatestProjectState => ProjectStates.FirstOrDefault();
 
     protected ProjectState? PreviousProjectState => ProjectStates.Skip(1).FirstOrDefault();
@@ -35,6 +42,7 @@ public partial class ProjectChangesPage
     protected override void OnParametersSet()
     {
         CurrentProject = ProjectMemoryStore.GetProjectById(ProjectId);
+        ChangesResult = null;
 
         if (CurrentProject is null)
         {
@@ -45,6 +53,13 @@ public partial class ProjectChangesPage
         ProjectStates = ProjectStateMemoryStore.GetByProjectId(
             ProjectId,
             LoadedProjectStateCount);
+
+        if (PreviousProjectState is not null && LatestProjectState is not null)
+        {
+            ChangesResult = ProjectChangesService.Compare(
+                PreviousProjectState,
+                LatestProjectState);
+        }
     }
 
     protected static string FormatProjectStateDate(ProjectState? projectState)
@@ -55,5 +70,17 @@ public partial class ProjectChangesPage
         }
 
         return ProjectOverviewFormatter.FormatDateTime(projectState.ScannedAt);
+    }
+
+    protected static string FormatChangeKind(ProjectFileChangeKind changeKind)
+    {
+        return changeKind switch
+        {
+            ProjectFileChangeKind.Added => "Neu",
+            ProjectFileChangeKind.Modified => "Geändert",
+            ProjectFileChangeKind.Removed => "Entfernt",
+            ProjectFileChangeKind.Unchanged => "Unverändert",
+            _ => "Unbekannt"
+        };
     }
 }

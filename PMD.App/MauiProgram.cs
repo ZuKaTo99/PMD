@@ -12,6 +12,7 @@ using PMD.App.Infrastructure.Projects;
 using PMD.App.Infrastructure.Scanner;
 using PMD.App.Application.ProjectFiles;
 using PMD.App.Infrastructure.ProjectFiles;
+using PMD.App.Application.ProjectChanges;
 
 namespace PMD.App;
 
@@ -38,6 +39,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IProjectRepository, SqliteProjectRepository>();
         builder.Services.AddSingleton<IProjectStateRepository, SqliteProjectStateRepository>();
         builder.Services.AddSingleton<IProjectFileContentReader, ProjectFileContentReader>();
+        builder.Services.AddSingleton<IProjectChangesService, ProjectChangesService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
