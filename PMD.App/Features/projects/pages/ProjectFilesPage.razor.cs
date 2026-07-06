@@ -34,6 +34,8 @@ public partial class ProjectFilesPage
     protected IReadOnlyList<ProjectStateFile> Files { get; private set; } =
         Array.Empty<ProjectStateFile>();
 
+    protected ProjectStateFile? SelectedFile { get; private set; }
+
     protected string SearchText { get; private set; } = string.Empty;
 
     protected string SelectedExtension { get; private set; } = string.Empty;
@@ -76,11 +78,13 @@ public partial class ProjectFilesPage
     protected void OnSearchTextChanged(ChangeEventArgs eventArgs)
     {
         SearchText = eventArgs.Value?.ToString() ?? string.Empty;
+        ClearSelectedFileIfFilteredOut();
     }
 
     protected void OnSelectedExtensionChanged(ChangeEventArgs eventArgs)
     {
         SelectedExtension = eventArgs.Value?.ToString() ?? string.Empty;
+        ClearSelectedFileIfFilteredOut();
     }
 
     protected void OnSelectedSortModeChanged(ChangeEventArgs eventArgs)
@@ -94,11 +98,26 @@ public partial class ProjectFilesPage
         SelectedExtension = string.Empty;
     }
 
+    protected void SelectFile(ProjectStateFile file)
+    {
+        SelectedFile = file;
+    }
+
+    protected string GetFileCardCssClass(ProjectStateFile file)
+    {
+        bool isSelected = IsSameFile(file, SelectedFile);
+
+        return isSelected
+            ? "border border-primary rounded p-3 bg-light"
+            : "border rounded p-3";
+    }
+
     private void LoadProjectFiles()
     {
         CurrentProject = ProjectMemoryStore.GetProjectById(ProjectId);
         LatestProjectState = null;
         Files = Array.Empty<ProjectStateFile>();
+        SelectedFile = null;
         SearchText = string.Empty;
         SelectedExtension = string.Empty;
         SelectedSortMode = SortByPath;
@@ -139,6 +158,22 @@ public partial class ProjectFilesPage
         };
     }
 
+    private void ClearSelectedFileIfFilteredOut()
+    {
+        if (SelectedFile is null)
+        {
+            return;
+        }
+
+        bool selectedFileStillVisible = FilteredFiles
+            .Any(file => IsSameFile(file, SelectedFile));
+
+        if (!selectedFileStillVisible)
+        {
+            SelectedFile = null;
+        }
+    }
+
     private bool MatchesSelectedExtension(ProjectStateFile file)
     {
         if (string.IsNullOrWhiteSpace(SelectedExtension))
@@ -165,5 +200,22 @@ public partial class ProjectFilesPage
             file.FileName.Contains(
                 SearchText,
                 StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsSameFile(
+        ProjectStateFile firstFile,
+        ProjectStateFile? secondFile)
+    {
+        if (secondFile is null)
+        {
+            return false;
+        }
+
+        return string.Equals(
+                firstFile.RelativePath,
+                secondFile.RelativePath,
+                StringComparison.OrdinalIgnoreCase) &&
+            firstFile.LastChangedAt == secondFile.LastChangedAt &&
+            firstFile.SizeInBytes == secondFile.SizeInBytes;
     }
 }

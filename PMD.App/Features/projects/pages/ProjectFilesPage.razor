@@ -177,30 +177,110 @@
                             }
                         </div>
 
-                        <div class="d-flex flex-column gap-2">
-                            @foreach (var file in VisibleFiles)
-                            {
-                                <div class="border rounded p-3">
-                                    <div class="text-truncate">
-                                        <code>@file.RelativePath</code>
+                        <div class="row g-3">
+                            <div class="col-12 col-xl-8">
+                                <div class="d-flex flex-column gap-2">
+                                    @foreach (var file in VisibleFiles)
+                                    {
+                                        <div class="@GetFileCardCssClass(file)">
+                                            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                                                <div class="min-w-0">
+                                                    <div class="text-truncate">
+                                                        <code>@file.RelativePath</code>
+                                                    </div>
+
+                                                    <div class="text-muted small mt-1">
+                                                        @ProjectOverviewFormatter.FormatExtension(file.Extension)
+                                                        · @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
+                                                        · geändert @ProjectOverviewFormatter.FormatDateTime(file.LastChangedAt)
+                                                    </div>
+                                                </div>
+
+                                                <div class="align-self-lg-start">
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                            type="button"
+                                                            @onclick="() => SelectFile(file)">
+                                                        Details
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (FilteredFiles.Count > VisibleFiles.Count)
+                                {
+                                    <div class="alert alert-secondary mt-3 mb-0">
+                                        Es werden die ersten @VisibleFiles.Count von @FilteredFiles.Count Treffern angezeigt.
+                                        Nutze die Suche oder den Dateityp-Filter, um die Auswahl einzugrenzen.
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-12 col-xl-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h3 class="h6 mb-0">Dateidetails</h3>
                                     </div>
 
-                                    <div class="text-muted small mt-1">
-                                        @ProjectOverviewFormatter.FormatExtension(file.Extension)
-                                        · @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
-                                        · geändert @ProjectOverviewFormatter.FormatDateTime(file.LastChangedAt)
+                                    <div class="card-body">
+                                        @if (SelectedFile is null)
+                                        {
+                                            <p class="text-muted mb-0">
+                                                Wähle eine Datei aus der Liste aus, um Details zu sehen.
+                                            </p>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex flex-column gap-3">
+                                                <div>
+                                                    <div class="text-muted small">Dateiname</div>
+                                                    <div class="fw-semibold text-break">@SelectedFile.FileName</div>
+                                                </div>
+
+                                                <div>
+                                                    <div class="text-muted small">Pfad im Projekt</div>
+                                                    <code class="d-block text-break">@SelectedFile.RelativePath</code>
+                                                </div>
+
+                                                <div class="row g-3">
+                                                    <div class="col-12 col-md-6 col-xl-12">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <div class="text-muted small">Dateityp</div>
+                                                            <div class="fw-semibold">
+                                                                @ProjectOverviewFormatter.FormatExtension(SelectedFile.Extension)
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12 col-md-6 col-xl-12">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <div class="text-muted small">Größe</div>
+                                                            <div class="fw-semibold">
+                                                                @ProjectOverviewFormatter.FormatFileSize(SelectedFile.SizeInBytes)
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <div class="text-muted small">Zuletzt geändert</div>
+                                                            <div class="fw-semibold">
+                                                                @ProjectOverviewFormatter.FormatDateTime(SelectedFile.LastChangedAt)
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="alert alert-light border mb-0">
+                                                    Codeansicht und Dateiaktionen werden später hier sauber ergänzt.
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
-                            }
-                        </div>
-
-                        @if (FilteredFiles.Count > VisibleFiles.Count)
-                        {
-                            <div class="alert alert-secondary mt-3 mb-0">
-                                Es werden die ersten @VisibleFiles.Count von @FilteredFiles.Count Treffern angezeigt.
-                                Nutze die Suche oder den Dateityp-Filter, um die Auswahl einzugrenzen.
                             </div>
-                        }
+                        </div>
                     }
                 </div>
             </div>
