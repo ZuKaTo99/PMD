@@ -51,7 +51,7 @@
 
                 <div class="card-body">
                     <p class="text-muted">
-                        Diese Dateiansicht nutzt die zuletzt gespeicherte Prüfung aus SQLite. Filter, Suche und Codeansicht bauen wir später hier ein.
+                        Diese Dateiansicht nutzt die zuletzt gespeicherte Prüfung aus SQLite.
                     </p>
 
                     <div class="row g-3">
@@ -87,32 +87,72 @@
                 <div class="card-header">
                     <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
                         <div>
-                            <h2 class="h5 mb-1">Dateivorschau</h2>
+                            <h2 class="h5 mb-1">Dateien durchsuchen</h2>
                             <div class="text-muted small">
-                                Erste Dateien aus der letzten Prüfung. Die vollständige filterbare Ansicht kommt später.
+                                Suche gezielt nach Dateien oder filtere nach Dateityp.
                             </div>
                         </div>
 
-                        @if (Files.Count > PreviewFiles.Count)
-                        {
-                            <span class="badge bg-light text-dark border align-self-start align-self-lg-center">
-                                @PreviewFiles.Count von @Files.Count
-                            </span>
-                        }
+                        <span class="badge bg-light text-dark border align-self-start align-self-lg-center">
+                            @FilteredFiles.Count Treffer
+                        </span>
                     </div>
                 </div>
 
                 <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-lg-7">
+                            <label class="form-label" for="file-search">Suche</label>
+                            <input id="file-search"
+                                   class="form-control"
+                                   placeholder="Dateiname oder Pfad suchen..."
+                                   value="@SearchText"
+                                   @oninput="OnSearchTextChanged" />
+                        </div>
+
+                        <div class="col-12 col-lg-3">
+                            <label class="form-label" for="file-extension-filter">Dateityp</label>
+                            <select id="file-extension-filter"
+                                    class="form-select"
+                                    value="@SelectedExtension"
+                                    @onchange="OnSelectedExtensionChanged">
+                                <option value="">Alle Dateitypen</option>
+
+                                @foreach (string extension in AvailableExtensions)
+                                {
+                                    <option value="@extension">
+                                        @ProjectOverviewFormatter.FormatExtension(extension)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-lg-2 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary w-100"
+                                    type="button"
+                                    @onclick="ClearFilters"
+                                    disabled="@(!HasActiveFilters)">
+                                Filter zurücksetzen
+                            </button>
+                        </div>
+                    </div>
+
                     @if (Files.Count == 0)
                     {
                         <p class="text-muted mb-0">
                             In der letzten Prüfung wurden keine Dateien gespeichert.
                         </p>
                     }
+                    else if (FilteredFiles.Count == 0)
+                    {
+                        <div class="alert alert-info mb-0">
+                            Für diese Suche wurden keine Dateien gefunden.
+                        </div>
+                    }
                     else
                     {
                         <div class="d-flex flex-column gap-2">
-                            @foreach (var file in PreviewFiles)
+                            @foreach (var file in VisibleFiles)
                             {
                                 <div class="border rounded p-3">
                                     <div class="text-truncate">
@@ -127,6 +167,14 @@
                                 </div>
                             }
                         </div>
+
+                        @if (FilteredFiles.Count > VisibleFiles.Count)
+                        {
+                            <div class="alert alert-secondary mt-3 mb-0">
+                                Es werden die ersten @VisibleFiles.Count von @FilteredFiles.Count Treffern angezeigt.
+                                Nutze die Suche oder den Dateityp-Filter, um die Auswahl einzugrenzen.
+                            </div>
+                        }
                     }
                 </div>
             </div>
