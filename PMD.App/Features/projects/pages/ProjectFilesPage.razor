@@ -272,9 +272,39 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="alert alert-light border mb-0">
-                                                    Codeansicht und Dateiaktionen werden später hier sauber ergänzt.
-                                                </div>
+                                                <button class="btn btn-outline-primary"
+                                                        type="button"
+                                                        @onclick="LoadSelectedFilePreview">
+                                                    Vorschau laden
+                                                </button>
+
+                                                @if (SelectedFileContentResult is not null)
+                                                {
+                                                    <div class="@GetFilePreviewAlertCssClass()">
+                                                        <div class="fw-semibold mb-1">
+                                                            @SelectedFileContentResult.Message
+                                                        </div>
+
+                                                        @if (SelectedFileContentResult.CanShowContent)
+                                                        {
+                                                            <div class="text-muted small">
+                                                                @SelectedFileContentResult.LineCount Zeilen
+                                                                · @ProjectOverviewFormatter.FormatFileSize(SelectedFileContentResult.SizeInBytes)
+
+                                                                @if (SelectedFileContentResult.WasTruncated)
+                                                                {
+                                                                    <span>· gekürzt</span>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
+
+                                                    @if (SelectedFileContentResult.CanShowContent)
+                                                    {
+                                                        <pre class="border rounded p-3 bg-light mb-0"
+                                                             style="max-height: 420px; overflow: auto;"><code>@SelectedFileContentResult.Content</code></pre>
+                                                    }
+                                                }
                                             </div>
                                         }
                                     </div>

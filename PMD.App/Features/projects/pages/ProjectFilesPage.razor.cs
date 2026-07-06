@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
+using PMD.App.Application.ProjectFiles;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
+using PMD.App.Domain.ProjectFiles;
 using PMD.App.Domain.ProjectStates;
 using PMD.App.Domain.Projects;
 using System;
@@ -24,6 +26,9 @@ public partial class ProjectFilesPage
     [Inject]
     private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } = default!;
 
+    [Inject]
+    private IProjectFileContentReader ProjectFileContentReader { get; set; } = default!;
+
     [Parameter]
     public Guid ProjectId { get; set; }
 
@@ -35,6 +40,8 @@ public partial class ProjectFilesPage
         Array.Empty<ProjectStateFile>();
 
     protected ProjectStateFile? SelectedFile { get; private set; }
+
+    protected ProjectFileContentResult? SelectedFileContentResult { get; private set; }
 
     protected string SearchText { get; private set; } = string.Empty;
 
@@ -100,7 +107,28 @@ public partial class ProjectFilesPage
 
     protected void SelectFile(ProjectStateFile file)
     {
+        if (!IsSameFile(file, SelectedFile))
+        {
+            SelectedFileContentResult = null;
+        }
+
         SelectedFile = file;
+    }
+
+    protected void LoadSelectedFilePreview()
+    {
+        if (SelectedFile is null || LatestProjectState is null)
+        {
+            SelectedFileContentResult = ProjectFileContentResult.Blocked(
+                string.Empty,
+                "Es wurde keine Datei ausgewählt.");
+
+            return;
+        }
+
+        SelectedFileContentResult = ProjectFileContentReader.ReadPreview(
+            LatestProjectState.RootPath,
+            SelectedFile.RelativePath);
     }
 
     protected string GetFileCardCssClass(ProjectStateFile file)
@@ -112,12 +140,23 @@ public partial class ProjectFilesPage
             : "border rounded p-3";
     }
 
+    protected string GetFilePreviewAlertCssClass()
+    {
+        if (SelectedFileContentResult?.CanShowContent == true)
+        {
+            return "alert alert-success mb-0";
+        }
+
+        return "alert alert-warning mb-0";
+    }
+
     private void LoadProjectFiles()
     {
         CurrentProject = ProjectMemoryStore.GetProjectById(ProjectId);
         LatestProjectState = null;
         Files = Array.Empty<ProjectStateFile>();
         SelectedFile = null;
+        SelectedFileContentResult = null;
         SearchText = string.Empty;
         SelectedExtension = string.Empty;
         SelectedSortMode = SortByPath;
@@ -171,6 +210,7 @@ public partial class ProjectFilesPage
         if (!selectedFileStillVisible)
         {
             SelectedFile = null;
+            SelectedFileContentResult = null;
         }
     }
 
