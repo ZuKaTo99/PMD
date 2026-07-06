@@ -131,15 +131,6 @@ public partial class ProjectFilesPage
             SelectedFile.RelativePath);
     }
 
-    protected string GetFileCardCssClass(ProjectStateFile file)
-    {
-        bool isSelected = IsSameFile(file, SelectedFile);
-
-        return isSelected
-            ? "border border-primary rounded p-3 bg-light"
-            : "border rounded p-3";
-    }
-
     private void LoadProjectFiles()
     {
         CurrentProject = ProjectMemoryStore.GetProjectById(ProjectId);

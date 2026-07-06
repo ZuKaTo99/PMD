@@ -100,130 +100,32 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="row g-3 mb-4">
-                        <div class="col-12 col-xl-5">
-                            <label class="form-label" for="file-search">Suche</label>
-                            <input id="file-search"
-                                   class="form-control"
-                                   placeholder="Dateiname oder Pfad suchen..."
-                                   value="@SearchText"
-                                   @oninput="OnSearchTextChanged" />
+                    <ProjectFileSearchBar SearchText="SearchText"
+                                          SelectedExtension="SelectedExtension"
+                                          SelectedSortMode="SelectedSortMode"
+                                          AvailableExtensions="AvailableExtensions"
+                                          HasActiveFilters="HasActiveFilters"
+                                          OnSearchTextChanged="OnSearchTextChanged"
+                                          OnSelectedExtensionChanged="OnSelectedExtensionChanged"
+                                          OnSelectedSortModeChanged="OnSelectedSortModeChanged"
+                                          OnClearFilters="ClearFilters" />
+
+                    <div class="row g-3">
+                        <div class="col-12 col-xl-8">
+                            <ProjectFileList TotalFileCount="Files.Count"
+                                             FilteredFiles="FilteredFiles"
+                                             VisibleFiles="VisibleFiles"
+                                             SelectedFile="SelectedFile"
+                                             SelectedSortLabel="@SelectedSortLabel"
+                                             OnSelectFile="SelectFile" />
                         </div>
 
-                        <div class="col-12 col-md-6 col-xl-3">
-                            <label class="form-label" for="file-extension-filter">Dateityp</label>
-                            <select id="file-extension-filter"
-                                    class="form-select"
-                                    value="@SelectedExtension"
-                                    @onchange="OnSelectedExtensionChanged">
-                                <option value="">Alle Dateitypen</option>
-
-                                @foreach (string extension in AvailableExtensions)
-                                {
-                                    <option value="@extension">
-                                        @ProjectOverviewFormatter.FormatExtension(extension)
-                                    </option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="col-12 col-md-6 col-xl-2">
-                            <label class="form-label" for="file-sort-mode">Sortieren nach</label>
-                            <select id="file-sort-mode"
-                                    class="form-select"
-                                    value="@SelectedSortMode"
-                                    @onchange="OnSelectedSortModeChanged">
-                                <option value="@SortByPath">Pfad</option>
-                                <option value="@SortByExtension">Dateityp</option>
-                                <option value="@SortBySizeDescending">Größe</option>
-                                <option value="@SortByLastChangedDescending">Zuletzt geändert</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12 col-xl-2 d-flex align-items-end">
-                            <button class="btn btn-outline-secondary w-100"
-                                    type="button"
-                                    @onclick="ClearFilters"
-                                    disabled="@(!HasActiveFilters)">
-                                Filter zurücksetzen
-                            </button>
+                        <div class="col-12 col-xl-4">
+                            <ProjectFileDetailCard SelectedFile="SelectedFile"
+                                                   SelectedFileContentResult="SelectedFileContentResult"
+                                                   OnLoadPreview="LoadSelectedFilePreview" />
                         </div>
                     </div>
-
-                    @if (Files.Count == 0)
-                    {
-                        <p class="text-muted mb-0">
-                            In der letzten Prüfung wurden keine Dateien gespeichert.
-                        </p>
-                    }
-                    else if (FilteredFiles.Count == 0)
-                    {
-                        <div class="alert alert-info mb-0">
-                            Für diese Suche wurden keine Dateien gefunden.
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
-                            <div class="text-muted small">
-                                @FilteredFiles.Count Treffer · sortiert nach @SelectedSortLabel
-                            </div>
-
-                            @if (FilteredFiles.Count > VisibleFiles.Count)
-                            {
-                                <div class="text-muted small">
-                                    @VisibleFiles.Count von @FilteredFiles.Count sichtbar
-                                </div>
-                            }
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-12 col-xl-8">
-                                <div class="d-flex flex-column gap-2">
-                                    @foreach (var file in VisibleFiles)
-                                    {
-                                        <div class="@GetFileCardCssClass(file)">
-                                            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
-                                                <div class="min-w-0">
-                                                    <div class="text-truncate">
-                                                        <code>@file.RelativePath</code>
-                                                    </div>
-
-                                                    <div class="text-muted small mt-1">
-                                                        @ProjectOverviewFormatter.FormatExtension(file.Extension)
-                                                        · @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
-                                                        · geändert @ProjectOverviewFormatter.FormatDateTime(file.LastChangedAt)
-                                                    </div>
-                                                </div>
-
-                                                <div class="align-self-lg-start">
-                                                    <button class="btn btn-sm btn-outline-primary"
-                                                            type="button"
-                                                            @onclick="() => SelectFile(file)">
-                                                        Details
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-
-                                @if (FilteredFiles.Count > VisibleFiles.Count)
-                                {
-                                    <div class="alert alert-secondary mt-3 mb-0">
-                                        Es werden die ersten @VisibleFiles.Count von @FilteredFiles.Count Treffern angezeigt.
-                                        Nutze die Suche oder den Dateityp-Filter, um die Auswahl einzugrenzen.
-                                    </div>
-                                }
-                            </div>
-
-                            <div class="col-12 col-xl-4">
-                                <ProjectFileDetailCard SelectedFile="SelectedFile"
-                                                       SelectedFileContentResult="SelectedFileContentResult"
-                                                       OnLoadPreview="LoadSelectedFilePreview" />
-                            </div>
-                        </div>
-                    }
                 </div>
             </div>
         }

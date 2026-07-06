@@ -1,0 +1,87 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-xl-5">
+        <label class="form-label" for="file-search">Suche</label>
+        <input id="file-search"
+               class="form-control"
+               placeholder="Dateiname oder Pfad suchen..."
+               value="@SearchText"
+               @oninput="OnSearchTextChanged" />
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <label class="form-label" for="file-extension-filter">Dateityp</label>
+        <select id="file-extension-filter"
+                class="form-select"
+                value="@SelectedExtension"
+                @onchange="OnSelectedExtensionChanged">
+            <option value="">Alle Dateitypen</option>
+
+            @foreach (string extension in AvailableExtensions)
+            {
+                <option value="@extension">
+                    @ProjectOverviewFormatter.FormatExtension(extension)
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-2">
+        <label class="form-label" for="file-sort-mode">Sortieren nach</label>
+        <select id="file-sort-mode"
+                class="form-select"
+                value="@SelectedSortMode"
+                @onchange="OnSelectedSortModeChanged">
+            <option value="@SortByPath">Pfad</option>
+            <option value="@SortByExtension">Dateityp</option>
+            <option value="@SortBySizeDescending">Größe</option>
+            <option value="@SortByLastChangedDescending">Zuletzt geändert</option>
+        </select>
+    </div>
+
+    <div class="col-12 col-xl-2 d-flex align-items-end">
+        <button class="btn btn-outline-secondary w-100"
+                type="button"
+                @onclick="OnClearFilters"
+                disabled="@(!HasActiveFilters)">
+            Filter zurücksetzen
+        </button>
+    </div>
+</div>
+
+@code {
+    private const string SortByPath = "path";
+    private const string SortByExtension = "extension";
+    private const string SortBySizeDescending = "size-desc";
+    private const string SortByLastChangedDescending = "last-changed-desc";
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string SelectedExtension { get; set; } = string.Empty;
+
+    [Parameter]
+    public string SelectedSortMode { get; set; } = SortByPath;
+
+    [Parameter]
+    public IReadOnlyList<string> AvailableExtensions { get; set; } =
+        Array.Empty<string>();
+
+    [Parameter]
+    public bool HasActiveFilters { get; set; }
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnSearchTextChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnSelectedExtensionChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnSelectedSortModeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnClearFilters { get; set; }
+}

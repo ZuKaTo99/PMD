@@ -1,0 +1,116 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectStates
+
+@if (TotalFileCount == 0)
+{
+    <p class="text-muted mb-0">
+        In der letzten Prüfung wurden keine Dateien gespeichert.
+    </p>
+}
+else if (FilteredFiles.Count == 0)
+{
+    <div class="alert alert-info mb-0">
+        Für diese Suche wurden keine Dateien gefunden.
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+        <div class="text-muted small">
+            @FilteredFiles.Count Treffer · sortiert nach @SelectedSortLabel
+        </div>
+
+        @if (FilteredFiles.Count > VisibleFiles.Count)
+        {
+            <div class="text-muted small">
+                @VisibleFiles.Count von @FilteredFiles.Count sichtbar
+            </div>
+        }
+    </div>
+
+    <div class="d-flex flex-column gap-2">
+        @foreach (ProjectStateFile file in VisibleFiles)
+        {
+            <div class="@GetFileCardCssClass(file)">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-truncate">
+                            <code>@file.RelativePath</code>
+                        </div>
+
+                        <div class="text-muted small mt-1">
+                            @ProjectOverviewFormatter.FormatExtension(file.Extension)
+                            · @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
+                            · geändert @ProjectOverviewFormatter.FormatDateTime(file.LastChangedAt)
+                        </div>
+                    </div>
+
+                    <div class="align-self-lg-start">
+                        <button class="btn btn-sm btn-outline-primary"
+                                type="button"
+                                @onclick="() => OnSelectFile.InvokeAsync(file)">
+                            Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (FilteredFiles.Count > VisibleFiles.Count)
+    {
+        <div class="alert alert-secondary mt-3 mb-0">
+            Es werden die ersten @VisibleFiles.Count von @FilteredFiles.Count Treffern angezeigt.
+            Nutze die Suche oder den Dateityp-Filter, um die Auswahl einzugrenzen.
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int TotalFileCount { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ProjectStateFile> FilteredFiles { get; set; } =
+        Array.Empty<ProjectStateFile>();
+
+    [Parameter]
+    public IReadOnlyList<ProjectStateFile> VisibleFiles { get; set; } =
+        Array.Empty<ProjectStateFile>();
+
+    [Parameter]
+    public ProjectStateFile? SelectedFile { get; set; }
+
+    [Parameter]
+    public string SelectedSortLabel { get; set; } = "Pfad";
+
+    [Parameter]
+    public EventCallback<ProjectStateFile> OnSelectFile { get; set; }
+
+    private string GetFileCardCssClass(ProjectStateFile file)
+    {
+        bool isSelected = IsSameFile(file, SelectedFile);
+
+        return isSelected
+            ? "border border-primary rounded p-3 bg-light"
+            : "border rounded p-3";
+    }
+
+    private static bool IsSameFile(
+        ProjectStateFile firstFile,
+        ProjectStateFile? secondFile)
+    {
+        if (secondFile is null)
+        {
+            return false;
+        }
+
+        return string.Equals(
+                firstFile.RelativePath,
+                secondFile.RelativePath,
+                StringComparison.OrdinalIgnoreCase) &&
+            firstFile.LastChangedAt == secondFile.LastChangedAt &&
+            firstFile.SizeInBytes == secondFile.SizeInBytes;
+    }
+}
