@@ -1,0 +1,193 @@
+@page "/projekte/{ProjectId:guid}/aenderungen"
+@namespace PMD.App.Features.Projects.Pages
+@using PMD.App.Features.Projects.Components
+
+<PageTitle>PMD - Änderungen</PageTitle>
+
+<div class="container-fluid pmd-project-page">
+    @if (CurrentProject is null)
+    {
+        <div class="alert alert-warning">
+            Das Projekt wurde nicht gefunden. Es ist nicht mehr in der Projektliste vorhanden.
+        </div>
+    }
+    else
+    {
+        <div class="mb-4">
+            <div class="text-muted small mb-1">PMD - Änderungen</div>
+
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div>
+                    <h1>Änderungen</h1>
+                    <p class="text-muted mb-0">
+                        Änderungsansicht für @CurrentProject.Name. Dieser Bereich wird aus dem gespeicherten Projektverlauf aufgebaut.
+                    </p>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap align-self-xl-start">
+                    <a class="btn btn-outline-secondary" href="@($"/projekte/{CurrentProject.Id}")">
+                        Zurück zum Projekt
+                    </a>
+
+                    <a class="btn btn-outline-primary" href="@($"/projekte/{CurrentProject.Id}/dateien")">
+                        Dateien ansehen
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Grundlage</h2>
+            </div>
+
+            <div class="card-body">
+                <p class="text-muted">
+                    PMD nutzt später die letzten gespeicherten Prüfungen dieses Projekts, um neue, geänderte und entfernte Dateien verständlich darzustellen.
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="text-muted small">Gespeicherte Prüfungen</div>
+                            <div class="fw-semibold">@ProjectStates.Count</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="text-muted small">Letzte Prüfung</div>
+                            <div class="fw-semibold">
+                                @FormatProjectStateDate(LatestProjectState)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="text-muted small">Vorherige Prüfung</div>
+                            <div class="fw-semibold">
+                                @FormatProjectStateDate(PreviousProjectState)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (ProjectStates.Count == 0)
+        {
+            <div class="alert alert-info">
+                Für dieses Projekt gibt es noch keine gespeicherte Prüfung. Prüfe das Projekt zuerst, damit PMD später Änderungen erkennen kann.
+            </div>
+        }
+        else if (ProjectStates.Count == 1)
+        {
+            <div class="alert alert-info">
+                Für eine Änderungsanalyse braucht PMD mindestens zwei gespeicherte Prüfungen. Prüfe das Projekt später erneut, nachdem sich Dateien geändert haben.
+            </div>
+        }
+        else
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Bereit für Änderungsanalyse</h2>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted">
+                        Für dieses Projekt sind mindestens zwei Prüfungen vorhanden. Im nächsten Schritt kann PMD daraus automatisch eine Änderungsübersicht erstellen.
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fw-semibold mb-2">Letzte Prüfung</div>
+
+                                @if (LatestProjectState is not null)
+                                {
+                                    <div class="text-muted small">
+                                        @ProjectOverviewFormatter.FormatDateTime(LatestProjectState.ScannedAt)
+                                    </div>
+
+                                    <div class="mt-2">
+                                        @LatestProjectState.FileCount Dateien ·
+                                        @ProjectOverviewFormatter.FormatFileSize(LatestProjectState.TotalSizeInBytes)
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fw-semibold mb-2">Vorherige Prüfung</div>
+
+                                @if (PreviousProjectState is not null)
+                                {
+                                    <div class="text-muted small">
+                                        @ProjectOverviewFormatter.FormatDateTime(PreviousProjectState.ScannedAt)
+                                    </div>
+
+                                    <div class="mt-2">
+                                        @PreviousProjectState.FileCount Dateien ·
+                                        @ProjectOverviewFormatter.FormatFileSize(PreviousProjectState.TotalSizeInBytes)
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border mt-3 mb-0">
+                        Die echte Änderungslogik bauen wir als nächsten eigenen Schritt sauber in Domain/Application auf.
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Nächster Ausbau</h2>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-3">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold mb-2">Neue Dateien</div>
+                            <div class="text-muted small">
+                                Dateien, die in der letzten Prüfung neu dazugekommen sind.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold mb-2">Geänderte Dateien</div>
+                            <div class="text-muted small">
+                                Dateien, deren Größe oder Änderungsdatum sich verändert hat.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold mb-2">Entfernte Dateien</div>
+                            <div class="text-muted small">
+                                Dateien, die vorher vorhanden waren und jetzt fehlen.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold mb-2">Unveränderte Dateien</div>
+                            <div class="text-muted small">
+                                Dateien, die zwischen den Prüfungen gleich geblieben sind.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
