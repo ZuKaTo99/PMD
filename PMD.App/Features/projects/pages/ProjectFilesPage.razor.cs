@@ -140,16 +140,6 @@ public partial class ProjectFilesPage
             : "border rounded p-3";
     }
 
-    protected string GetFilePreviewAlertCssClass()
-    {
-        if (SelectedFileContentResult?.CanShowContent == true)
-        {
-            return "alert alert-success mb-0";
-        }
-
-        return "alert alert-warning mb-0";
-    }
-
     private void LoadProjectFiles()
     {
         CurrentProject = ProjectMemoryStore.GetProjectById(ProjectId);
