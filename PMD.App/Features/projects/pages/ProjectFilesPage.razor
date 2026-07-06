@@ -1,0 +1,135 @@
+@page "/projekte/{ProjectId:guid}/dateien"
+@namespace PMD.App.Features.Projects.Pages
+@using PMD.App.Features.Projects.Components
+
+<PageTitle>PMD - Dateien</PageTitle>
+
+<div class="container-fluid pmd-project-page">
+    @if (CurrentProject is null)
+    {
+        <div class="alert alert-warning">
+            Das Projekt wurde nicht gefunden. Es ist nicht mehr in der Projektliste vorhanden.
+        </div>
+    }
+    else
+    {
+        <div class="mb-4">
+            <div class="text-muted small mb-1">PMD - Dateien</div>
+
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div>
+                    <h1>Dateien</h1>
+                    <p class="text-muted mb-0">
+                        Dateiansicht für @CurrentProject.Name. Diese Ansicht basiert auf der letzten gespeicherten Prüfung.
+                    </p>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap align-self-xl-start">
+                    <a class="btn btn-outline-secondary" href="@($"/projekte/{CurrentProject.Id}")">
+                        Zurück zum Projekt
+                    </a>
+
+                    <a class="btn btn-outline-secondary" href="/projektpruefung">
+                        Anderen Projektordner prüfen
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if (LatestProjectState is null)
+        {
+            <div class="alert alert-info">
+                Für dieses Projekt gibt es noch keine gespeicherte Prüfung. Prüfe das Projekt zuerst, damit PMD die Dateien anzeigen kann.
+            </div>
+        }
+        else
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Grundlage</h2>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted">
+                        Diese Dateiansicht nutzt die zuletzt gespeicherte Prüfung aus SQLite. Filter, Suche und Codeansicht bauen wir später hier ein.
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Letzte Prüfung</div>
+                                <div class="fw-semibold">
+                                    @ProjectOverviewFormatter.FormatDateTime(LatestProjectState.ScannedAt)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Dateien</div>
+                                <div class="fw-semibold">@Files.Count</div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Gesamtgröße</div>
+                                <div class="fw-semibold">
+                                    @ProjectOverviewFormatter.FormatFileSize(LatestProjectState.TotalSizeInBytes)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                        <div>
+                            <h2 class="h5 mb-1">Dateivorschau</h2>
+                            <div class="text-muted small">
+                                Erste Dateien aus der letzten Prüfung. Die vollständige filterbare Ansicht kommt später.
+                            </div>
+                        </div>
+
+                        @if (Files.Count > PreviewFiles.Count)
+                        {
+                            <span class="badge bg-light text-dark border align-self-start align-self-lg-center">
+                                @PreviewFiles.Count von @Files.Count
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if (Files.Count == 0)
+                    {
+                        <p class="text-muted mb-0">
+                            In der letzten Prüfung wurden keine Dateien gespeichert.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-2">
+                            @foreach (var file in PreviewFiles)
+                            {
+                                <div class="border rounded p-3">
+                                    <div class="text-truncate">
+                                        <code>@file.RelativePath</code>
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        @ProjectOverviewFormatter.FormatExtension(file.Extension)
+                                        · @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
+                                        · geändert @ProjectOverviewFormatter.FormatDateTime(file.LastChangedAt)
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
