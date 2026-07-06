@@ -11,6 +11,11 @@ namespace PMD.App.Features.Projects.Pages;
 
 public partial class ProjectFilesPage
 {
+    protected const string SortByPath = "path";
+    protected const string SortByExtension = "extension";
+    protected const string SortBySizeDescending = "size-desc";
+    protected const string SortByLastChangedDescending = "last-changed-desc";
+
     private const int MaxVisibleFileCount = 100;
 
     [Inject]
@@ -33,9 +38,19 @@ public partial class ProjectFilesPage
 
     protected string SelectedExtension { get; private set; } = string.Empty;
 
+    protected string SelectedSortMode { get; private set; } = SortByPath;
+
     protected bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(SearchText) ||
         !string.IsNullOrWhiteSpace(SelectedExtension);
+
+    protected string SelectedSortLabel => SelectedSortMode switch
+    {
+        SortByExtension => "Dateityp",
+        SortBySizeDescending => "Größe",
+        SortByLastChangedDescending => "Änderungsdatum",
+        _ => "Pfad"
+    };
 
     protected IReadOnlyList<string> AvailableExtensions => Files
         .Select(file => file.Extension)
@@ -47,10 +62,9 @@ public partial class ProjectFilesPage
     protected IReadOnlyList<ProjectStateFile> FilteredFiles => Files
         .Where(MatchesSelectedExtension)
         .Where(MatchesSearchText)
-        .OrderBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase)
         .ToList();
 
-    protected IReadOnlyList<ProjectStateFile> VisibleFiles => FilteredFiles
+    protected IReadOnlyList<ProjectStateFile> VisibleFiles => SortFiles(FilteredFiles)
         .Take(MaxVisibleFileCount)
         .ToList();
 
@@ -69,6 +83,11 @@ public partial class ProjectFilesPage
         SelectedExtension = eventArgs.Value?.ToString() ?? string.Empty;
     }
 
+    protected void OnSelectedSortModeChanged(ChangeEventArgs eventArgs)
+    {
+        SelectedSortMode = eventArgs.Value?.ToString() ?? SortByPath;
+    }
+
     protected void ClearFilters()
     {
         SearchText = string.Empty;
@@ -82,6 +101,7 @@ public partial class ProjectFilesPage
         Files = Array.Empty<ProjectStateFile>();
         SearchText = string.Empty;
         SelectedExtension = string.Empty;
+        SelectedSortMode = SortByPath;
 
         if (CurrentProject is null)
         {
@@ -96,6 +116,27 @@ public partial class ProjectFilesPage
         }
 
         Files = ProjectStateMemoryStore.GetFilesByProjectStateId(LatestProjectState.Id);
+    }
+
+    private IEnumerable<ProjectStateFile> SortFiles(IReadOnlyList<ProjectStateFile> files)
+    {
+        return SelectedSortMode switch
+        {
+            SortByExtension => files
+                .OrderBy(file => file.Extension, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase),
+
+            SortBySizeDescending => files
+                .OrderByDescending(file => file.SizeInBytes)
+                .ThenBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase),
+
+            SortByLastChangedDescending => files
+                .OrderByDescending(file => file.LastChangedAt)
+                .ThenBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase),
+
+            _ => files
+                .OrderBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase)
+        };
     }
 
     private bool MatchesSelectedExtension(ProjectStateFile file)

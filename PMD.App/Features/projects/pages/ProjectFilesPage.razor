@@ -89,7 +89,7 @@
                         <div>
                             <h2 class="h5 mb-1">Dateien durchsuchen</h2>
                             <div class="text-muted small">
-                                Suche gezielt nach Dateien oder filtere nach Dateityp.
+                                Suche gezielt nach Dateien, filtere nach Dateityp oder ändere die Sortierung.
                             </div>
                         </div>
 
@@ -101,7 +101,7 @@
 
                 <div class="card-body">
                     <div class="row g-3 mb-4">
-                        <div class="col-12 col-lg-7">
+                        <div class="col-12 col-xl-5">
                             <label class="form-label" for="file-search">Suche</label>
                             <input id="file-search"
                                    class="form-control"
@@ -110,7 +110,7 @@
                                    @oninput="OnSearchTextChanged" />
                         </div>
 
-                        <div class="col-12 col-lg-3">
+                        <div class="col-12 col-md-6 col-xl-3">
                             <label class="form-label" for="file-extension-filter">Dateityp</label>
                             <select id="file-extension-filter"
                                     class="form-select"
@@ -127,7 +127,20 @@
                             </select>
                         </div>
 
-                        <div class="col-12 col-lg-2 d-flex align-items-end">
+                        <div class="col-12 col-md-6 col-xl-2">
+                            <label class="form-label" for="file-sort-mode">Sortieren nach</label>
+                            <select id="file-sort-mode"
+                                    class="form-select"
+                                    value="@SelectedSortMode"
+                                    @onchange="OnSelectedSortModeChanged">
+                                <option value="@SortByPath">Pfad</option>
+                                <option value="@SortByExtension">Dateityp</option>
+                                <option value="@SortBySizeDescending">Größe</option>
+                                <option value="@SortByLastChangedDescending">Zuletzt geändert</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-xl-2 d-flex align-items-end">
                             <button class="btn btn-outline-secondary w-100"
                                     type="button"
                                     @onclick="ClearFilters"
@@ -151,6 +164,19 @@
                     }
                     else
                     {
+                        <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+                            <div class="text-muted small">
+                                @FilteredFiles.Count Treffer · sortiert nach @SelectedSortLabel
+                            </div>
+
+                            @if (FilteredFiles.Count > VisibleFiles.Count)
+                            {
+                                <div class="text-muted small">
+                                    @VisibleFiles.Count von @FilteredFiles.Count sichtbar
+                                </div>
+                            }
+                        </div>
+
                         <div class="d-flex flex-column gap-2">
                             @foreach (var file in VisibleFiles)
                             {
