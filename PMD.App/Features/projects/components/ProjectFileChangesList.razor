@@ -1,0 +1,103 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectChanges
+@using System.Linq
+
+@if (ChangesResult is not null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Auffällige Änderungen</h2>
+        </div>
+
+        <div class="card-body">
+            @if (VisibleChanges.Count == 0)
+            {
+                <div class="alert alert-success mb-0">
+                    Zwischen den letzten beiden Prüfungen wurden keine auffälligen Dateiänderungen erkannt.
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-2">
+                    @foreach (ProjectFileChange change in VisibleChanges)
+                    {
+                        <div class="border rounded p-3">
+                            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="text-truncate">
+                                        <code>@change.RelativePath</code>
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        @ProjectOverviewFormatter.FormatExtension(change.Extension)
+                                    </div>
+                                </div>
+
+                                <span class="badge bg-light text-dark border align-self-start">
+                                    @FormatChangeKind(change.ChangeKind)
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (TotalVisibleChangeCount > VisibleChanges.Count)
+                {
+                    <div class="alert alert-secondary mt-3 mb-0">
+                        Es werden die ersten @VisibleChanges.Count auffälligen Änderungen angezeigt.
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private const int MaxVisibleChangeCount = 25;
+
+    [Parameter]
+    public ProjectChangesResult? ChangesResult { get; set; }
+
+    private IReadOnlyList<ProjectFileChange> VisibleChanges
+    {
+        get
+        {
+            if (ChangesResult is null)
+            {
+                return Array.Empty<ProjectFileChange>();
+            }
+
+            return ChangesResult.Changes
+                .Where(change => change.ChangeKind != ProjectFileChangeKind.Unchanged)
+                .Take(MaxVisibleChangeCount)
+                .ToList();
+        }
+    }
+
+    private int TotalVisibleChangeCount
+    {
+        get
+        {
+            if (ChangesResult is null)
+            {
+                return 0;
+            }
+
+            return ChangesResult.Changes
+                .Count(change => change.ChangeKind != ProjectFileChangeKind.Unchanged);
+        }
+    }
+
+    private static string FormatChangeKind(ProjectFileChangeKind changeKind)
+    {
+        return changeKind switch
+        {
+            ProjectFileChangeKind.Added => "Neu",
+            ProjectFileChangeKind.Modified => "Geändert",
+            ProjectFileChangeKind.Removed => "Entfernt",
+            ProjectFileChangeKind.Unchanged => "Unverändert",
+            _ => "Unbekannt"
+        };
+    }
+}

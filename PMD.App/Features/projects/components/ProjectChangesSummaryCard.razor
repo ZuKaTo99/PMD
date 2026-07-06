@@ -1,0 +1,53 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectChanges
+
+@if (ChangesResult is not null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Änderungsübersicht</h2>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Erste Auswertung auf Basis von Dateipfad, Dateigröße und Änderungsdatum.
+            </p>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Neue Dateien</div>
+                        <div class="display-6">@ChangesResult.AddedFileCount</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Geänderte Dateien</div>
+                        <div class="display-6">@ChangesResult.ModifiedFileCount</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Entfernte Dateien</div>
+                        <div class="display-6">@ChangesResult.RemovedFileCount</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small">Unveränderte Dateien</div>
+                        <div class="display-6">@ChangesResult.UnchangedFileCount</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ProjectChangesResult? ChangesResult { get; set; }
+}

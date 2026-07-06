@@ -71,16 +71,4 @@ public partial class ProjectChangesPage
 
         return ProjectOverviewFormatter.FormatDateTime(projectState.ScannedAt);
     }
-
-    protected static string FormatChangeKind(ProjectFileChangeKind changeKind)
-    {
-        return changeKind switch
-        {
-            ProjectFileChangeKind.Added => "Neu",
-            ProjectFileChangeKind.Modified => "Geändert",
-            ProjectFileChangeKind.Removed => "Entfernt",
-            ProjectFileChangeKind.Unchanged => "Unverändert",
-            _ => "Unbekannt"
-        };
-    }
 }
