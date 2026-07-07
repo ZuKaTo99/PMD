@@ -32,6 +32,9 @@ public partial class ProjectFilesPage
     [Parameter]
     public Guid ProjectId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "datei")]
+    public string? RequestedFilePath { get; set; }
+
     protected Project? CurrentProject { get; private set; }
 
     protected ProjectState? LatestProjectState { get; private set; }
@@ -155,6 +158,9 @@ public partial class ProjectFilesPage
         }
 
         Files = ProjectStateMemoryStore.GetFilesByProjectStateId(LatestProjectState.Id);
+
+        TrySelectRequestedFile();
+
     }
 
     private IEnumerable<ProjectStateFile> SortFiles(IReadOnlyList<ProjectStateFile> files)
@@ -238,5 +244,41 @@ public partial class ProjectFilesPage
                 StringComparison.OrdinalIgnoreCase) &&
             firstFile.LastChangedAt == secondFile.LastChangedAt &&
             firstFile.SizeInBytes == secondFile.SizeInBytes;
+    }
+
+    private void TrySelectRequestedFile()
+    {
+        if (string.IsNullOrWhiteSpace(RequestedFilePath))
+        {
+            return;
+        }
+
+        string requestedFilePath = NormalizeRelativePath(
+            Uri.UnescapeDataString(RequestedFilePath));
+
+        ProjectStateFile? requestedFile = Files.FirstOrDefault(file =>
+            string.Equals(
+                NormalizeRelativePath(file.RelativePath),
+                requestedFilePath,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (requestedFile is null)
+        {
+            SearchText = requestedFilePath;
+            return;
+        }
+
+        SearchText = requestedFile.RelativePath;
+        SelectedFile = requestedFile;
+        SelectedFileContentResult = null;
+
+        LoadSelectedFilePreview();
+    }
+
+    private static string NormalizeRelativePath(string relativePath)
+    {
+        return relativePath
+            .Replace('\\', '/')
+            .Trim();
     }
 }

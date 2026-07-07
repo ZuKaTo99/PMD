@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectChanges
 @using PMD.App.Domain.ProjectStates
+@using System
 
 <div class="card h-100 mb-4">
     <div class="card-header">
@@ -91,10 +92,21 @@
                     Ein genauer Code-Diff kommt später.
                 </div>
 
-                <a class="btn btn-outline-primary"
-                   href="@($"/projekte/{ProjectId}/dateien")">
-                    Dateien ansehen
-                </a>
+                @if (CanOpenLatestFile)
+                {
+                    <a class="btn btn-outline-primary"
+                       href="@LatestFileDetailsLink">
+                        Datei mit Vorschau öffnen
+                    </a>
+                }
+                else
+                {
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            disabled>
+                        Datei nicht mehr vorhanden
+                    </button>
+                }
             </div>
         }
     </div>
@@ -106,6 +118,25 @@
 
     [Parameter]
     public ProjectFileChange? SelectedChange { get; set; }
+
+    private bool CanOpenLatestFile =>
+        SelectedChange?.LatestFile is not null;
+
+    private string LatestFileDetailsLink
+    {
+        get
+        {
+            if (SelectedChange?.LatestFile is null)
+            {
+                return "#";
+            }
+
+            string encodedRelativePath = Uri.EscapeDataString(
+                SelectedChange.LatestFile.RelativePath);
+
+            return $"/projekte/{ProjectId}/dateien?datei={encodedRelativePath}";
+        }
+    }
 
     private static string FormatFileSize(ProjectStateFile? file)
     {
