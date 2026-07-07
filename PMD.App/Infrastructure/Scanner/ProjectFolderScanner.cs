@@ -22,54 +22,6 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
         "Temp"
     };
 
-    private static readonly HashSet<string> TextSnapshotExtensions = new(StringComparer.OrdinalIgnoreCase)
-{
-    ".cs",
-    ".razor",
-    ".xaml",
-    ".css",
-    ".scss",
-    ".html",
-    ".htm",
-    ".js",
-    ".ts",
-    ".jsx",
-    ".tsx",
-    ".json",
-    ".xml",
-    ".config",
-    ".csproj",
-    ".sln",
-    ".props",
-    ".targets",
-    ".md",
-    ".txt",
-    ".gitignore",
-    ".editorconfig",
-    ".yml",
-    ".yaml",
-
-    ".py",
-    ".java",
-    ".kt",
-    ".kts",
-    ".cpp",
-    ".c",
-    ".h",
-    ".hpp",
-    ".rs",
-    ".go",
-    ".php",
-    ".rb",
-    ".swift",
-    ".sql",
-    ".sh",
-    ".bat",
-    ".ps1",
-    ".vue",
-    ".svelte"
-};
-
     public ProjectFolderScanResult ScanFolder(string folderPath)
     {
         if (string.IsNullOrWhiteSpace(folderPath))
@@ -306,12 +258,7 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
 
     private static bool IsSupportedTextSnapshotFile(string fileName, string extension)
     {
-        if (TextSnapshotExtensions.Contains(fileName))
-        {
-            return true;
-        }
-
-        return TextSnapshotExtensions.Contains(extension);
+        return ProjectTextFileRules.IsSupportedTextSnapshotFile(fileName, extension);
     }
 
     private sealed record ProjectTextSnapshot(
