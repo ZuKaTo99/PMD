@@ -71,6 +71,9 @@
     public ProjectFileChangeKind? SelectedChangeKind { get; set; }
 
     [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
     public ProjectFileChange? SelectedChange { get; set; }
 
     [Parameter]
@@ -103,6 +106,11 @@
     {
         get
         {
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                return "Für diese Suche wurden keine passenden Änderungen gefunden.";
+            }
+
             return SelectedChangeKind switch
             {
                 ProjectFileChangeKind.Added => "Zwischen den letzten beiden Prüfungen wurden keine neuen Dateien erkannt.",
@@ -121,15 +129,31 @@
             return Array.Empty<ProjectFileChange>();
         }
 
+        IEnumerable<ProjectFileChange> changes = ChangesResult.Changes;
+
         if (SelectedChangeKind is null)
         {
-            return ChangesResult.Changes
-                .Where(change => change.ChangeKind != ProjectFileChangeKind.Unchanged)
-                .OrderBy(change => change.RelativePath, StringComparer.OrdinalIgnoreCase);
+            changes = changes
+                .Where(change => change.ChangeKind != ProjectFileChangeKind.Unchanged);
+        }
+        else
+        {
+            changes = changes
+                .Where(change => change.ChangeKind == SelectedChangeKind);
         }
 
-        return ChangesResult.Changes
-            .Where(change => change.ChangeKind == SelectedChangeKind)
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            changes = changes.Where(change =>
+                change.RelativePath.Contains(
+                    SearchText,
+                    StringComparison.OrdinalIgnoreCase) ||
+                change.FileName.Contains(
+                    SearchText,
+                    StringComparison.OrdinalIgnoreCase));
+        }
+
+        return changes
             .OrderBy(change => change.RelativePath, StringComparer.OrdinalIgnoreCase);
     }
 

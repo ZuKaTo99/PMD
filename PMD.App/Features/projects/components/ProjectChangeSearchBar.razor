@@ -1,0 +1,61 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Änderungen durchsuchen</h2>
+    </div>
+
+    <div class="card-body">
+        <label class="form-label" for="project-change-search">
+            Datei oder Pfad suchen
+        </label>
+
+        <div class="d-flex flex-column flex-lg-row gap-2">
+            <input id="project-change-search"
+                   class="form-control"
+                   placeholder="z. B. ProjectChangesService.cs oder Application/ProjectChanges"
+                   value="@SearchText"
+                   @oninput="OnSearchInputChanged"
+                   @onkeydown="OnSearchKeyDown" />
+
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    disabled="@string.IsNullOrWhiteSpace(SearchText)"
+                    @onclick="ClearSearch">
+                Suche leeren
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchTextChanged { get; set; }
+
+    private Task OnSearchInputChanged(ChangeEventArgs eventArgs)
+    {
+        string newSearchText = eventArgs.Value?.ToString() ?? string.Empty;
+
+        return SearchTextChanged.InvokeAsync(newSearchText);
+    }
+
+    private Task OnSearchKeyDown(KeyboardEventArgs eventArgs)
+    {
+        if (eventArgs.Key != "Escape")
+        {
+            return Task.CompletedTask;
+        }
+
+        return ClearSearch();
+    }
+
+    private Task ClearSearch()
+    {
+        return SearchTextChanged.InvokeAsync(string.Empty);
+    }
+}

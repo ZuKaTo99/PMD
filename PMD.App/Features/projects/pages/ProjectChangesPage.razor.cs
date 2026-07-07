@@ -39,6 +39,8 @@ public partial class ProjectChangesPage
 
     protected ProjectFileChange? SelectedChange { get; private set; }
 
+    protected string ChangeSearchText { get; private set; } = string.Empty;
+
     protected ProjectState? LatestProjectState => ProjectStates.FirstOrDefault();
 
     protected ProjectState? PreviousProjectState => ProjectStates.Skip(1).FirstOrDefault();
@@ -49,6 +51,7 @@ public partial class ProjectChangesPage
         ChangesResult = null;
         SelectedChangeKind = null;
         SelectedChange = null;
+        ChangeSearchText = string.Empty;
 
         if (CurrentProject is null)
         {
@@ -78,6 +81,16 @@ public partial class ProjectChangesPage
         }
     }
 
+    protected void OnChangeSearchTextChanged(string searchText)
+    {
+        ChangeSearchText = searchText;
+
+        if (SelectedChange is not null && !MatchesCurrentFilters(SelectedChange))
+        {
+            SelectedChange = null;
+        }
+    }
+
     protected void SelectChange(ProjectFileChange change)
     {
         SelectedChange = change;
@@ -91,6 +104,26 @@ public partial class ProjectChangesPage
         }
 
         return change.ChangeKind == SelectedChangeKind;
+    }
+
+    private bool MatchesCurrentFilters(ProjectFileChange change)
+    {
+        if (!MatchesSelectedChangeKind(change))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(ChangeSearchText))
+        {
+            return true;
+        }
+
+        return change.RelativePath.Contains(
+                ChangeSearchText,
+                StringComparison.OrdinalIgnoreCase) ||
+            change.FileName.Contains(
+                ChangeSearchText,
+                StringComparison.OrdinalIgnoreCase);
     }
 
     protected static string FormatProjectStateDate(ProjectState? projectState)
