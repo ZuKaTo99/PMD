@@ -1,0 +1,93 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectFiles
+@using System
+
+@if (PreviewResult is not null)
+{
+    <div class="border rounded">
+        <div class="border-bottom p-3">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                    <div class="fw-semibold">
+                        @PreviewResult.Message
+                    </div>
+
+                    @if (PreviewResult.CanShowContent)
+                    {
+                        <div class="text-muted small mt-1">
+                            @PreviewResult.LineCount Zeilen
+                            · @ProjectOverviewFormatter.FormatFileSize(PreviewResult.SizeInBytes)
+
+                            @if (PreviewResult.WasTruncated)
+                            {
+                                <span>· gekürzt</span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <span class="@PreviewBadgeCssClass">
+                    @PreviewStatusText
+                </span>
+            </div>
+        </div>
+
+        @if (PreviewResult.CanShowContent)
+        {
+            <div class="bg-light"
+                 style="max-height: 520px; overflow: auto;">
+                <div class="p-0">
+                    @for (int lineIndex = 0; lineIndex < PreviewLines.Count; lineIndex++)
+                    {
+                        string line = PreviewLines[lineIndex];
+
+                        <div class="d-flex border-bottom">
+                            <div class="text-muted text-end px-3 py-1 user-select-none"
+                                 style="width: 4.5rem; flex: 0 0 4.5rem;">
+                                @(lineIndex + 1)
+                            </div>
+
+                            <code class="d-block flex-grow-1 px-3 py-1 text-break"
+                                  style="white-space: pre-wrap;">
+                                @line
+                            </code>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ProjectFileContentResult? PreviewResult { get; set; }
+
+    private IReadOnlyList<string> PreviewLines
+    {
+        get
+        {
+            if (PreviewResult is null || string.IsNullOrEmpty(PreviewResult.Content))
+            {
+                return Array.Empty<string>();
+            }
+
+            return PreviewResult.Content
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .Split('\n')
+                .ToList();
+        }
+    }
+
+    private string PreviewStatusText =>
+        PreviewResult?.CanShowContent == true
+            ? "Vorschau bereit"
+            : "Nicht verfügbar";
+
+    private string PreviewBadgeCssClass =>
+        PreviewResult?.CanShowContent == true
+            ? "badge bg-success-subtle text-success border align-self-start"
+            : "badge bg-warning-subtle text-warning border align-self-start";
+}

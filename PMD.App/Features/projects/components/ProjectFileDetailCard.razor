@@ -63,33 +63,7 @@
                     Vorschau laden
                 </button>
 
-                @if (SelectedFileContentResult is not null)
-                {
-                    <div class="@PreviewAlertCssClass">
-                        <div class="fw-semibold mb-1">
-                            @SelectedFileContentResult.Message
-                        </div>
-
-                        @if (SelectedFileContentResult.CanShowContent)
-                        {
-                            <div class="text-muted small">
-                                @SelectedFileContentResult.LineCount Zeilen
-                                · @ProjectOverviewFormatter.FormatFileSize(SelectedFileContentResult.SizeInBytes)
-
-                                @if (SelectedFileContentResult.WasTruncated)
-                                {
-                                    <span>· gekürzt</span>
-                                }
-                            </div>
-                        }
-                    </div>
-
-                    @if (SelectedFileContentResult.CanShowContent)
-                    {
-                        <pre class="border rounded p-3 bg-light mb-0"
-                             style="max-height: 420px; overflow: auto;"><code>@SelectedFileContentResult.Content</code></pre>
-                    }
-                }
+                <ProjectFilePreviewCard PreviewResult="SelectedFileContentResult" />
             </div>
         }
     </div>
@@ -104,9 +78,4 @@
 
     [Parameter]
     public EventCallback OnLoadPreview { get; set; }
-
-    private string PreviewAlertCssClass =>
-        SelectedFileContentResult?.CanShowContent == true
-            ? "alert alert-success mb-0"
-            : "alert alert-warning mb-0";
 }
