@@ -22,7 +22,7 @@
                 <div class="d-flex flex-column gap-2">
                     @foreach (ProjectFileChange change in VisibleChanges)
                     {
-                        <div class="border rounded p-3">
+                        <div class="@GetChangeCardCssClass(change)">
                             <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
                                 <div class="min-w-0">
                                     <div class="text-truncate">
@@ -34,9 +34,17 @@
                                     </div>
                                 </div>
 
-                                <span class="badge bg-light text-dark border align-self-start">
-                                    @FormatChangeKind(change.ChangeKind)
-                                </span>
+                                <div class="d-flex gap-2 align-items-start align-self-lg-start">
+                                    <span class="badge bg-light text-dark border">
+                                        @FormatChangeKind(change.ChangeKind)
+                                    </span>
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            @onclick="() => OnSelectChange.InvokeAsync(change)">
+                                        Details
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     }
@@ -61,6 +69,12 @@
 
     [Parameter]
     public ProjectFileChangeKind? SelectedChangeKind { get; set; }
+
+    [Parameter]
+    public ProjectFileChange? SelectedChange { get; set; }
+
+    [Parameter]
+    public EventCallback<ProjectFileChange> OnSelectChange { get; set; }
 
     private IReadOnlyList<ProjectFileChange> VisibleChanges =>
         GetFilteredChanges()
@@ -117,6 +131,31 @@
         return ChangesResult.Changes
             .Where(change => change.ChangeKind == SelectedChangeKind)
             .OrderBy(change => change.RelativePath, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private string GetChangeCardCssClass(ProjectFileChange change)
+    {
+        bool isSelected = IsSameChange(change, SelectedChange);
+
+        return isSelected
+            ? "border border-primary rounded p-3 bg-light"
+            : "border rounded p-3";
+    }
+
+    private static bool IsSameChange(
+        ProjectFileChange firstChange,
+        ProjectFileChange? secondChange)
+    {
+        if (secondChange is null)
+        {
+            return false;
+        }
+
+        return firstChange.ChangeKind == secondChange.ChangeKind &&
+            string.Equals(
+                firstChange.RelativePath,
+                secondChange.RelativePath,
+                StringComparison.OrdinalIgnoreCase);
     }
 
     private static string FormatChangeKind(ProjectFileChangeKind changeKind)

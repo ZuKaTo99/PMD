@@ -89,14 +89,23 @@
         }
         else if (ChangesResult is not null)
         {
-            <ProjectChangesSummaryCard ChangesResult="ChangesResult" />
-
             <ProjectChangeTypeFilterBar ChangesResult="ChangesResult"
                                         SelectedChangeKind="SelectedChangeKind"
                                         SelectedChangeKindChanged="OnSelectedChangeKindChanged" />
 
-            <ProjectFileChangesList ChangesResult="ChangesResult"
-                                    SelectedChangeKind="SelectedChangeKind" />
+            <div class="row g-3">
+                <div class="col-12 col-xl-8">
+                    <ProjectFileChangesList ChangesResult="ChangesResult"
+                                            SelectedChangeKind="SelectedChangeKind"
+                                            SelectedChange="SelectedChange"
+                                            OnSelectChange="SelectChange" />
+                </div>
+
+                <div class="col-12 col-xl-4">
+                    <ProjectFileChangeDetailCard ProjectId="CurrentProject.Id"
+                                                 SelectedChange="SelectedChange" />
+                </div>
+            </div>
         }
     }
 </div>

@@ -37,6 +37,8 @@ public partial class ProjectChangesPage
 
     protected ProjectFileChangeKind? SelectedChangeKind { get; private set; }
 
+    protected ProjectFileChange? SelectedChange { get; private set; }
+
     protected ProjectState? LatestProjectState => ProjectStates.FirstOrDefault();
 
     protected ProjectState? PreviousProjectState => ProjectStates.Skip(1).FirstOrDefault();
@@ -45,6 +47,8 @@ public partial class ProjectChangesPage
     {
         CurrentProject = ProjectMemoryStore.GetProjectById(ProjectId);
         ChangesResult = null;
+        SelectedChangeKind = null;
+        SelectedChange = null;
 
         if (CurrentProject is null)
         {
@@ -67,6 +71,26 @@ public partial class ProjectChangesPage
     protected void OnSelectedChangeKindChanged(ProjectFileChangeKind? changeKind)
     {
         SelectedChangeKind = changeKind;
+
+        if (SelectedChange is not null && !MatchesSelectedChangeKind(SelectedChange))
+        {
+            SelectedChange = null;
+        }
+    }
+
+    protected void SelectChange(ProjectFileChange change)
+    {
+        SelectedChange = change;
+    }
+
+    private bool MatchesSelectedChangeKind(ProjectFileChange change)
+    {
+        if (SelectedChangeKind is null)
+        {
+            return change.ChangeKind != ProjectFileChangeKind.Unchanged;
+        }
+
+        return change.ChangeKind == SelectedChangeKind;
     }
 
     protected static string FormatProjectStateDate(ProjectState? projectState)
