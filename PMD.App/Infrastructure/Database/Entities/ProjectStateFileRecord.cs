@@ -22,4 +22,6 @@ public sealed class ProjectStateFileRecord
     public long SizeInBytes { get; set; }
 
     public DateTime LastChangedAt { get; set; }
+
+    public string ContentHashSha256 { get; set; } = string.Empty;
 }

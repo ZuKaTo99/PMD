@@ -13,4 +13,6 @@ public sealed class ProjectStateFile
     public long SizeInBytes { get; init; }
 
     public DateTime LastChangedAt { get; init; }
+
+    public string ContentHashSha256 { get; init; } = string.Empty;
 }

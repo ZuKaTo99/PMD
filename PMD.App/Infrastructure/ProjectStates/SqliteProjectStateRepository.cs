@@ -184,7 +184,8 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
             FileName = record.FileName,
             Extension = record.Extension,
             SizeInBytes = record.SizeInBytes,
-            LastChangedAt = record.LastChangedAt
+            LastChangedAt = record.LastChangedAt,
+            ContentHashSha256 = record.ContentHashSha256 ?? string.Empty
         };
     }
 
@@ -220,7 +221,8 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
             FileName = file.FileName,
             Extension = file.Extension,
             SizeInBytes = file.SizeInBytes,
-            LastChangedAt = file.LastChangedAt
+            LastChangedAt = file.LastChangedAt,
+            ContentHashSha256 = file.ContentHashSha256
         };
     }
 }

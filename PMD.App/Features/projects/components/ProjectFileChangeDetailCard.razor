@@ -128,7 +128,8 @@
                 </div>
 
                 <div class="alert alert-secondary mb-0">
-                    Aktuell erkennt PMD Änderungen über Pfad, Größe und Änderungsdatum.
+                    PMD nutzt Hash-Werte, wenn beide Prüfungen sie enthalten.
+                    Für ältere Prüfungen bleibt Größe und Änderungsdatum die Grundlage.
                     Ein genauer Code-Diff kommt später.
                 </div>
 
@@ -208,6 +209,17 @@
             return reasons;
         }
 
+        if (HasUsableContentHashes(
+            SelectedChange.PreviousFile,
+            SelectedChange.LatestFile) &&
+            !string.Equals(
+                SelectedChange.PreviousFile.ContentHashSha256,
+                SelectedChange.LatestFile.ContentHashSha256,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            reasons.Add("Inhalt geändert");
+        }
+
         if (SelectedChange.PreviousFile.SizeInBytes != SelectedChange.LatestFile.SizeInBytes)
         {
             reasons.Add("Größe geändert");
@@ -224,6 +236,14 @@
         }
 
         return reasons;
+    }
+
+    private static bool HasUsableContentHashes(
+        ProjectStateFile previousFile,
+        ProjectStateFile latestFile)
+    {
+        return !string.IsNullOrWhiteSpace(previousFile.ContentHashSha256) &&
+            !string.IsNullOrWhiteSpace(latestFile.ContentHashSha256);
     }
 
     private string FormatSizeDifference()

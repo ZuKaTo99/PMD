@@ -98,7 +98,23 @@ public sealed class ProjectChangesService : IProjectChangesService
         ProjectStateFile previousFile,
         ProjectStateFile latestFile)
     {
+        if (HasUsableContentHashes(previousFile, latestFile))
+        {
+            return !string.Equals(
+                previousFile.ContentHashSha256,
+                latestFile.ContentHashSha256,
+                StringComparison.OrdinalIgnoreCase);
+        }
+
         return previousFile.SizeInBytes != latestFile.SizeInBytes ||
             previousFile.LastChangedAt != latestFile.LastChangedAt;
+    }
+
+    private static bool HasUsableContentHashes(
+        ProjectStateFile previousFile,
+        ProjectStateFile latestFile)
+    {
+        return !string.IsNullOrWhiteSpace(previousFile.ContentHashSha256) &&
+            !string.IsNullOrWhiteSpace(latestFile.ContentHashSha256);
     }
 }

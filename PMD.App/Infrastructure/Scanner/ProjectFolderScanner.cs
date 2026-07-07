@@ -1,6 +1,7 @@
-﻿using System.Diagnostics;
-using PMD.App.Application.Scanner;
+﻿using PMD.App.Application.Scanner;
 using PMD.App.Domain.Scanner;
+using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace PMD.App.Infrastructure.Scanner;
 
@@ -52,14 +53,21 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
                     continue;
                 }
 
+                string relativePath = Path.GetRelativePath(rootPath, fileInfo.FullName);
+                string contentHashSha256 = TryComputeFileHashSha256(
+                    fileInfo.FullName,
+                    relativePath,
+                    warnings);
+
                 files.Add(new ProjectFileEntry
                 {
                     FullPath = fileInfo.FullName,
-                    RelativePath = Path.GetRelativePath(rootPath, fileInfo.FullName),
+                    RelativePath = relativePath,
                     FileName = fileInfo.Name,
                     Extension = fileInfo.Extension,
                     SizeInBytes = fileInfo.Length,
-                    LastChangedAt = fileInfo.LastWriteTime
+                    LastChangedAt = fileInfo.LastWriteTime,
+                    ContentHashSha256 = contentHashSha256
                 });
             }
             catch (UnauthorizedAccessException)
@@ -74,7 +82,6 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
 
         stopwatch.Stop();
 
-
         return new ProjectFolderScanResult
         {
             ProjectName = new DirectoryInfo(rootPath).Name,
@@ -83,17 +90,15 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
             ScanDuration = stopwatch.Elapsed,
             ScannedFolderCount = scannedFolderCount,
             Files = files
-        .OrderBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase)
-        .ToList(),
+                .OrderBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
             IgnoredFolders = ignoredFolders
-        .OrderBy(folder => folder, StringComparer.OrdinalIgnoreCase)
-        .ToList(),
+                .OrderBy(folder => folder, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
             Warnings = warnings
-        .OrderBy(warning => warning, StringComparer.OrdinalIgnoreCase)
-        .ToList()
+                .OrderBy(warning => warning, StringComparer.OrdinalIgnoreCase)
+                .ToList()
         };
-
-
     }
 
     private static IEnumerable<string> EnumerateFilesSafe(
@@ -146,6 +151,30 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
             {
                 yield return file;
             }
+        }
+    }
+
+    private static string TryComputeFileHashSha256(
+        string filePath,
+        string relativePath,
+        List<string> warnings)
+    {
+        try
+        {
+            using FileStream fileStream = File.OpenRead(filePath);
+            byte[] hashBytes = SHA256.HashData(fileStream);
+
+            return Convert.ToHexString(hashBytes).ToLowerInvariant();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            warnings.Add($"Dateiinhalt konnte nicht geprüft werden: {relativePath}");
+            return string.Empty;
+        }
+        catch (IOException)
+        {
+            warnings.Add($"Dateiinhalt konnte nicht geprüft werden: {relativePath}");
+            return string.Empty;
         }
     }
 }

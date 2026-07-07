@@ -40,7 +40,8 @@ public static class ProjectStateBuilder
                     FileName = file.FileName,
                     Extension = file.Extension,
                     SizeInBytes = file.SizeInBytes,
-                    LastChangedAt = file.LastChangedAt
+                    LastChangedAt = file.LastChangedAt,
+                    ContentHashSha256 = file.ContentHashSha256
                 })
                 .ToList()
         };
