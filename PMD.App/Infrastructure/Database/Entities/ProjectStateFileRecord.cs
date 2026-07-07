@@ -24,4 +24,10 @@ public sealed class ProjectStateFileRecord
     public DateTime LastChangedAt { get; set; }
 
     public string ContentHashSha256 { get; set; } = string.Empty;
+
+    public string TextSnapshotContent { get; set; } = string.Empty;
+
+    public int TextSnapshotLineCount { get; set; }
+
+    public bool TextSnapshotWasTruncated { get; set; }
 }

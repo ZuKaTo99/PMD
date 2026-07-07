@@ -185,7 +185,10 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
             Extension = record.Extension,
             SizeInBytes = record.SizeInBytes,
             LastChangedAt = record.LastChangedAt,
-            ContentHashSha256 = record.ContentHashSha256 ?? string.Empty
+            ContentHashSha256 = record.ContentHashSha256 ?? string.Empty,
+            TextSnapshotContent = record.TextSnapshotContent ?? string.Empty,
+            TextSnapshotLineCount = record.TextSnapshotLineCount,
+            TextSnapshotWasTruncated = record.TextSnapshotWasTruncated
         };
     }
 
@@ -222,7 +225,10 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
             Extension = file.Extension,
             SizeInBytes = file.SizeInBytes,
             LastChangedAt = file.LastChangedAt,
-            ContentHashSha256 = file.ContentHashSha256
+            ContentHashSha256 = file.ContentHashSha256,
+            TextSnapshotContent = file.TextSnapshotContent,
+            TextSnapshotLineCount = file.TextSnapshotLineCount,
+            TextSnapshotWasTruncated = file.TextSnapshotWasTruncated
         };
     }
 }

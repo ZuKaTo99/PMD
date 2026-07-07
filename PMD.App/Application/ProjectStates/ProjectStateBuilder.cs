@@ -41,7 +41,10 @@ public static class ProjectStateBuilder
                     Extension = file.Extension,
                     SizeInBytes = file.SizeInBytes,
                     LastChangedAt = file.LastChangedAt,
-                    ContentHashSha256 = file.ContentHashSha256
+                    ContentHashSha256 = file.ContentHashSha256,
+                    TextSnapshotContent = file.TextSnapshotContent,
+                    TextSnapshotLineCount = file.TextSnapshotLineCount,
+                    TextSnapshotWasTruncated = file.TextSnapshotWasTruncated
                 })
                 .ToList()
         };

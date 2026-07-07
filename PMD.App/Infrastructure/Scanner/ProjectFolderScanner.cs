@@ -2,11 +2,15 @@
 using PMD.App.Domain.Scanner;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace PMD.App.Infrastructure.Scanner;
 
 public sealed class ProjectFolderScanner : IProjectFolderScanner
 {
+    private const long MaxTextSnapshotSizeInBytes = 200 * 1024;
+    private const int MaxTextSnapshotLineCount = 400;
+
     private static readonly HashSet<string> IgnoredFolderNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "bin",
@@ -17,6 +21,54 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
         "Library",
         "Temp"
     };
+
+    private static readonly HashSet<string> TextSnapshotExtensions = new(StringComparer.OrdinalIgnoreCase)
+{
+    ".cs",
+    ".razor",
+    ".xaml",
+    ".css",
+    ".scss",
+    ".html",
+    ".htm",
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".json",
+    ".xml",
+    ".config",
+    ".csproj",
+    ".sln",
+    ".props",
+    ".targets",
+    ".md",
+    ".txt",
+    ".gitignore",
+    ".editorconfig",
+    ".yml",
+    ".yaml",
+
+    ".py",
+    ".java",
+    ".kt",
+    ".kts",
+    ".cpp",
+    ".c",
+    ".h",
+    ".hpp",
+    ".rs",
+    ".go",
+    ".php",
+    ".rb",
+    ".swift",
+    ".sql",
+    ".sh",
+    ".bat",
+    ".ps1",
+    ".vue",
+    ".svelte"
+};
 
     public ProjectFolderScanResult ScanFolder(string folderPath)
     {
@@ -32,13 +84,13 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
 
         var stopwatch = Stopwatch.StartNew();
 
-        var rootPath = Path.GetFullPath(folderPath);
+        string rootPath = Path.GetFullPath(folderPath);
         var files = new List<ProjectFileEntry>();
         var ignoredFolders = new List<string>();
         var warnings = new List<string>();
         var scannedFolderCount = 0;
 
-        foreach (var filePath in EnumerateFilesSafe(
+        foreach (string filePath in EnumerateFilesSafe(
             rootPath,
             ignoredFolders,
             warnings,
@@ -54,8 +106,14 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
                 }
 
                 string relativePath = Path.GetRelativePath(rootPath, fileInfo.FullName);
+
                 string contentHashSha256 = TryComputeFileHashSha256(
                     fileInfo.FullName,
+                    relativePath,
+                    warnings);
+
+                ProjectTextSnapshot textSnapshot = TryCreateTextSnapshot(
+                    fileInfo,
                     relativePath,
                     warnings);
 
@@ -67,7 +125,10 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
                     Extension = fileInfo.Extension,
                     SizeInBytes = fileInfo.Length,
                     LastChangedAt = fileInfo.LastWriteTime,
-                    ContentHashSha256 = contentHashSha256
+                    ContentHashSha256 = contentHashSha256,
+                    TextSnapshotContent = textSnapshot.Content,
+                    TextSnapshotLineCount = textSnapshot.LineCount,
+                    TextSnapshotWasTruncated = textSnapshot.WasTruncated
                 });
             }
             catch (UnauthorizedAccessException)
@@ -112,7 +173,7 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
 
         while (foldersToCheck.Count > 0)
         {
-            var currentFolder = foldersToCheck.Pop();
+            string currentFolder = foldersToCheck.Pop();
             countScannedFolder();
 
             string[] subFolders;
@@ -134,9 +195,9 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
                 continue;
             }
 
-            foreach (var subFolder in subFolders)
+            foreach (string subFolder in subFolders)
             {
-                var folderName = Path.GetFileName(subFolder);
+                string folderName = Path.GetFileName(subFolder);
 
                 if (IgnoredFolderNames.Contains(folderName))
                 {
@@ -147,7 +208,7 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
                 foldersToCheck.Push(subFolder);
             }
 
-            foreach (var file in files)
+            foreach (string file in files)
             {
                 yield return file;
             }
@@ -176,5 +237,91 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
             warnings.Add($"Dateiinhalt konnte nicht geprüft werden: {relativePath}");
             return string.Empty;
         }
+    }
+
+    private static ProjectTextSnapshot TryCreateTextSnapshot(
+        FileInfo fileInfo,
+        string relativePath,
+        List<string> warnings)
+    {
+        if (!IsSupportedTextSnapshotFile(fileInfo.Name, fileInfo.Extension))
+        {
+            return ProjectTextSnapshot.Empty;
+        }
+
+        if (fileInfo.Length > MaxTextSnapshotSizeInBytes)
+        {
+            return ProjectTextSnapshot.Empty;
+        }
+
+        try
+        {
+            var lines = new List<string>();
+            bool wasTruncated = false;
+
+            using var reader = new StreamReader(
+                fileInfo.FullName,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true);
+
+            while (!reader.EndOfStream)
+            {
+                string? line = reader.ReadLine();
+
+                if (line is null)
+                {
+                    break;
+                }
+
+                if (line.Contains('\0'))
+                {
+                    return ProjectTextSnapshot.Empty;
+                }
+
+                if (lines.Count >= MaxTextSnapshotLineCount)
+                {
+                    wasTruncated = true;
+                    break;
+                }
+
+                lines.Add(line);
+            }
+
+            return new ProjectTextSnapshot(
+                string.Join(Environment.NewLine, lines),
+                lines.Count,
+                wasTruncated);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            warnings.Add($"Textinhalt konnte nicht gespeichert werden: {relativePath}");
+            return ProjectTextSnapshot.Empty;
+        }
+        catch (IOException)
+        {
+            warnings.Add($"Textinhalt konnte nicht gespeichert werden: {relativePath}");
+            return ProjectTextSnapshot.Empty;
+        }
+    }
+
+    private static bool IsSupportedTextSnapshotFile(string fileName, string extension)
+    {
+        if (TextSnapshotExtensions.Contains(fileName))
+        {
+            return true;
+        }
+
+        return TextSnapshotExtensions.Contains(extension);
+    }
+
+    private sealed record ProjectTextSnapshot(
+        string Content,
+        int LineCount,
+        bool WasTruncated)
+    {
+        public static ProjectTextSnapshot Empty { get; } = new(
+            string.Empty,
+            0,
+            false);
     }
 }

@@ -32,6 +32,24 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
             connection.Execute(
                 "ALTER TABLE ProjectStateFiles ADD COLUMN ContentHashSha256 TEXT NOT NULL DEFAULT ''");
         }
+
+        if (!ColumnExists(connection, "ProjectStateFiles", "TextSnapshotContent"))
+        {
+            connection.Execute(
+                "ALTER TABLE ProjectStateFiles ADD COLUMN TextSnapshotContent TEXT NOT NULL DEFAULT ''");
+        }
+
+        if (!ColumnExists(connection, "ProjectStateFiles", "TextSnapshotLineCount"))
+        {
+            connection.Execute(
+                "ALTER TABLE ProjectStateFiles ADD COLUMN TextSnapshotLineCount INTEGER NOT NULL DEFAULT 0");
+        }
+
+        if (!ColumnExists(connection, "ProjectStateFiles", "TextSnapshotWasTruncated"))
+        {
+            connection.Execute(
+                "ALTER TABLE ProjectStateFiles ADD COLUMN TextSnapshotWasTruncated INTEGER NOT NULL DEFAULT 0");
+        }
     }
 
     private static bool ColumnExists(

@@ -15,4 +15,13 @@ public sealed class ProjectStateFile
     public DateTime LastChangedAt { get; init; }
 
     public string ContentHashSha256 { get; init; } = string.Empty;
+
+    public string TextSnapshotContent { get; init; } = string.Empty;
+
+    public int TextSnapshotLineCount { get; init; }
+
+    public bool TextSnapshotWasTruncated { get; init; }
+
+    public bool HasTextSnapshot =>
+        !string.IsNullOrEmpty(TextSnapshotContent);
 }
