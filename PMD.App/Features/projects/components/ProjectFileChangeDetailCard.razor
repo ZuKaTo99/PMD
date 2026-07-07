@@ -40,6 +40,46 @@
                     </code>
                 </div>
 
+                <div class="border rounded p-3">
+                    <div class="text-muted small mb-2">Erkannt durch</div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (string reason in ChangeReasons)
+                        {
+                            <span class="badge bg-primary-subtle text-primary border">
+                                @reason
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                @if (SelectedChange.ChangeKind == ProjectFileChangeKind.Modified)
+                {
+                    <div class="border rounded p-3">
+                        <div class="text-muted small mb-2">Änderung im Überblick</div>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-xl-12">
+                                <div class="border rounded p-3 h-100 bg-light">
+                                    <div class="text-muted small">Größenänderung</div>
+                                    <div class="fw-semibold">
+                                        @FormatSizeDifference()
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-12">
+                                <div class="border rounded p-3 h-100 bg-light">
+                                    <div class="text-muted small">Zeitlicher Abstand</div>
+                                    <div class="fw-semibold">
+                                        @FormatLastChangedDifference()
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 <div class="row g-3">
                     <div class="col-12">
                         <div class="border rounded p-3 h-100">
@@ -136,6 +176,112 @@
 
             return $"/projekte/{ProjectId}/dateien?datei={encodedRelativePath}&quelle=aenderungen";
         }
+    }
+
+    private IReadOnlyList<string> ChangeReasons
+    {
+        get
+        {
+            if (SelectedChange is null)
+            {
+                return Array.Empty<string>();
+            }
+
+            return SelectedChange.ChangeKind switch
+            {
+                ProjectFileChangeKind.Added => new[] { "Neue Datei" },
+                ProjectFileChangeKind.Removed => new[] { "Datei entfernt" },
+                ProjectFileChangeKind.Unchanged => new[] { "Keine auffällige Änderung" },
+                ProjectFileChangeKind.Modified => GetModifiedChangeReasons(),
+                _ => new[] { "Unbekannte Änderung" }
+            };
+        }
+    }
+
+    private IReadOnlyList<string> GetModifiedChangeReasons()
+    {
+        List<string> reasons = new();
+
+        if (SelectedChange?.PreviousFile is null || SelectedChange.LatestFile is null)
+        {
+            reasons.Add("Dateidaten unvollständig");
+            return reasons;
+        }
+
+        if (SelectedChange.PreviousFile.SizeInBytes != SelectedChange.LatestFile.SizeInBytes)
+        {
+            reasons.Add("Größe geändert");
+        }
+
+        if (SelectedChange.PreviousFile.LastChangedAt != SelectedChange.LatestFile.LastChangedAt)
+        {
+            reasons.Add("Änderungsdatum geändert");
+        }
+
+        if (reasons.Count == 0)
+        {
+            reasons.Add("Änderung erkannt");
+        }
+
+        return reasons;
+    }
+
+    private string FormatSizeDifference()
+    {
+        if (SelectedChange?.PreviousFile is null || SelectedChange.LatestFile is null)
+        {
+            return "Nicht berechenbar";
+        }
+
+        long difference =
+            SelectedChange.LatestFile.SizeInBytes -
+            SelectedChange.PreviousFile.SizeInBytes;
+
+        if (difference == 0)
+        {
+            return "Keine Größenänderung";
+        }
+
+        string prefix = difference > 0 ? "+" : "-";
+        long absoluteDifference = Math.Abs(difference);
+
+        return $"{prefix}{ProjectOverviewFormatter.FormatFileSize(absoluteDifference)}";
+    }
+
+    private string FormatLastChangedDifference()
+    {
+        if (SelectedChange?.PreviousFile is null || SelectedChange.LatestFile is null)
+        {
+            return "Nicht berechenbar";
+        }
+
+        TimeSpan difference =
+            SelectedChange.LatestFile.LastChangedAt -
+            SelectedChange.PreviousFile.LastChangedAt;
+
+        if (difference == TimeSpan.Zero)
+        {
+            return "Kein Zeitunterschied";
+        }
+
+        TimeSpan absoluteDifference = difference.Duration();
+
+        if (absoluteDifference.TotalDays >= 1)
+        {
+            return $"{absoluteDifference.TotalDays:0.#} Tage";
+        }
+
+        if (absoluteDifference.TotalHours >= 1)
+        {
+            return $"{absoluteDifference.TotalHours:0.#} Stunden";
+        }
+
+        if (absoluteDifference.TotalMinutes >= 1)
+        {
+            return $"{absoluteDifference.TotalMinutes:0.#} Minuten";
+        }
+
+        return $"{absoluteDifference.TotalSeconds:0.#} Sekunden";
     }
 
     private static string FormatFileSize(ProjectStateFile? file)
