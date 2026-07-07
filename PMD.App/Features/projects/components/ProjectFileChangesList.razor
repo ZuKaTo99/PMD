@@ -7,14 +7,14 @@
 {
     <div class="card mb-4">
         <div class="card-header">
-            <h2 class="h5 mb-0">Auffällige Änderungen</h2>
+            <h2 class="h5 mb-0">@ListTitle</h2>
         </div>
 
         <div class="card-body">
             @if (VisibleChanges.Count == 0)
             {
                 <div class="alert alert-success mb-0">
-                    Zwischen den letzten beiden Prüfungen wurden keine auffälligen Dateiänderungen erkannt.
+                    @EmptyText
                 </div>
             }
             else
@@ -45,7 +45,7 @@
                 @if (TotalVisibleChangeCount > VisibleChanges.Count)
                 {
                     <div class="alert alert-secondary mt-3 mb-0">
-                        Es werden die ersten @VisibleChanges.Count auffälligen Änderungen angezeigt.
+                        Es werden die ersten @VisibleChanges.Count von @TotalVisibleChangeCount passenden Dateien angezeigt.
                     </div>
                 }
             }
@@ -59,34 +59,64 @@
     [Parameter]
     public ProjectChangesResult? ChangesResult { get; set; }
 
-    private IReadOnlyList<ProjectFileChange> VisibleChanges
+    [Parameter]
+    public ProjectFileChangeKind? SelectedChangeKind { get; set; }
+
+    private IReadOnlyList<ProjectFileChange> VisibleChanges =>
+        GetFilteredChanges()
+            .Take(MaxVisibleChangeCount)
+            .ToList();
+
+    private int TotalVisibleChangeCount =>
+        GetFilteredChanges().Count();
+
+    private string ListTitle
     {
         get
         {
-            if (ChangesResult is null)
+            return SelectedChangeKind switch
             {
-                return Array.Empty<ProjectFileChange>();
-            }
-
-            return ChangesResult.Changes
-                .Where(change => change.ChangeKind != ProjectFileChangeKind.Unchanged)
-                .Take(MaxVisibleChangeCount)
-                .ToList();
+                ProjectFileChangeKind.Added => "Neue Dateien",
+                ProjectFileChangeKind.Modified => "Geänderte Dateien",
+                ProjectFileChangeKind.Removed => "Entfernte Dateien",
+                ProjectFileChangeKind.Unchanged => "Unveränderte Dateien",
+                _ => "Auffällige Änderungen"
+            };
         }
     }
 
-    private int TotalVisibleChangeCount
+    private string EmptyText
     {
         get
         {
-            if (ChangesResult is null)
+            return SelectedChangeKind switch
             {
-                return 0;
-            }
-
-            return ChangesResult.Changes
-                .Count(change => change.ChangeKind != ProjectFileChangeKind.Unchanged);
+                ProjectFileChangeKind.Added => "Zwischen den letzten beiden Prüfungen wurden keine neuen Dateien erkannt.",
+                ProjectFileChangeKind.Modified => "Zwischen den letzten beiden Prüfungen wurden keine geänderten Dateien erkannt.",
+                ProjectFileChangeKind.Removed => "Zwischen den letzten beiden Prüfungen wurden keine entfernten Dateien erkannt.",
+                ProjectFileChangeKind.Unchanged => "Es wurden keine unveränderten Dateien gefunden.",
+                _ => "Zwischen den letzten beiden Prüfungen wurden keine auffälligen Dateiänderungen erkannt."
+            };
         }
+    }
+
+    private IEnumerable<ProjectFileChange> GetFilteredChanges()
+    {
+        if (ChangesResult is null)
+        {
+            return Array.Empty<ProjectFileChange>();
+        }
+
+        if (SelectedChangeKind is null)
+        {
+            return ChangesResult.Changes
+                .Where(change => change.ChangeKind != ProjectFileChangeKind.Unchanged)
+                .OrderBy(change => change.RelativePath, StringComparer.OrdinalIgnoreCase);
+        }
+
+        return ChangesResult.Changes
+            .Where(change => change.ChangeKind == SelectedChangeKind)
+            .OrderBy(change => change.RelativePath, StringComparer.OrdinalIgnoreCase);
     }
 
     private static string FormatChangeKind(ProjectFileChangeKind changeKind)

@@ -91,7 +91,12 @@
         {
             <ProjectChangesSummaryCard ChangesResult="ChangesResult" />
 
-            <ProjectFileChangesList ChangesResult="ChangesResult" />
+            <ProjectChangeTypeFilterBar ChangesResult="ChangesResult"
+                                        SelectedChangeKind="SelectedChangeKind"
+                                        SelectedChangeKindChanged="OnSelectedChangeKindChanged" />
+
+            <ProjectFileChangesList ChangesResult="ChangesResult"
+                                    SelectedChangeKind="SelectedChangeKind" />
         }
     }
 </div>

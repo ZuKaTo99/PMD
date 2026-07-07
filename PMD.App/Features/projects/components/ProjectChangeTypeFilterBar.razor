@@ -1,0 +1,107 @@
+@namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.ProjectChanges
+@using System.Threading.Tasks
+
+@if (ChangesResult is not null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Änderungen filtern</h2>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Wähle aus, welche Änderungen angezeigt werden sollen.
+            </p>
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button"
+                        class="@GetButtonCssClass(null)"
+                        @onclick="() => SelectFilter(null)">
+                    Alle auffälligen Änderungen
+                    <span class="badge bg-light text-dark border ms-1">
+                        @AttentionChangeCount
+                    </span>
+                </button>
+
+                <button type="button"
+                        class="@GetButtonCssClass(ProjectFileChangeKind.Added)"
+                        @onclick="() => SelectFilter(ProjectFileChangeKind.Added)">
+                    Neue Dateien
+                    <span class="badge bg-light text-dark border ms-1">
+                        @ChangesResult.AddedFileCount
+                    </span>
+                </button>
+
+                <button type="button"
+                        class="@GetButtonCssClass(ProjectFileChangeKind.Modified)"
+                        @onclick="() => SelectFilter(ProjectFileChangeKind.Modified)">
+                    Geänderte Dateien
+                    <span class="badge bg-light text-dark border ms-1">
+                        @ChangesResult.ModifiedFileCount
+                    </span>
+                </button>
+
+                <button type="button"
+                        class="@GetButtonCssClass(ProjectFileChangeKind.Removed)"
+                        @onclick="() => SelectFilter(ProjectFileChangeKind.Removed)">
+                    Entfernte Dateien
+                    <span class="badge bg-light text-dark border ms-1">
+                        @ChangesResult.RemovedFileCount
+                    </span>
+                </button>
+
+                <button type="button"
+                        class="@GetButtonCssClass(ProjectFileChangeKind.Unchanged)"
+                        @onclick="() => SelectFilter(ProjectFileChangeKind.Unchanged)">
+                    Unveränderte Dateien
+                    <span class="badge bg-light text-dark border ms-1">
+                        @ChangesResult.UnchangedFileCount
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ProjectChangesResult? ChangesResult { get; set; }
+
+    [Parameter]
+    public ProjectFileChangeKind? SelectedChangeKind { get; set; }
+
+    [Parameter]
+    public EventCallback<ProjectFileChangeKind?> SelectedChangeKindChanged { get; set; }
+
+    private int AttentionChangeCount
+    {
+        get
+        {
+            if (ChangesResult is null)
+            {
+                return 0;
+            }
+
+            return ChangesResult.AddedFileCount
+                + ChangesResult.ModifiedFileCount
+                + ChangesResult.RemovedFileCount;
+        }
+    }
+
+    private Task SelectFilter(ProjectFileChangeKind? changeKind)
+    {
+        return SelectedChangeKindChanged.InvokeAsync(changeKind);
+    }
+
+    private string GetButtonCssClass(ProjectFileChangeKind? changeKind)
+    {
+        if (SelectedChangeKind == changeKind)
+        {
+            return "btn btn-primary";
+        }
+
+        return "btn btn-outline-primary";
+    }
+}

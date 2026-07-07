@@ -35,6 +35,8 @@ public partial class ProjectChangesPage
 
     protected ProjectChangesResult? ChangesResult { get; private set; }
 
+    protected ProjectFileChangeKind? SelectedChangeKind { get; private set; }
+
     protected ProjectState? LatestProjectState => ProjectStates.FirstOrDefault();
 
     protected ProjectState? PreviousProjectState => ProjectStates.Skip(1).FirstOrDefault();
@@ -60,6 +62,11 @@ public partial class ProjectChangesPage
                 PreviousProjectState,
                 LatestProjectState);
         }
+    }
+
+    protected void OnSelectedChangeKindChanged(ProjectFileChangeKind? changeKind)
+    {
+        SelectedChangeKind = changeKind;
     }
 
     protected static string FormatProjectStateDate(ProjectState? projectState)
