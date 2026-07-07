@@ -134,7 +134,7 @@
             string encodedRelativePath = Uri.EscapeDataString(
                 SelectedChange.LatestFile.RelativePath);
 
-            return $"/projekte/{ProjectId}/dateien?datei={encodedRelativePath}";
+            return $"/projekte/{ProjectId}/dateien?datei={encodedRelativePath}&quelle=aenderungen";
         }
     }
 

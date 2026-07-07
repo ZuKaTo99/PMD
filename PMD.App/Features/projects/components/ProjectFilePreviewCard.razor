@@ -1,12 +1,13 @@
 @namespace PMD.App.Features.Projects.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectFiles
-@using System
+@using System.Net
+@using System.Text
 
 @if (PreviewResult is not null)
 {
-    <div class="border rounded">
-        <div class="border-bottom p-3">
+    <div class="border rounded overflow-hidden shadow-sm pmd-preview-card">
+        <div class="border-bottom p-3 pmd-preview-header">
             <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
                 <div>
                     <div class="fw-semibold">
@@ -35,51 +36,78 @@
 
         @if (PreviewResult.CanShowContent)
         {
-            <div class="bg-light"
-                 style="max-height: 520px; overflow: auto;">
-                <div class="p-0">
-                    @for (int lineIndex = 0; lineIndex < PreviewLines.Count; lineIndex++)
-                    {
-                        string line = PreviewLines[lineIndex];
-
-                        <div class="d-flex border-bottom">
-                            <div class="text-muted text-end px-3 py-1 user-select-none"
-                                 style="width: 4.5rem; flex: 0 0 4.5rem;">
-                                @(lineIndex + 1)
-                            </div>
-
-                            <code class="d-block flex-grow-1 px-3 py-1 text-break"
-                                  style="white-space: pre-wrap;">
-                                @line
-                            </code>
-                        </div>
-                    }
-                </div>
+            <div class="pmd-code-preview">
+                <pre class="mb-0 px-4 py-3 pmd-code-block"><code class="pmd-code-content">@HighlightedPreviewContent</code></pre>
             </div>
         }
     </div>
 }
 
+<style>
+    .pmd-preview-card {
+        border-color: #d8d4f0 !important;
+    }
+
+    .pmd-preview-header {
+        background: linear-gradient(135deg, #faf8ff 0%, #eef4ff 100%);
+    }
+
+    .pmd-code-preview {
+        min-height: 660px;
+        height: clamp(660px, 76vh, 980px);
+        overflow: auto;
+        background: radial-gradient(circle at top left, rgba(78, 55, 160, 0.08), transparent 34%), linear-gradient(135deg, #fbf9ff 0%, #f2f5ff 52%, #f8f4ff 100%);
+    }
+
+    .pmd-code-block {
+        white-space: pre;
+        font-size: 0.92rem;
+        line-height: 1.65;
+        tab-size: 4;
+    }
+
+    .pmd-code-content {
+        color: #6f2dbd;
+        font-weight: 500;
+    }
+
+    .pmd-code-symbol {
+        color: #334bdc;
+        font-weight: 700;
+    }
+</style>
+
 @code {
     [Parameter]
     public ProjectFileContentResult? PreviewResult { get; set; }
 
-    private IReadOnlyList<string> PreviewLines
+    private static readonly HashSet<char> HighlightedCodeSymbols = new()
     {
-        get
-        {
-            if (PreviewResult is null || string.IsNullOrEmpty(PreviewResult.Content))
-            {
-                return Array.Empty<string>();
-            }
+        '(', ')',
+        '{', '}',
+        '[', ']',
+        '<', '>',
+        '=',
+        '/',
+        '\\',
+        '.',
+        ',',
+        ';',
+        ':',
+        '"',
+        '\'',
+        '`',
+        '+',
+        '-',
+        '*',
+        '&',
+        '|',
+        '!',
+        '?'
+    };
 
-            return PreviewResult.Content
-                .Replace("\r\n", "\n")
-                .Replace('\r', '\n')
-                .Split('\n')
-                .ToList();
-        }
-    }
+    private MarkupString HighlightedPreviewContent =>
+        new(RenderHighlightedContent(PreviewResult?.Content));
 
     private string PreviewStatusText =>
         PreviewResult?.CanShowContent == true
@@ -90,4 +118,33 @@
         PreviewResult?.CanShowContent == true
             ? "badge bg-success-subtle text-success border align-self-start"
             : "badge bg-warning-subtle text-warning border align-self-start";
+
+    private static string RenderHighlightedContent(string? content)
+    {
+        if (string.IsNullOrEmpty(content))
+        {
+            return string.Empty;
+        }
+
+        StringBuilder builder = new();
+
+        foreach (char character in content)
+        {
+            string encodedCharacter = WebUtility.HtmlEncode(character.ToString());
+
+            if (HighlightedCodeSymbols.Contains(character))
+            {
+                builder
+                    .Append("<span class=\"pmd-code-symbol\">")
+                    .Append(encodedCharacter)
+                    .Append("</span>");
+
+                continue;
+            }
+
+            builder.Append(encodedCharacter);
+        }
+
+        return builder.ToString();
+    }
 }

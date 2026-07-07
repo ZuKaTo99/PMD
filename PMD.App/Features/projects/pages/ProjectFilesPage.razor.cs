@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using PMD.App.Application.ProjectFiles;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
@@ -35,6 +35,9 @@ public partial class ProjectFilesPage
     [SupplyParameterFromQuery(Name = "datei")]
     public string? RequestedFilePath { get; set; }
 
+    [SupplyParameterFromQuery(Name = "quelle")]
+    public string? SourceArea { get; set; }
+
     protected Project? CurrentProject { get; private set; }
 
     protected ProjectState? LatestProjectState { get; private set; }
@@ -51,6 +54,37 @@ public partial class ProjectFilesPage
     protected string SelectedExtension { get; private set; } = string.Empty;
 
     protected string SelectedSortMode { get; private set; } = SortByPath;
+
+    protected bool HasFocusedFileRequest =>
+        !string.IsNullOrWhiteSpace(RequestedFilePath);
+
+    protected bool OpenedFromChanges =>
+        HasFocusedFileRequest &&
+        string.Equals(SourceArea, "aenderungen", StringComparison.OrdinalIgnoreCase);
+
+    protected string FocusedFileDisplayPath
+    {
+        get
+        {
+            if (SelectedFile is not null)
+            {
+                return SelectedFile.RelativePath;
+            }
+
+            if (string.IsNullOrWhiteSpace(RequestedFilePath))
+            {
+                return string.Empty;
+            }
+
+            return DecodeRequestedFilePath(RequestedFilePath);
+        }
+    }
+
+    protected string ProjectChangesLink =>
+        $"/projekte/{ProjectId}/aenderungen";
+
+    protected string ProjectFilesLink =>
+        $"/projekte/{ProjectId}/dateien";
 
     protected bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(SearchText) ||
@@ -254,7 +288,7 @@ public partial class ProjectFilesPage
         }
 
         string requestedFilePath = NormalizeRelativePath(
-            Uri.UnescapeDataString(RequestedFilePath));
+            DecodeRequestedFilePath(RequestedFilePath));
 
         ProjectStateFile? requestedFile = Files.FirstOrDefault(file =>
             string.Equals(
@@ -280,5 +314,17 @@ public partial class ProjectFilesPage
         return relativePath
             .Replace('\\', '/')
             .Trim();
+    }
+
+    private static string DecodeRequestedFilePath(string requestedFilePath)
+    {
+        try
+        {
+            return Uri.UnescapeDataString(requestedFilePath);
+        }
+        catch (UriFormatException)
+        {
+            return requestedFilePath;
+        }
     }
 }
