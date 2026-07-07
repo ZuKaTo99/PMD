@@ -29,6 +29,10 @@
                         Zurück zum Projekt
                     </a>
 
+                    <a class="btn btn-outline-primary" href="@ProjectChangesLink">
+                        Änderungen ansehen
+                    </a>
+
                     <a class="btn btn-outline-secondary" href="/projektpruefung">
                         Anderen Projektordner prüfen
                     </a>
@@ -145,9 +149,9 @@
                 </div>
 
                 <div class="card-body">
-                    <ProjectFileSearchBar SearchText="SearchText"
-                                          SelectedExtension="SelectedExtension"
-                                          SelectedSortMode="SelectedSortMode"
+                    <ProjectFileSearchBar SearchText="@SearchText"
+                                          SelectedExtension="@SelectedExtension"
+                                          SelectedSortMode="@SelectedSortMode"
                                           AvailableExtensions="AvailableExtensions"
                                           HasActiveFilters="HasActiveFilters"
                                           OnSearchTextChanged="OnSearchTextChanged"

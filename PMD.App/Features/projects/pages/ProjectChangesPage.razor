@@ -93,14 +93,14 @@
                                         SelectedChangeKind="SelectedChangeKind"
                                         SelectedChangeKindChanged="OnSelectedChangeKindChanged" />
 
-            <ProjectChangeSearchBar SearchText="ChangeSearchText"
+            <ProjectChangeSearchBar SearchText="@ChangeSearchText"
                                     SearchTextChanged="OnChangeSearchTextChanged" />
 
             <div class="row g-3">
                 <div class="col-12 col-xl-8">
                     <ProjectFileChangesList ChangesResult="ChangesResult"
                                             SelectedChangeKind="SelectedChangeKind"
-                                            SearchText="ChangeSearchText"
+                                            SearchText="@ChangeSearchText"
                                             SelectedChange="SelectedChange"
                                             OnSelectChange="SelectChange" />
                 </div>
