@@ -130,9 +130,13 @@
                 <div class="alert alert-secondary mb-0">
                     PMD nutzt Hash-Werte, wenn beide Prüfungen sie enthalten.
                     Für ältere Prüfungen bleibt Größe und Änderungsdatum die Grundlage.
+                    Code-Abschnitte werden angezeigt, wenn gespeicherte Textauszüge vorhanden sind.
                 </div>
 
-                <ProjectCodeChangeSectionsCard FileChange="SelectedChange" />
+                @if (CanShowCodeChangeSections)
+                {
+                    <ProjectCodeChangeSectionsCard FileChange="SelectedChange" />
+                }
 
                 @if (CanOpenLatestFile)
                 {
@@ -163,6 +167,10 @@
 
     private bool CanOpenLatestFile =>
         SelectedChange?.LatestFile is not null;
+
+    private bool CanShowCodeChangeSections =>
+        SelectedChange is not null &&
+        SelectedChange.ChangeKind != ProjectFileChangeKind.Unchanged;
 
     private string LatestFileDetailsLink
     {
