@@ -1,4 +1,6 @@
-﻿namespace PMD.App.Domain.ProjectCodeDiff;
+﻿using System.Linq;
+
+namespace PMD.App.Domain.ProjectCodeDiff;
 
 public sealed class ProjectCodeDiffResult
 {
@@ -14,4 +16,21 @@ public sealed class ProjectCodeDiffResult
         Array.Empty<ProjectCodeChangeSection>();
 
     public bool HasSections => Sections.Count > 0;
+
+    public int SectionCount => Sections.Count;
+
+    public int AddedLineCount => Sections.Sum(
+        section => section.LatestLines.Count);
+
+    public int RemovedLineCount => Sections.Sum(
+        section => section.PreviousLines.Count);
+
+    public int AddedSectionCount => Sections.Count(
+        section => section.ChangeKind == ProjectCodeChangeKind.Added);
+
+    public int RemovedSectionCount => Sections.Count(
+        section => section.ChangeKind == ProjectCodeChangeKind.Removed);
+
+    public int ModifiedSectionCount => Sections.Count(
+        section => section.ChangeKind == ProjectCodeChangeKind.Modified);
 }

@@ -44,6 +44,37 @@ else
             }
             else
             {
+                <div class="border rounded p-3 bg-light mb-3">
+                    <div class="text-muted small mb-2">Zusammenfassung</div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge text-bg-secondary">
+                            @_diffResult.SectionCount Abschnitte
+                        </span>
+
+                        @if (_diffResult.ModifiedSectionCount > 0)
+                        {
+                            <span class="badge text-bg-warning">
+                                @_diffResult.ModifiedSectionCount verändert
+                            </span>
+                        }
+
+                        @if (_diffResult.AddedLineCount > 0)
+                        {
+                            <span class="badge text-bg-success">
+                                +@_diffResult.AddedLineCount Zeilen
+                            </span>
+                        }
+
+                        @if (_diffResult.RemovedLineCount > 0)
+                        {
+                            <span class="badge text-bg-danger">
+                                -@_diffResult.RemovedLineCount Zeilen
+                            </span>
+                        }
+                    </div>
+                </div>
+
                 <div class="d-flex flex-column gap-3">
                     @foreach (ProjectCodeChangeSection section in _diffResult.Sections)
                     {
