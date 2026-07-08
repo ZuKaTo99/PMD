@@ -137,6 +137,13 @@
                 {
                     <ProjectCodeChangeSectionsCard FileChange="SelectedChange" />
                 }
+                else if (CanShowMissingTextSnapshotHint)
+                {
+                    <div class="alert alert-light border mb-0">
+                        Für diese Datei gibt es keinen gespeicherten Textauszug.
+                        Code-Abschnitte können deshalb nicht angezeigt werden.
+                    </div>
+                }
 
                 @if (CanOpenLatestFile)
                 {
@@ -170,7 +177,22 @@
 
     private bool CanShowCodeChangeSections =>
         SelectedChange is not null &&
-        SelectedChange.ChangeKind != ProjectFileChangeKind.Unchanged;
+        SelectedChange.ChangeKind != ProjectFileChangeKind.Unchanged &&
+        HasAnyTextSnapshot;
+
+    private bool CanShowMissingTextSnapshotHint =>
+        SelectedChange is not null &&
+        SelectedChange.ChangeKind != ProjectFileChangeKind.Unchanged &&
+        !HasAnyTextSnapshot;
+
+    private bool HasAnyTextSnapshot =>
+        HasTextSnapshot(SelectedChange?.PreviousFile) ||
+        HasTextSnapshot(SelectedChange?.LatestFile);
+
+    private static bool HasTextSnapshot(ProjectStateFile? file)
+    {
+        return !string.IsNullOrWhiteSpace(file?.TextSnapshotContent);
+    }
 
     private string LatestFileDetailsLink
     {
