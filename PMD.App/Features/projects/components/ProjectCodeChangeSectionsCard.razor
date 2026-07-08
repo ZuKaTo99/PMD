@@ -76,14 +76,30 @@ else
                 </div>
 
                 <div class="d-flex flex-column gap-3">
-                    @foreach (ProjectCodeChangeSection section in _diffResult.Sections)
+                    @for (int sectionIndex = 0; sectionIndex < _diffResult.Sections.Count; sectionIndex++)
                     {
+                        ProjectCodeChangeSection section = _diffResult.Sections[sectionIndex];
+
                         <div class="border rounded p-3">
                             <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
                                 <div>
-                                    <span class="@GetBadgeClass(section.ChangeKind)">
-                                        @GetChangeKindText(section.ChangeKind)
-                                    </span>
+                                    <div class="small text-muted mb-1">
+                                        Abschnitt @(sectionIndex + 1) von @(_diffResult.SectionCount)
+                                    </div>
+
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="@GetBadgeClass(section.ChangeKind)">
+                                            @GetChangeKindText(section.ChangeKind)
+                                        </span>
+
+                                        <span class="fw-semibold">
+                                            @GetSectionTitle(section.ChangeKind)
+                                        </span>
+                                    </div>
+
+                                    <div class="small text-muted mt-1">
+                                        @GetSectionLineSummary(section)
+                                    </div>
                                 </div>
 
                                 <small class="text-muted text-end">
@@ -184,6 +200,34 @@ else
             ProjectCodeChangeKind.Removed => "badge text-bg-danger",
             ProjectCodeChangeKind.Modified => "badge text-bg-warning",
             _ => "badge text-bg-secondary"
+        };
+    }
+
+    private static string GetSectionTitle(ProjectCodeChangeKind changeKind)
+    {
+        return changeKind switch
+        {
+            ProjectCodeChangeKind.Added => "Neuer Code wurde eingefügt",
+            ProjectCodeChangeKind.Removed => "Code wurde entfernt",
+            ProjectCodeChangeKind.Modified => "Code wurde ersetzt oder angepasst",
+            _ => "Änderung erkannt"
+        };
+    }
+
+    private static string GetSectionLineSummary(ProjectCodeChangeSection section)
+    {
+        return section.ChangeKind switch
+        {
+            ProjectCodeChangeKind.Added =>
+                $"{section.LatestLines.Count} neue Zeilen",
+
+            ProjectCodeChangeKind.Removed =>
+                $"{section.PreviousLines.Count} entfernte Zeilen",
+
+            ProjectCodeChangeKind.Modified =>
+                $"{section.PreviousLines.Count} alte Zeilen, {section.LatestLines.Count} neue Zeilen",
+
+            _ => "Keine Zeilenangabe"
         };
     }
 
