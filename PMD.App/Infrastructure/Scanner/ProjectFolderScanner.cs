@@ -159,7 +159,7 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
 
                 foldersToCheck.Push(subFolder);
             }
-
+            
             foreach (string file in files)
             {
                 yield return file;

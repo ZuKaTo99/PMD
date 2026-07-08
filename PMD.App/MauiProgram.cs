@@ -13,6 +13,7 @@ using PMD.App.Infrastructure.Scanner;
 using PMD.App.Application.ProjectFiles;
 using PMD.App.Infrastructure.ProjectFiles;
 using PMD.App.Application.ProjectChanges;
+using PMD.App.Application.ProjectCodeDiff;
 
 namespace PMD.App;
 
@@ -40,6 +41,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IProjectStateRepository, SqliteProjectStateRepository>();
         builder.Services.AddSingleton<IProjectFileContentReader, ProjectFileContentReader>();
         builder.Services.AddSingleton<IProjectChangesService, ProjectChangesService>();
+        builder.Services.AddSingleton<IProjectCodeDiffService, ProjectCodeDiffService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
