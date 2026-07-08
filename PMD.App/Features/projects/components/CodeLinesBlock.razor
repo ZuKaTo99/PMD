@@ -2,13 +2,25 @@
 
 @using Microsoft.AspNetCore.Components
 
-<div class="mb-3">
+<div class="code-lines-block mb-3">
     <div class="small text-muted mb-1">@Title</div>
 
-    <div class="border rounded bg-light overflow-auto">
-        @foreach (string line in Lines)
+    <div class="code-lines-container">
+        @for (int index = 0; index < Lines.Count; index++)
         {
-            <pre class="m-0 px-3 py-1 small"><code><span class="text-muted">@LinePrefix</span> @line</code></pre>
+            int? lineNumber = GetLineNumber(index);
+
+            <div class="@GetLineClass()">
+                <div class="code-line-number">
+                    @(lineNumber?.ToString() ?? "")
+                </div>
+
+                <div class="code-line-prefix">
+                    @LinePrefix
+                </div>
+
+                <pre class="code-line-content"><code>@Lines[index]</code></pre>
+            </div>
         }
     </div>
 </div>
@@ -24,4 +36,30 @@
 
     [Parameter]
     public string LinePrefix { get; set; } = string.Empty;
+
+    [Parameter]
+    public int? StartLineNumber { get; set; }
+
+    [Parameter]
+    public string ChangeStyle { get; set; } = "context";
+
+    private int? GetLineNumber(int index)
+    {
+        if (!StartLineNumber.HasValue)
+        {
+            return null;
+        }
+
+        return StartLineNumber.Value + index;
+    }
+
+    private string GetLineClass()
+    {
+        return ChangeStyle switch
+        {
+            "added" => "code-line code-line-added",
+            "removed" => "code-line code-line-removed",
+            _ => "code-line code-line-context"
+        };
+    }
 }

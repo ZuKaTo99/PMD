@@ -1,0 +1,66 @@
+.code-lines-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #f8f9fa;
+    font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+    font-size: 0.82rem;
+}
+
+.code-line {
+    display: grid;
+    grid-template-columns: 3.25rem 1.75rem minmax(0, 1fr);
+    border-bottom: 1px solid #e9ecef;
+    line-height: 1.55;
+}
+
+    .code-line:last-child {
+        border-bottom: none;
+    }
+
+.code-line-number {
+    padding: 0.35rem 0.5rem;
+    color: #868e96;
+    text-align: right;
+    background: #f1f3f5;
+    user-select: none;
+}
+
+.code-line-prefix {
+    padding: 0.35rem 0.5rem;
+    text-align: center;
+    font-weight: 700;
+    user-select: none;
+}
+
+.code-line-content {
+    margin: 0;
+    padding: 0.35rem 0.75rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.code-line-added {
+    background: #e6f4ea;
+}
+
+    .code-line-added .code-line-prefix {
+        color: #198754;
+    }
+
+.code-line-removed {
+    background: #fdecec;
+}
+
+    .code-line-removed .code-line-prefix {
+        color: #dc3545;
+    }
+
+.code-line-context {
+    background: #ffffff;
+}
+
+    .code-line-context .code-line-prefix {
+        color: #adb5bd;
+    }

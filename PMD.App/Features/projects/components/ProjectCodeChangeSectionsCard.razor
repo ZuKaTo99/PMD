@@ -4,6 +4,7 @@
 @using PMD.App.Application.ProjectCodeDiff
 @using PMD.App.Domain.ProjectChanges
 @using PMD.App.Domain.ProjectCodeDiff
+@using System
 
 @inject IProjectCodeDiffService CodeDiffService
 
@@ -63,7 +64,9 @@ else
                             {
                                 <CodeLinesBlock Title="Kontext davor"
                                                 Lines="section.ContextBefore"
-                                                LinePrefix=" " />
+                                                LinePrefix=" "
+                                                StartLineNumber="@GetContextBeforeStartLine(section)"
+                                                ChangeStyle="context" />
                             }
 
                             @if (section.ChangeKind == ProjectCodeChangeKind.Modified)
@@ -72,34 +75,44 @@ else
                                 {
                                     <CodeLinesBlock Title="Vorher entfernt"
                                                     Lines="section.PreviousLines"
-                                                    LinePrefix="-" />
+                                                    LinePrefix="-"
+                                                    StartLineNumber="@section.PreviousStartLineNumber"
+                                                    ChangeStyle="removed" />
                                 }
 
                                 @if (section.LatestLines.Count > 0)
                                 {
                                     <CodeLinesBlock Title="Nachher hinzugefügt"
                                                     Lines="section.LatestLines"
-                                                    LinePrefix="+" />
+                                                    LinePrefix="+"
+                                                    StartLineNumber="@section.LatestStartLineNumber"
+                                                    ChangeStyle="added" />
                                 }
                             }
                             else if (section.ChangeKind == ProjectCodeChangeKind.Removed)
                             {
                                 <CodeLinesBlock Title="Entfernt"
                                                 Lines="section.PreviousLines"
-                                                LinePrefix="-" />
+                                                LinePrefix="-"
+                                                StartLineNumber="@section.PreviousStartLineNumber"
+                                                ChangeStyle="removed" />
                             }
                             else if (section.ChangeKind == ProjectCodeChangeKind.Added)
                             {
                                 <CodeLinesBlock Title="Hinzugefügt"
                                                 Lines="section.LatestLines"
-                                                LinePrefix="+" />
+                                                LinePrefix="+"
+                                                StartLineNumber="@section.LatestStartLineNumber"
+                                                ChangeStyle="added" />
                             }
 
                             @if (section.ContextAfter.Count > 0)
                             {
                                 <CodeLinesBlock Title="Kontext danach"
                                                 Lines="section.ContextAfter"
-                                                LinePrefix=" " />
+                                                LinePrefix=" "
+                                                StartLineNumber="@GetContextAfterStartLine(section)"
+                                                ChangeStyle="context" />
                             }
                         </div>
                     }
@@ -162,5 +175,37 @@ else
         }
 
         return "ohne Zeilenangabe";
+    }
+
+    private static int? GetContextBeforeStartLine(ProjectCodeChangeSection section)
+    {
+        int? startLineNumber =
+            section.PreviousStartLineNumber ??
+            section.LatestStartLineNumber;
+
+        if (!startLineNumber.HasValue || section.ContextBefore.Count == 0)
+        {
+            return null;
+        }
+
+        return Math.Max(1, startLineNumber.Value - section.ContextBefore.Count);
+    }
+
+    private static int? GetContextAfterStartLine(ProjectCodeChangeSection section)
+    {
+        int? startLineNumber =
+            section.PreviousStartLineNumber ??
+            section.LatestStartLineNumber;
+
+        int changedLineCount = Math.Max(
+            section.PreviousLines.Count,
+            section.LatestLines.Count);
+
+        if (!startLineNumber.HasValue || section.ContextAfter.Count == 0)
+        {
+            return null;
+        }
+
+        return startLineNumber.Value + changedLineCount;
     }
 }
