@@ -1,0 +1,27 @@
+@namespace PMD.App.Features.Projects.Components
+
+@using Microsoft.AspNetCore.Components
+
+<div class="mb-3">
+    <div class="small text-muted mb-1">@Title</div>
+
+    <div class="border rounded bg-light overflow-auto">
+        @foreach (string line in Lines)
+        {
+            <pre class="m-0 px-3 py-1 small"><code><span class="text-muted">@LinePrefix</span> @line</code></pre>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyList<string> Lines { get; set; } = Array.Empty<string>();
+
+    [Parameter]
+    public string LinePrefix { get; set; } = string.Empty;
+}

@@ -1,0 +1,166 @@
+@namespace PMD.App.Features.Projects.Components
+
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.ProjectCodeDiff
+@using PMD.App.Domain.ProjectChanges
+@using PMD.App.Domain.ProjectCodeDiff
+
+@inject IProjectCodeDiffService CodeDiffService
+
+@if (_diffResult is null)
+{
+    <div class="alert alert-light border mb-0">
+        Code-Änderungen konnten nicht geladen werden.
+    </div>
+}
+else
+{
+    <div class="card mt-3">
+        <div class="card-header">
+            <h3 class="h6 mb-0">Geänderte Code-Abschnitte</h3>
+        </div>
+
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(_diffResult.Message))
+            {
+                <div class="alert alert-info mb-3">
+                    @_diffResult.Message
+                </div>
+            }
+
+            @if (_diffResult.PreviousSnapshotWasTruncated || _diffResult.LatestSnapshotWasTruncated)
+            {
+                <div class="alert alert-warning mb-3">
+                    Der gespeicherte Textauszug wurde gekürzt. Es kann sein, dass nicht alle Änderungen angezeigt werden.
+                </div>
+            }
+
+            @if (!_diffResult.HasSections)
+            {
+                <p class="text-muted mb-0">
+                    Für diese Datei wurden keine darstellbaren Code-Abschnitte gefunden.
+                </p>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (ProjectCodeChangeSection section in _diffResult.Sections)
+                    {
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                <div>
+                                    <span class="@GetBadgeClass(section.ChangeKind)">
+                                        @GetChangeKindText(section.ChangeKind)
+                                    </span>
+                                </div>
+
+                                <small class="text-muted text-end">
+                                    @GetLineInfo(section)
+                                </small>
+                            </div>
+
+                            @if (section.ContextBefore.Count > 0)
+                            {
+                                <CodeLinesBlock Title="Kontext davor"
+                                                Lines="section.ContextBefore"
+                                                LinePrefix=" " />
+                            }
+
+                            @if (section.ChangeKind == ProjectCodeChangeKind.Modified)
+                            {
+                                @if (section.PreviousLines.Count > 0)
+                                {
+                                    <CodeLinesBlock Title="Vorher entfernt"
+                                                    Lines="section.PreviousLines"
+                                                    LinePrefix="-" />
+                                }
+
+                                @if (section.LatestLines.Count > 0)
+                                {
+                                    <CodeLinesBlock Title="Nachher hinzugefügt"
+                                                    Lines="section.LatestLines"
+                                                    LinePrefix="+" />
+                                }
+                            }
+                            else if (section.ChangeKind == ProjectCodeChangeKind.Removed)
+                            {
+                                <CodeLinesBlock Title="Entfernt"
+                                                Lines="section.PreviousLines"
+                                                LinePrefix="-" />
+                            }
+                            else if (section.ChangeKind == ProjectCodeChangeKind.Added)
+                            {
+                                <CodeLinesBlock Title="Hinzugefügt"
+                                                Lines="section.LatestLines"
+                                                LinePrefix="+" />
+                            }
+
+                            @if (section.ContextAfter.Count > 0)
+                            {
+                                <CodeLinesBlock Title="Kontext danach"
+                                                Lines="section.ContextAfter"
+                                                LinePrefix=" " />
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private ProjectCodeDiffResult? _diffResult;
+
+    [Parameter]
+    [EditorRequired]
+    public ProjectFileChange FileChange { get; set; } = default!;
+
+    protected override void OnParametersSet()
+    {
+        _diffResult = CodeDiffService.BuildDiff(FileChange);
+    }
+
+    private static string GetChangeKindText(ProjectCodeChangeKind changeKind)
+    {
+        return changeKind switch
+        {
+            ProjectCodeChangeKind.Added => "Hinzugefügt",
+            ProjectCodeChangeKind.Removed => "Entfernt",
+            ProjectCodeChangeKind.Modified => "Verändert",
+            _ => "Unbekannt"
+        };
+    }
+
+    private static string GetBadgeClass(ProjectCodeChangeKind changeKind)
+    {
+        return changeKind switch
+        {
+            ProjectCodeChangeKind.Added => "badge text-bg-success",
+            ProjectCodeChangeKind.Removed => "badge text-bg-danger",
+            ProjectCodeChangeKind.Modified => "badge text-bg-warning",
+            _ => "badge text-bg-secondary"
+        };
+    }
+
+    private static string GetLineInfo(ProjectCodeChangeSection section)
+    {
+        if (section.PreviousStartLineNumber.HasValue &&
+            section.LatestStartLineNumber.HasValue)
+        {
+            return $"alt ab Zeile {section.PreviousStartLineNumber}, neu ab Zeile {section.LatestStartLineNumber}";
+        }
+
+        if (section.PreviousStartLineNumber.HasValue)
+        {
+            return $"alt ab Zeile {section.PreviousStartLineNumber}";
+        }
+
+        if (section.LatestStartLineNumber.HasValue)
+        {
+            return $"neu ab Zeile {section.LatestStartLineNumber}";
+        }
+
+        return "ohne Zeilenangabe";
+    }
+}

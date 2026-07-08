@@ -130,8 +130,9 @@
                 <div class="alert alert-secondary mb-0">
                     PMD nutzt Hash-Werte, wenn beide Prüfungen sie enthalten.
                     Für ältere Prüfungen bleibt Größe und Änderungsdatum die Grundlage.
-                    Ein genauer Code-Diff kommt später.
                 </div>
+
+                <ProjectCodeChangeSectionsCard FileChange="SelectedChange" />
 
                 @if (CanOpenLatestFile)
                 {
