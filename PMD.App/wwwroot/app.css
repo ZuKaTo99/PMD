@@ -107,3 +107,127 @@ h1:focus {
 .pmd-dashboard .card-title {
     margin-bottom: 0.75rem;
 }
+
+/* PMD responsive foundation */
+
+.pmd-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.pmd-page-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.pmd-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+    .pmd-card .card-body,
+    .pmd-card .card-header,
+    .pmd-card .card-footer {
+        min-width: 0;
+    }
+
+.pmd-responsive-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.pmd-responsive-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+    .pmd-responsive-actions .btn {
+        white-space: normal;
+    }
+
+.pmd-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 1rem;
+    min-width: 0;
+}
+
+.pmd-detail-item {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.pmd-text-break {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.pmd-path {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.pmd-table-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.pmd-table {
+    min-width: 42rem;
+}
+
+.pmd-code-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.pmd-code-content {
+    max-width: 100%;
+    min-width: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+@media (max-width: 768px) {
+    .pmd-responsive-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+        .pmd-responsive-actions .btn,
+        .pmd-responsive-actions a.btn {
+            width: 100%;
+        }
+
+    .pmd-table {
+        min-width: 36rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .pmd-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pmd-table {
+        min-width: 32rem;
+    }
+}

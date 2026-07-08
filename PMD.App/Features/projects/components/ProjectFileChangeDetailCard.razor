@@ -4,7 +4,7 @@
 @using PMD.App.Domain.ProjectStates
 @using System
 
-<div class="card h-100 mb-4">
+<div class="card h-100 mb-4 pmd-card">
     <div class="card-header">
         <h3 class="h6 mb-0">Änderungsdetails</h3>
     </div>
@@ -35,7 +35,7 @@
 
                 <div>
                     <div class="text-muted small">Pfad im Projekt</div>
-                    <code class="d-block text-break">
+                    <code class="pmd-path">
                         @SelectedChange.RelativePath
                     </code>
                 </div>
@@ -159,6 +159,26 @@
                             disabled>
                         Datei nicht mehr vorhanden
                     </button>
+                }
+
+                @if (CanOpenLatestFile)
+                {
+                    <div class="pmd-responsive-actions">
+                        <a class="btn btn-outline-primary"
+                           href="@LatestFileDetailsLink">
+                            Datei mit Vorschau öffnen
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="pmd-responsive-actions">
+                        <button class="btn btn-outline-secondary"
+                                type="button"
+                                disabled>
+                            Datei nicht mehr vorhanden
+                        </button>
+                    </div>
                 }
             </div>
         }
