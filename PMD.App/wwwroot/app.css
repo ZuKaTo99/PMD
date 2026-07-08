@@ -231,3 +231,59 @@ h1:focus {
         min-width: 32rem;
     }
 }
+
+/* PMD change page responsive layout */
+
+.pmd-change-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
+    gap: 1rem;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.pmd-change-layout-column {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.pmd-change-list-card {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.pmd-change-list-item {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.pmd-change-list-text {
+    flex: 1 1 18rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.pmd-change-list-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+@media (max-width: 576px) {
+    .pmd-change-list-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+        .pmd-change-list-actions .btn {
+            flex: 1 1 auto;
+        }
+}

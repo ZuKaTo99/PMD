@@ -8,19 +8,30 @@ public sealed class ProjectCodeDiffService : IProjectCodeDiffService
 {
     private const int ContextLineCount = 2;
     private const int MaxUnchangedLinesBetweenChanges = 2;
+    private const int MaxComparableLineCount = 600;
+    private const int MaxComparableLineProduct = 250_000;
 
     public ProjectCodeDiffResult BuildDiff(ProjectFileChange fileChange)
     {
         ArgumentNullException.ThrowIfNull(fileChange);
 
-        return fileChange.ChangeKind switch
+        try
         {
-            ProjectFileChangeKind.Added => BuildAddedFileDiff(fileChange),
-            ProjectFileChangeKind.Removed => BuildRemovedFileDiff(fileChange),
-            ProjectFileChangeKind.Modified => BuildModifiedFileDiff(fileChange),
-            ProjectFileChangeKind.Unchanged => BuildUnchangedFileDiff(fileChange),
-            _ => BuildUnsupportedDiff(fileChange)
-        };
+            return fileChange.ChangeKind switch
+            {
+                ProjectFileChangeKind.Added => BuildAddedFileDiff(fileChange),
+                ProjectFileChangeKind.Removed => BuildRemovedFileDiff(fileChange),
+                ProjectFileChangeKind.Modified => BuildModifiedFileDiff(fileChange),
+                ProjectFileChangeKind.Unchanged => BuildUnchangedFileDiff(fileChange),
+                _ => BuildUnsupportedDiff(fileChange)
+            };
+        }
+        catch
+        {
+            return BuildMessageResult(
+                fileChange,
+                "Der Code-Vergleich konnte für diese Datei nicht erstellt werden. PMD zeigt die Datei deshalb nur als geändert an.");
+        }
     }
 
     private static ProjectCodeDiffResult BuildAddedFileDiff(ProjectFileChange fileChange)
@@ -95,6 +106,17 @@ public sealed class ProjectCodeDiffService : IProjectCodeDiffService
         IReadOnlyList<string> latestLines = SplitLines(
             fileChange.LatestFile!.TextSnapshotContent);
 
+        if (!CanBuildLineDiff(previousLines, latestLines))
+        {
+            return new ProjectCodeDiffResult
+            {
+                RelativePath = fileChange.RelativePath,
+                Message = "Der gespeicherte Textauszug ist für einen direkten Abschnittsvergleich zu groß. PMD zeigt diese Datei deshalb nur als geändert an.",
+                PreviousSnapshotWasTruncated = fileChange.PreviousFile.TextSnapshotWasTruncated,
+                LatestSnapshotWasTruncated = fileChange.LatestFile.TextSnapshotWasTruncated
+            };
+        }
+
         IReadOnlyList<DiffOperation> operations = BuildDiffOperations(
             previousLines,
             latestLines);
@@ -161,6 +183,22 @@ public sealed class ProjectCodeDiffService : IProjectCodeDiffService
             .Replace("\r\n", "\n", StringComparison.Ordinal)
             .Replace('\r', '\n')
             .Split('\n');
+    }
+
+    private static bool CanBuildLineDiff(
+        IReadOnlyList<string> previousLines,
+        IReadOnlyList<string> latestLines)
+    {
+        if (previousLines.Count > MaxComparableLineCount ||
+            latestLines.Count > MaxComparableLineCount)
+        {
+            return false;
+        }
+
+        long lineProduct =
+            (long)previousLines.Count * latestLines.Count;
+
+        return lineProduct <= MaxComparableLineProduct;
     }
 
     private static IReadOnlyList<DiffOperation> BuildDiffOperations(
@@ -298,8 +336,8 @@ public sealed class ProjectCodeDiffService : IProjectCodeDiffService
     }
 
     private static int FindGroupedChangeEndIndex(
-    IReadOnlyList<DiffOperation> operations,
-    int changeStartIndex)
+        IReadOnlyList<DiffOperation> operations,
+        int changeStartIndex)
     {
         int index = changeStartIndex;
         int latestChangeIndex = changeStartIndex;

@@ -23,18 +23,18 @@
                     @foreach (ProjectFileChange change in VisibleChanges)
                     {
                         <div class="@GetChangeCardCssClass(change)">
-                            <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
-                                <div class="min-w-0">
-                                    <div class="text-truncate">
-                                        <code>@change.RelativePath</code>
-                                    </div>
+                            <div class="pmd-change-list-item">
+                                <div class="pmd-change-list-text">
+                                    <code class="pmd-path">
+                                        @change.RelativePath
+                                    </code>
 
                                     <div class="text-muted small mt-1">
                                         @ProjectOverviewFormatter.FormatExtension(change.Extension)
                                     </div>
                                 </div>
 
-                                <div class="d-flex gap-2 align-items-start align-self-lg-start">
+                                <div class="pmd-change-list-actions">
                                     <span class="badge bg-light text-dark border">
                                         @FormatChangeKind(change.ChangeKind)
                                     </span>
@@ -162,8 +162,8 @@
         bool isSelected = IsSameChange(change, SelectedChange);
 
         return isSelected
-            ? "border border-primary rounded p-3 bg-light"
-            : "border rounded p-3";
+            ? "pmd-change-list-card pmd-card border border-primary rounded p-3 bg-light"
+            : "pmd-change-list-card pmd-card border rounded p-3";
     }
 
     private static bool IsSameChange(

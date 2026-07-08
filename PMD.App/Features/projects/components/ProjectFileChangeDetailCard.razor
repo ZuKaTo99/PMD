@@ -1,4 +1,5 @@
 @namespace PMD.App.Features.Projects.Components
+
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectChanges
 @using PMD.App.Domain.ProjectStates
@@ -19,28 +20,28 @@
         else
         {
             <div class="d-flex flex-column gap-3">
-                <div>
+                <div class="pmd-detail-item">
                     <div class="text-muted small">Status</div>
                     <span class="badge bg-light text-dark border">
                         @FormatChangeKind(SelectedChange.ChangeKind)
                     </span>
                 </div>
 
-                <div>
+                <div class="pmd-detail-item">
                     <div class="text-muted small">Dateiname</div>
-                    <div class="fw-semibold text-break">
+                    <div class="fw-semibold pmd-text-break">
                         @SelectedChange.FileName
                     </div>
                 </div>
 
-                <div>
+                <div class="pmd-detail-item">
                     <div class="text-muted small">Pfad im Projekt</div>
                     <code class="pmd-path">
                         @SelectedChange.RelativePath
                     </code>
                 </div>
 
-                <div class="border rounded p-3">
+                <div class="border rounded p-3 pmd-card">
                     <div class="text-muted small mb-2">Erkannt durch</div>
 
                     <div class="d-flex flex-wrap gap-2">
@@ -55,74 +56,60 @@
 
                 @if (SelectedChange.ChangeKind == ProjectFileChangeKind.Modified)
                 {
-                    <div class="border rounded p-3">
+                    <div class="border rounded p-3 pmd-card">
                         <div class="text-muted small mb-2">Änderung im Überblick</div>
 
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6 col-xl-12">
-                                <div class="border rounded p-3 h-100 bg-light">
-                                    <div class="text-muted small">Größenänderung</div>
-                                    <div class="fw-semibold">
-                                        @FormatSizeDifference()
-                                    </div>
+                        <div class="pmd-detail-grid">
+                            <div class="border rounded p-3 h-100 bg-light pmd-detail-item">
+                                <div class="text-muted small">Größenänderung</div>
+                                <div class="fw-semibold">
+                                    @FormatSizeDifference()
                                 </div>
                             </div>
 
-                            <div class="col-12 col-md-6 col-xl-12">
-                                <div class="border rounded p-3 h-100 bg-light">
-                                    <div class="text-muted small">Zeitlicher Abstand</div>
-                                    <div class="fw-semibold">
-                                        @FormatLastChangedDifference()
-                                    </div>
+                            <div class="border rounded p-3 h-100 bg-light pmd-detail-item">
+                                <div class="text-muted small">Zeitlicher Abstand</div>
+                                <div class="fw-semibold">
+                                    @FormatLastChangedDifference()
                                 </div>
                             </div>
                         </div>
                     </div>
                 }
 
-                <div class="row g-3">
-                    <div class="col-12">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Dateityp</div>
-                            <div class="fw-semibold">
-                                @ProjectOverviewFormatter.FormatExtension(SelectedChange.Extension)
-                            </div>
+                <div class="pmd-detail-grid">
+                    <div class="border rounded p-3 h-100 pmd-detail-item">
+                        <div class="text-muted small">Dateityp</div>
+                        <div class="fw-semibold">
+                            @ProjectOverviewFormatter.FormatExtension(SelectedChange.Extension)
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-12">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Vorherige Größe</div>
-                            <div class="fw-semibold">
-                                @FormatFileSize(SelectedChange.PreviousFile)
-                            </div>
+                    <div class="border rounded p-3 h-100 pmd-detail-item">
+                        <div class="text-muted small">Vorherige Größe</div>
+                        <div class="fw-semibold">
+                            @FormatFileSize(SelectedChange.PreviousFile)
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-12">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Letzte Größe</div>
-                            <div class="fw-semibold">
-                                @FormatFileSize(SelectedChange.LatestFile)
-                            </div>
+                    <div class="border rounded p-3 h-100 pmd-detail-item">
+                        <div class="text-muted small">Letzte Größe</div>
+                        <div class="fw-semibold">
+                            @FormatFileSize(SelectedChange.LatestFile)
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-12">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Vorher geändert</div>
-                            <div class="fw-semibold">
-                                @FormatLastChangedAt(SelectedChange.PreviousFile)
-                            </div>
+                    <div class="border rounded p-3 h-100 pmd-detail-item">
+                        <div class="text-muted small">Vorher geändert</div>
+                        <div class="fw-semibold">
+                            @FormatLastChangedAt(SelectedChange.PreviousFile)
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-12">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small">Zuletzt geändert</div>
-                            <div class="fw-semibold">
-                                @FormatLastChangedAt(SelectedChange.LatestFile)
-                            </div>
+                    <div class="border rounded p-3 h-100 pmd-detail-item">
+                        <div class="text-muted small">Zuletzt geändert</div>
+                        <div class="fw-semibold">
+                            @FormatLastChangedAt(SelectedChange.LatestFile)
                         </div>
                     </div>
                 </div>
@@ -143,22 +130,6 @@
                         Für diese Datei gibt es keinen gespeicherten Textauszug.
                         Code-Abschnitte können deshalb nicht angezeigt werden.
                     </div>
-                }
-
-                @if (CanOpenLatestFile)
-                {
-                    <a class="btn btn-outline-primary"
-                       href="@LatestFileDetailsLink">
-                        Datei mit Vorschau öffnen
-                    </a>
-                }
-                else
-                {
-                    <button class="btn btn-outline-secondary"
-                            type="button"
-                            disabled>
-                        Datei nicht mehr vorhanden
-                    </button>
                 }
 
                 @if (CanOpenLatestFile)
