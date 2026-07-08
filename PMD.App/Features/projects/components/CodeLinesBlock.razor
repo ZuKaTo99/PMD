@@ -1,12 +1,22 @@
 @namespace PMD.App.Features.Projects.Components
 
 @using Microsoft.AspNetCore.Components
+@using System.Linq
 
 <div class="code-lines-block mb-3">
-    <div class="small text-muted mb-1">@Title</div>
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+        <div class="small text-muted">@Title</div>
+
+        @if (ShouldCollapse)
+        {
+            <div class="small text-muted text-end">
+                @VisibleLineCount von @Lines.Count Zeilen
+            </div>
+        }
+    </div>
 
     <div class="code-lines-container">
-        @for (int index = 0; index < Lines.Count; index++)
+        @for (int index = 0; index < VisibleLines.Count; index++)
         {
             int? lineNumber = GetLineNumber(index);
 
@@ -19,13 +29,46 @@
                     @LinePrefix
                 </div>
 
-                <pre class="code-line-content"><code>@Lines[index]</code></pre>
+                <pre class="code-line-content"><code>@VisibleLines[index]</code></pre>
             </div>
         }
     </div>
+
+    @if (ShouldCollapse)
+    {
+        <div class="code-lines-footer">
+            @if (!_showAll)
+            {
+                <span>
+                    Weitere @(Lines.Count - MaxVisibleLineCount) Zeilen sind ausgeblendet.
+                </span>
+
+                <button class="btn btn-sm btn-outline-secondary"
+                        type="button"
+                        @onclick="ShowAllLines">
+                    Mehr anzeigen
+                </button>
+            }
+            else
+            {
+                <span>
+                    Alle @Lines.Count Zeilen werden angezeigt.
+                </span>
+
+                <button class="btn btn-sm btn-outline-secondary"
+                        type="button"
+                        @onclick="CollapseLines">
+                    Weniger anzeigen
+                </button>
+            }
+        </div>
+    }
 </div>
 
 @code {
+    private bool _showAll;
+    private IReadOnlyList<string>? _lastLines;
+
     [Parameter]
     [EditorRequired]
     public string Title { get; set; } = string.Empty;
@@ -42,6 +85,29 @@
 
     [Parameter]
     public string ChangeStyle { get; set; } = "context";
+
+    [Parameter]
+    public int MaxVisibleLineCount { get; set; } = 40;
+
+    private bool ShouldCollapse =>
+        Lines.Count > MaxVisibleLineCount;
+
+    private IReadOnlyList<string> VisibleLines =>
+        ShouldCollapse && !_showAll
+            ? Lines.Take(MaxVisibleLineCount).ToList()
+            : Lines;
+
+    private int VisibleLineCount =>
+        VisibleLines.Count;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_lastLines, Lines))
+        {
+            _showAll = false;
+            _lastLines = Lines;
+        }
+    }
 
     private int? GetLineNumber(int index)
     {
@@ -61,5 +127,15 @@
             "removed" => "code-line code-line-removed",
             _ => "code-line code-line-context"
         };
+    }
+
+    private void ShowAllLines()
+    {
+        _showAll = true;
+    }
+
+    private void CollapseLines()
+    {
+        _showAll = false;
     }
 }
