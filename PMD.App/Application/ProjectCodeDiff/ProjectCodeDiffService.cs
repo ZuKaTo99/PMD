@@ -7,6 +7,7 @@ namespace PMD.App.Application.ProjectCodeDiff;
 public sealed class ProjectCodeDiffService : IProjectCodeDiffService
 {
     private const int ContextLineCount = 2;
+    private const int MaxUnchangedLinesBetweenChanges = 2;
 
     public ProjectCodeDiffResult BuildDiff(ProjectFileChange fileChange)
     {
@@ -281,22 +282,50 @@ public sealed class ProjectCodeDiffService : IProjectCodeDiffService
             }
 
             int changeStartIndex = index;
-
-            while (index < operations.Count &&
-                   operations[index].Kind != DiffOperationKind.Unchanged)
-            {
-                index++;
-            }
-
-            int changeEndIndex = index - 1;
+            int changeEndIndex = FindGroupedChangeEndIndex(
+                operations,
+                changeStartIndex);
 
             sections.Add(BuildChangeSection(
                 operations,
                 changeStartIndex,
                 changeEndIndex));
+
+            index = changeEndIndex + 1;
         }
 
         return sections;
+    }
+
+    private static int FindGroupedChangeEndIndex(
+    IReadOnlyList<DiffOperation> operations,
+    int changeStartIndex)
+    {
+        int index = changeStartIndex;
+        int latestChangeIndex = changeStartIndex;
+        int unchangedLineCount = 0;
+
+        while (index < operations.Count)
+        {
+            if (operations[index].Kind == DiffOperationKind.Unchanged)
+            {
+                unchangedLineCount++;
+
+                if (unchangedLineCount > MaxUnchangedLinesBetweenChanges)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                latestChangeIndex = index;
+                unchangedLineCount = 0;
+            }
+
+            index++;
+        }
+
+        return latestChangeIndex;
     }
 
     private static ProjectCodeChangeSection BuildChangeSection(
