@@ -119,23 +119,29 @@ else
 
                             @if (section.ChangeKind == ProjectCodeChangeKind.Modified)
                             {
-                                @if (section.PreviousLines.Count > 0)
-                                {
-                                    <CodeLinesBlock Title="Vorher entfernt"
-                                                    Lines="section.PreviousLines"
-                                                    LinePrefix="-"
-                                                    StartLineNumber="@section.PreviousStartLineNumber"
-                                                    ChangeStyle="removed" />
-                                }
+                                <div class="row g-3">
+                                    @if (section.PreviousLines.Count > 0)
+                                    {
+                                        <div class="col-12 col-xxl-6">
+                                            <CodeLinesBlock Title="Vorher entfernt"
+                                                            Lines="section.PreviousLines"
+                                                            LinePrefix="-"
+                                                            StartLineNumber="@section.PreviousStartLineNumber"
+                                                            ChangeStyle="removed" />
+                                        </div>
+                                    }
 
-                                @if (section.LatestLines.Count > 0)
-                                {
-                                    <CodeLinesBlock Title="Nachher hinzugefügt"
-                                                    Lines="section.LatestLines"
-                                                    LinePrefix="+"
-                                                    StartLineNumber="@section.LatestStartLineNumber"
-                                                    ChangeStyle="added" />
-                                }
+                                    @if (section.LatestLines.Count > 0)
+                                    {
+                                        <div class="col-12 col-xxl-6">
+                                            <CodeLinesBlock Title="Nachher hinzugefügt"
+                                                            Lines="section.LatestLines"
+                                                            LinePrefix="+"
+                                                            StartLineNumber="@section.LatestStartLineNumber"
+                                                            ChangeStyle="added" />
+                                        </div>
+                                    }
+                                </div>
                             }
                             else if (section.ChangeKind == ProjectCodeChangeKind.Removed)
                             {
