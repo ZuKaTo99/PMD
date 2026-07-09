@@ -1,9 +1,11 @@
 @namespace PMD.App.Features.Projects.Components
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Routing
 @using System
 @using PMD.App.Application.Projects
 @using PMD.App.Domain.Projects
 @inject IProjectMemoryStore ProjectMemoryStore
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 @if (ProjectMemoryStore.Projects.Count > 0)
@@ -17,27 +19,159 @@
         <div class="project-navigation-list">
             @foreach (Project project in ProjectMemoryStore.Projects)
             {
-                <NavLink class="project-navigation-card" href="@($"projekte/{project.Id}")" title="@project.RootPath">
-                    <span class="project-navigation-marker" aria-hidden="true">
-                        @GetProjectInitials(project.Name)
-                    </span>
+                <div class="project-navigation-entry">
+                    <div class="project-navigation-card-row">
+                        <NavLink class="project-navigation-card" href="@($"projekte/{project.Id}")" title="@project.RootPath">
+                            <span class="project-navigation-marker" aria-hidden="true">
+                                @GetProjectInitials(project.Name)
+                            </span>
 
-                    <span class="project-navigation-content">
-                        <span class="project-navigation-name">@project.Name</span>
-                        <span class="project-navigation-meta">
-                            Geprüft @FormatNavigationDate(project.LastScannedAt)
-                        </span>
-                    </span>
-                </NavLink>
+                            <span class="project-navigation-content">
+                                <span class="project-navigation-name">@project.Name</span>
+                                <span class="project-navigation-meta">
+                                    Geprüft @FormatNavigationDate(project.LastScannedAt)
+                                </span>
+                            </span>
+                        </NavLink>
+
+                        <button class="project-navigation-remove-button"
+                                type="button"
+                                title="Projekt aus PMD entfernen"
+                                aria-label="Projekt aus PMD entfernen"
+                                @onclick="() => StartProjectRemoval(project)">
+                            ×
+                        </button>
+                    </div>
+
+                    @if (ProjectPendingRemoval?.Id == project.Id)
+                    {
+                        <div class="project-navigation-remove-panel">
+                            <div class="project-navigation-remove-title">
+                                Projekt aus PMD entfernen?
+                            </div>
+
+                            <p>
+                                Das Projekt wird nur aus PMD entfernt. Der echte Ordner auf deinem Computer bleibt bestehen.
+                            </p>
+
+                            <label class="project-navigation-remove-label" for="project-remove-confirmation">
+                                Gib <strong>BESTÄTIGEN</strong> ein.
+                            </label>
+
+                            <input id="project-remove-confirmation"
+                                   class="project-navigation-remove-input"
+                                   value="@RemoveConfirmationText"
+                                   @oninput="OnRemoveConfirmationTextChanged"
+                                   autocomplete="off" />
+
+                            @if (!string.IsNullOrWhiteSpace(RemoveErrorMessage))
+                            {
+                                <div class="project-navigation-remove-error">
+                                    @RemoveErrorMessage
+                                </div>
+                            }
+
+                            <div class="project-navigation-remove-actions">
+                                <button class="project-navigation-confirm-remove-button"
+                                        type="button"
+                                        disabled="@(!CanConfirmProjectRemoval)"
+                                        @onclick="ConfirmProjectRemoval">
+                                    Aus PMD entfernen
+                                </button>
+
+                                <button class="project-navigation-cancel-remove-button"
+                                        type="button"
+                                        @onclick="CancelProjectRemoval">
+                                    Abbrechen
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
             }
         </div>
     </section>
 }
 
 @code {
+    private const string RequiredRemoveConfirmationText = "BESTÄTIGEN";
+
+    private Project? ProjectPendingRemoval { get; set; }
+
+    private string RemoveConfirmationText { get; set; } = string.Empty;
+
+    private string? RemoveErrorMessage { get; set; }
+
+    private bool CanConfirmProjectRemoval =>
+        string.Equals(
+            RemoveConfirmationText,
+            RequiredRemoveConfirmationText,
+            StringComparison.Ordinal);
+
     protected override void OnInitialized()
     {
         ProjectMemoryStore.ProjectsChanged += OnProjectsChanged;
+    }
+
+    private void StartProjectRemoval(Project project)
+    {
+        ProjectPendingRemoval = project;
+        RemoveConfirmationText = string.Empty;
+        RemoveErrorMessage = null;
+    }
+
+    private void OnRemoveConfirmationTextChanged(ChangeEventArgs eventArgs)
+    {
+        RemoveConfirmationText = eventArgs.Value?.ToString() ?? string.Empty;
+        RemoveErrorMessage = null;
+    }
+
+    private void ConfirmProjectRemoval()
+    {
+        if (ProjectPendingRemoval is null || !CanConfirmProjectRemoval)
+        {
+            return;
+        }
+
+        Guid removedProjectId = ProjectPendingRemoval.Id;
+
+        try
+        {
+            bool wasRemoved = ProjectMemoryStore.RemoveProject(removedProjectId);
+
+            if (!wasRemoved)
+            {
+                RemoveErrorMessage = "Das Projekt wurde nicht gefunden.";
+                return;
+            }
+
+            CancelProjectRemoval();
+
+            if (IsCurrentProjectRoute(removedProjectId))
+            {
+                NavigationManager.NavigateTo("/");
+            }
+        }
+        catch (Exception ex)
+        {
+            RemoveErrorMessage = $"Das Projekt konnte nicht entfernt werden: {ex.Message}";
+        }
+    }
+
+    private void CancelProjectRemoval()
+    {
+        ProjectPendingRemoval = null;
+        RemoveConfirmationText = string.Empty;
+        RemoveErrorMessage = null;
+    }
+
+    private bool IsCurrentProjectRoute(Guid projectId)
+    {
+        string relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+        return relativePath.StartsWith(
+            $"projekte/{projectId}",
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private void OnProjectsChanged()

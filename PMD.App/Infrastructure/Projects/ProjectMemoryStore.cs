@@ -4,17 +4,22 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using PMD.App.Application.ProjectStates;
 
 namespace PMD.App.Infrastructure.Projects;
 
 public sealed class ProjectMemoryStore : IProjectMemoryStore
 {
     private readonly IProjectRepository projectRepository;
+    private readonly IProjectStateMemoryStore projectStateMemoryStore;
     private readonly List<Project> projects;
 
-    public ProjectMemoryStore(IProjectRepository projectRepository)
+    public ProjectMemoryStore(
+        IProjectRepository projectRepository,
+        IProjectStateMemoryStore projectStateMemoryStore)
     {
         this.projectRepository = projectRepository;
+        this.projectStateMemoryStore = projectStateMemoryStore;
         projects = projectRepository.GetAll().ToList();
     }
 
@@ -93,6 +98,23 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
                 NormalizeRootPath(project.RootPath),
                 normalizedRootPath,
                 StringComparison.OrdinalIgnoreCase));
+    }
+
+    public bool RemoveProject(Guid projectId)
+    {
+        int existingIndex = projects.FindIndex(project => project.Id == projectId);
+
+        if (existingIndex < 0)
+        {
+            return false;
+        }
+
+        projectStateMemoryStore.RemoveByProjectId(projectId);
+        projectRepository.Delete(projectId);
+        projects.RemoveAt(existingIndex);
+        ProjectsChanged?.Invoke();
+
+        return true;
     }
 
     public void Clear()

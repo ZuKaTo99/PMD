@@ -105,6 +105,34 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
         }
     }
 
+    public void DeleteByProjectId(Guid projectId)
+    {
+        using var connection = connectionFactory.CreateConnection();
+
+        string projectIdText = projectId.ToString();
+
+        List<string> projectStateIds = connection
+            .Table<ProjectStateRecord>()
+            .Where(record => record.ProjectId == projectIdText)
+            .Select(record => record.Id)
+            .ToList();
+
+        if (projectStateIds.Count == 0)
+        {
+            return;
+        }
+
+        string placeholders = string.Join(", ", projectStateIds.Select(_ => "?"));
+
+        connection.Execute(
+            $"DELETE FROM ProjectStateFiles WHERE ProjectStateId IN ({placeholders})",
+            projectStateIds.Cast<object>().ToArray());
+
+        connection.Execute(
+            "DELETE FROM ProjectStates WHERE ProjectId = ?",
+            projectIdText);
+    }
+
     public void DeleteAll()
     {
         using var connection = connectionFactory.CreateConnection();

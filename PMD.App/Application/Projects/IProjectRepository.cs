@@ -14,5 +14,7 @@ public interface IProjectRepository
 
     void Save(Project project);
 
+    void Delete(Guid projectId);
+
     void DeleteAll();
 }

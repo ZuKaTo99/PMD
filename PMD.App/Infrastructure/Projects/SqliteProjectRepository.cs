@@ -75,6 +75,15 @@ public sealed class SqliteProjectRepository : IProjectRepository
         connection.InsertOrReplace(MapToRecord(project));
     }
 
+    public void Delete(Guid projectId)
+    {
+        using var connection = connectionFactory.CreateConnection();
+
+        connection.Execute(
+            "DELETE FROM Projects WHERE Id = ?",
+            projectId.ToString());
+    }
+
     public void DeleteAll()
     {
         using var connection = connectionFactory.CreateConnection();

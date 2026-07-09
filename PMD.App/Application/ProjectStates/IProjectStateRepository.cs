@@ -16,5 +16,7 @@ public interface IProjectStateRepository
 
     void Save(ProjectState projectState);
 
+    void DeleteByProjectId(Guid projectId);
+
     void DeleteAll();
 }

@@ -81,6 +81,13 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
         return true;
     }
 
+    public void RemoveByProjectId(Guid projectId)
+    {
+        projectStates.RemoveAll(projectState => projectState.ProjectId == projectId);
+        projectStateRepository.DeleteByProjectId(projectId);
+        ProjectStatesChanged?.Invoke();
+    }
+
     public void Clear()
     {
         projectStates.Clear();

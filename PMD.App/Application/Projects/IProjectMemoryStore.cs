@@ -19,5 +19,7 @@ public interface IProjectMemoryStore
 
     Project? GetProjectByRootPath(string rootPath);
 
+    bool RemoveProject(Guid projectId);
+
     void Clear();
 }

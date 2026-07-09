@@ -18,5 +18,7 @@ public interface IProjectStateMemoryStore
 
     bool Remember(ProjectState projectState);
 
+    void RemoveByProjectId(Guid projectId);
+
     void Clear();
 }

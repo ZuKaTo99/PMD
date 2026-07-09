@@ -131,3 +131,145 @@
 .project-navigation-list ::deep .project-navigation-card.active .project-navigation-meta {
     text-decoration: none;
 }
+
+.project-navigation-entry {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.project-navigation-card-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.project-navigation-remove-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    min-width: 2.25rem;
+    min-height: 3.75rem;
+    color: rgba(255, 235, 235, 0.9);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1;
+    border: 1px solid rgba(255, 120, 120, 0.18);
+    border-radius: 0.95rem;
+    background: rgba(255, 90, 90, 0.1);
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+    .project-navigation-remove-button:hover,
+    .project-navigation-remove-button:focus {
+        color: #ffffff;
+        border-color: rgba(255, 135, 135, 0.42);
+        background: rgba(210, 50, 50, 0.24);
+        transform: translateY(-1px);
+    }
+
+    .project-navigation-remove-button:focus {
+        outline: 2px solid rgba(255, 170, 170, 0.72);
+        outline-offset: 2px;
+    }
+
+.project-navigation-remove-panel {
+    display: grid;
+    gap: 0.55rem;
+    min-width: 0;
+    padding: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.78rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    border: 1px solid rgba(255, 160, 92, 0.28);
+    border-radius: 0.95rem;
+    background: linear-gradient(135deg, rgba(145, 63, 20, 0.42), rgba(95, 35, 35, 0.24));
+}
+
+    .project-navigation-remove-panel p {
+        margin: 0;
+        color: rgba(255, 244, 232, 0.84);
+    }
+
+.project-navigation-remove-title {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.project-navigation-remove-label {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.74rem;
+}
+
+.project-navigation-remove-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.48rem 0.58rem;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 0.65rem;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+    .project-navigation-remove-input:focus {
+        outline: 2px solid rgba(255, 203, 145, 0.75);
+        outline-offset: 2px;
+    }
+
+.project-navigation-remove-error {
+    color: #ffe4e4;
+    font-size: 0.74rem;
+}
+
+.project-navigation-remove-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.project-navigation-confirm-remove-button,
+.project-navigation-cancel-remove-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.62rem;
+    font-size: 0.74rem;
+    font-weight: 760;
+    border-radius: 0.65rem;
+}
+
+.project-navigation-confirm-remove-button {
+    color: #ffffff;
+    border: 1px solid rgba(255, 120, 120, 0.42);
+    background: rgba(200, 45, 45, 0.46);
+}
+
+    .project-navigation-confirm-remove-button:disabled {
+        cursor: not-allowed;
+        color: rgba(255, 255, 255, 0.42);
+        border-color: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+.project-navigation-cancel-remove-button {
+    color: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.09);
+}
+
+@media (max-width: 380px) {
+    .project-navigation-card-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .project-navigation-remove-button {
+        width: 100%;
+        min-height: 2.2rem;
+    }
+}
