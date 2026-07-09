@@ -480,47 +480,78 @@
     }
 }
 
-.project-navigation-card {
+.project-navigation-list ::deep .project-navigation-card {
     --project-accent: #7da5ff;
-    --project-accent-soft: rgba(125, 165, 255, 0.22);
-    border-left: 3px solid var(--project-accent);
+    --project-accent-soft: rgba(125, 165, 255, 0.24);
+    --project-accent-card: rgba(125, 165, 255, 0.16);
+    --project-accent-card-strong: rgba(125, 165, 255, 0.28);
+    --project-accent-border: rgba(125, 165, 255, 0.62);
+    border-color: var(--project-accent-border);
+    border-left: 4px solid var(--project-accent);
+    background: linear-gradient( 135deg, var(--project-accent-card-strong), rgba(34, 38, 112, 0.66) );
 }
 
-    .project-navigation-card .project-navigation-marker {
-        color: #ffffff;
-        background: var(--project-accent-soft);
-        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--project-accent) 45%, transparent);
+    .project-navigation-list ::deep .project-navigation-card:hover,
+    .project-navigation-list ::deep .project-navigation-card.active {
+        border-color: var(--project-accent);
+        background: linear-gradient( 135deg, var(--project-accent-card-strong), rgba(31, 34, 105, 0.82) );
+        box-shadow: inset 3px 0 0 var(--project-accent), 0 14px 32px rgba(0, 0, 0, 0.18);
     }
 
-.project-navigation-accent-blue {
-    --project-accent: #7da5ff;
-    --project-accent-soft: rgba(125, 165, 255, 0.22);
-}
+    .project-navigation-list ::deep .project-navigation-card .project-navigation-marker {
+        color: #ffffff;
+        border-color: var(--project-accent-border);
+        background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.32), transparent 42%), linear-gradient( 135deg, var(--project-accent), var(--project-accent-card-strong) );
+        box-shadow: inset 0 0 0 1px var(--project-accent-soft), 0 0 14px var(--project-accent-soft);
+    }
 
-.project-navigation-accent-violet {
-    --project-accent: #b48cff;
-    --project-accent-soft: rgba(180, 140, 255, 0.22);
-}
+    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-blue {
+        --project-accent: #7da5ff;
+        --project-accent-soft: rgba(125, 165, 255, 0.24);
+        --project-accent-card: rgba(125, 165, 255, 0.16);
+        --project-accent-card-strong: rgba(125, 165, 255, 0.28);
+        --project-accent-border: rgba(125, 165, 255, 0.62);
+    }
 
-.project-navigation-accent-cyan {
-    --project-accent: #64d7ff;
-    --project-accent-soft: rgba(100, 215, 255, 0.2);
-}
+    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-violet {
+        --project-accent: #b48cff;
+        --project-accent-soft: rgba(180, 140, 255, 0.24);
+        --project-accent-card: rgba(180, 140, 255, 0.16);
+        --project-accent-card-strong: rgba(180, 140, 255, 0.28);
+        --project-accent-border: rgba(180, 140, 255, 0.62);
+    }
 
-.project-navigation-accent-emerald {
-    --project-accent: #61d394;
-    --project-accent-soft: rgba(97, 211, 148, 0.2);
-}
+    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-cyan {
+        --project-accent: #64d7ff;
+        --project-accent-soft: rgba(100, 215, 255, 0.24);
+        --project-accent-card: rgba(100, 215, 255, 0.16);
+        --project-accent-card-strong: rgba(100, 215, 255, 0.28);
+        --project-accent-border: rgba(100, 215, 255, 0.62);
+    }
 
-.project-navigation-accent-amber {
-    --project-accent: #ffbf69;
-    --project-accent-soft: rgba(255, 191, 105, 0.22);
-}
+    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-emerald {
+        --project-accent: #61d394;
+        --project-accent-soft: rgba(97, 211, 148, 0.24);
+        --project-accent-card: rgba(97, 211, 148, 0.16);
+        --project-accent-card-strong: rgba(97, 211, 148, 0.28);
+        --project-accent-border: rgba(97, 211, 148, 0.62);
+    }
 
-.project-navigation-accent-rose {
-    --project-accent: #ff7a90;
-    --project-accent-soft: rgba(255, 122, 144, 0.22);
-}
+    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-amber {
+        --project-accent: #ffbf69;
+        --project-accent-soft: rgba(255, 191, 105, 0.24);
+        --project-accent-card: rgba(255, 191, 105, 0.16);
+        --project-accent-card-strong: rgba(255, 191, 105, 0.28);
+        --project-accent-border: rgba(255, 191, 105, 0.62);
+    }
+
+    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-rose {
+        --project-accent: #ff7a90;
+        --project-accent-soft: rgba(255, 122, 144, 0.24);
+        --project-accent-card: rgba(255, 122, 144, 0.16);
+        --project-accent-card-strong: rgba(255, 122, 144, 0.28);
+        --project-accent-border: rgba(255, 122, 144, 0.62);
+    }
 
 .project-navigation-edit-panel {
     display: grid;
