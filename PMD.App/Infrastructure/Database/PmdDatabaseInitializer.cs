@@ -22,7 +22,17 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
         connection.CreateTable<ProjectStateRecord>();
         connection.CreateTable<ProjectStateFileRecord>();
 
+        EnsureProjectsSchema(connection);
         EnsureProjectStateFilesSchema(connection);
+    }
+
+    private static void EnsureProjectsSchema(SQLiteConnection connection)
+    {
+        if (!ColumnExists(connection, "Projects", "AccentColor"))
+        {
+            connection.Execute(
+                "ALTER TABLE Projects ADD COLUMN AccentColor TEXT NOT NULL DEFAULT 'blue'");
+        }
     }
 
     private static void EnsureProjectStateFilesSchema(SQLiteConnection connection)

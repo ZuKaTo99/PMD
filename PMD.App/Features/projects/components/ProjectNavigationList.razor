@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Routing
 @using System
+@using System.Collections.Generic
 @using PMD.App.Application.Projects
 @using PMD.App.Domain.Projects
 @inject IProjectMemoryStore ProjectMemoryStore
@@ -21,8 +22,8 @@
             {
                 <div class="project-navigation-entry">
                     <div class="project-navigation-card-row">
-                        <NavLink class="project-navigation-card" href="@($"projekte/{project.Id}")" title="@project.RootPath">
-                            <span class="project-navigation-marker" aria-hidden="true">
+                        <NavLink class="@GetProjectCardCssClass(project)" href="@($"projekte/{project.Id}")" title="@project.RootPath">
+                            <span class="@GetProjectMarkerCssClass(project)" aria-hidden="true">
                                 @GetProjectInitials(project.Name)
                             </span>
 
@@ -37,9 +38,9 @@
                         <div class="project-navigation-actions">
                             <button class="project-navigation-action-button project-navigation-edit-button"
                                     type="button"
-                                    title="Projekt umbenennen"
-                                    aria-label="Projekt umbenennen"
-                                    @onclick="() => StartProjectRename(project)">
+                                    title="Projekt bearbeiten"
+                                    aria-label="Projekt bearbeiten"
+                                    @onclick="() => StartProjectEdit(project)">
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                      width="16"
                                      height="16"
@@ -48,7 +49,7 @@
                                      viewBox="0 0 16 16"
                                      aria-hidden="true"
                                      focusable="false">
-                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706l-1 1a.5.5 0 0 1-.707 0L12.354 2.207a.5.5 0 0 1 0-.707l1-1a.5.5 0 0 1 .707 0zm-1.75 2.456-2.147-2.147L4.939 8.914a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12z" />
+                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
                                 </svg>
                             </button>
@@ -72,46 +73,67 @@
                         </div>
                     </div>
 
-                    @if (ProjectPendingRename?.Id == project.Id)
+                    @if (ProjectPendingEdit?.Id == project.Id)
                     {
-                        <div class="project-navigation-rename-panel">
-                            <div class="project-navigation-rename-title">
-                                Projekt umbenennen
+                        <div class="project-navigation-edit-panel">
+                            <div class="project-navigation-edit-title">
+                                Projekt bearbeiten
                             </div>
 
                             <p>
-                                Geändert wird nur der Anzeigename in PMD. Der echte Ordnerpfad bleibt unverändert.
+                                Geändert werden nur Anzeigename und Farbe in PMD. Der echte Ordnerpfad bleibt unverändert.
                             </p>
 
-                            <label class="project-navigation-rename-label" for="@GetRenameInputId(project.Id)">
+                            <label class="project-navigation-edit-label" for="@GetEditInputId(project.Id)">
                                 Anzeigename
                             </label>
 
-                            <input id="@GetRenameInputId(project.Id)"
-                                   class="project-navigation-rename-input"
-                                   value="@ProjectRenameText"
-                                   @oninput="OnProjectRenameTextChanged"
+                            <input id="@GetEditInputId(project.Id)"
+                                   class="project-navigation-edit-input"
+                                   value="@ProjectEditName"
+                                   @oninput="OnProjectEditNameChanged"
                                    maxlength="@MaxProjectNameLength"
                                    autocomplete="off" />
 
-                            @if (!string.IsNullOrWhiteSpace(RenameErrorMessage))
+                            <div class="project-navigation-color-section">
+                                <div class="project-navigation-color-title">
+                                    Farbe
+                                </div>
+
+                                <div class="project-navigation-color-options" role="radiogroup" aria-label="Projektfarbe auswählen">
+                                    @foreach (ProjectAccentColorOption option in AccentColorOptions)
+                                    {
+                                        <button class="@GetColorOptionCssClassInstance(option.Key)"
+                                                type="button"
+                                                role="radio"
+                                                aria-checked="@IsSelectedAccentColor(option.Key)"
+                                                title="@option.Label"
+                                                @onclick="() => SelectProjectAccentColor(option.Key)">
+                                            <span class="@GetColorPreviewCssClass(option.Key)" aria-hidden="true"></span>
+                                            <span>@option.Label</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(EditErrorMessage))
                             {
-                                <div class="project-navigation-rename-error">
-                                    @RenameErrorMessage
+                                <div class="project-navigation-edit-error">
+                                    @EditErrorMessage
                                 </div>
                             }
 
-                            <div class="project-navigation-rename-actions">
-                                <button class="project-navigation-confirm-rename-button"
+                            <div class="project-navigation-edit-actions">
+                                <button class="project-navigation-confirm-edit-button"
                                         type="button"
-                                        disabled="@(!CanConfirmProjectRename)"
-                                        @onclick="ConfirmProjectRename">
+                                        disabled="@(!CanConfirmProjectEdit)"
+                                        @onclick="ConfirmProjectEdit">
                                     Speichern
                                 </button>
 
-                                <button class="project-navigation-cancel-rename-button"
+                                <button class="project-navigation-cancel-edit-button"
                                         type="button"
-                                        @onclick="CancelProjectRename">
+                                        @onclick="CancelProjectEdit">
                                     Abbrechen
                                 </button>
                             </div>
@@ -172,11 +194,23 @@
     private const string RequiredRemoveConfirmationText = "BESTÄTIGEN";
     private const int MaxProjectNameLength = 80;
 
-    private Project? ProjectPendingRename { get; set; }
+    private static readonly IReadOnlyList<ProjectAccentColorOption> AccentColorOptions =
+    [
+        new(ProjectAccentColors.Blue, "Blau"),
+        new(ProjectAccentColors.Violet, "Violett"),
+        new(ProjectAccentColors.Cyan, "Türkis"),
+        new(ProjectAccentColors.Emerald, "Grün"),
+        new(ProjectAccentColors.Amber, "Gold"),
+        new(ProjectAccentColors.Rose, "Rot")
+    ];
 
-    private string ProjectRenameText { get; set; } = string.Empty;
+    private Project? ProjectPendingEdit { get; set; }
 
-    private string? RenameErrorMessage { get; set; }
+    private string ProjectEditName { get; set; } = string.Empty;
+
+    private string ProjectEditAccentColor { get; set; } = ProjectAccentColors.Default;
+
+    private string? EditErrorMessage { get; set; }
 
     private Project? ProjectPendingRemoval { get; set; }
 
@@ -184,20 +218,34 @@
 
     private string? RemoveErrorMessage { get; set; }
 
-    private bool CanConfirmProjectRename
+    private bool CanConfirmProjectEdit
     {
         get
         {
-            if (ProjectPendingRename is null)
+            if (ProjectPendingEdit is null)
             {
                 return false;
             }
 
-            string trimmedName = ProjectRenameText.Trim();
+            string trimmedName = ProjectEditName.Trim();
+            string normalizedAccentColor = ProjectAccentColors.Normalize(ProjectEditAccentColor);
+            string currentAccentColor = ProjectAccentColors.Normalize(ProjectPendingEdit.AccentColor);
 
-            return trimmedName.Length > 0 &&
-                trimmedName.Length <= MaxProjectNameLength &&
-                !string.Equals(trimmedName, ProjectPendingRename.Name, StringComparison.Ordinal);
+            bool hasValidName =
+                trimmedName.Length > 0 &&
+                trimmedName.Length <= MaxProjectNameLength;
+
+            bool hasChangedName = !string.Equals(
+                trimmedName,
+                ProjectPendingEdit.Name,
+                StringComparison.Ordinal);
+
+            bool hasChangedColor = !string.Equals(
+                normalizedAccentColor,
+                currentAccentColor,
+                StringComparison.Ordinal);
+
+            return hasValidName && (hasChangedName || hasChangedColor);
         }
     }
 
@@ -212,69 +260,104 @@
         ProjectMemoryStore.ProjectsChanged += OnProjectsChanged;
     }
 
-    private void StartProjectRename(Project project)
+    private void StartProjectEdit(Project project)
     {
-        ProjectPendingRename = project;
-        ProjectRenameText = project.Name;
-        RenameErrorMessage = null;
+        ProjectPendingEdit = project;
+        ProjectEditName = project.Name;
+        ProjectEditAccentColor = ProjectAccentColors.Normalize(project.AccentColor);
+        EditErrorMessage = null;
 
         ProjectPendingRemoval = null;
         RemoveConfirmationText = string.Empty;
         RemoveErrorMessage = null;
     }
 
-    private void OnProjectRenameTextChanged(ChangeEventArgs eventArgs)
+    private void OnProjectEditNameChanged(ChangeEventArgs eventArgs)
     {
-        ProjectRenameText = eventArgs.Value?.ToString() ?? string.Empty;
-        RenameErrorMessage = null;
+        ProjectEditName = eventArgs.Value?.ToString() ?? string.Empty;
+        EditErrorMessage = null;
     }
 
-    private void ConfirmProjectRename()
+    private void SelectProjectAccentColor(string accentColor)
     {
-        if (ProjectPendingRename is null)
+        ProjectEditAccentColor = ProjectAccentColors.Normalize(accentColor);
+        EditErrorMessage = null;
+    }
+
+    private void ConfirmProjectEdit()
+    {
+        if (ProjectPendingEdit is null)
         {
             return;
         }
 
-        string trimmedName = ProjectRenameText.Trim();
+        string trimmedName = ProjectEditName.Trim();
+        string normalizedAccentColor = ProjectAccentColors.Normalize(ProjectEditAccentColor);
 
         if (trimmedName.Length == 0)
         {
-            RenameErrorMessage = "Bitte gib einen Namen ein.";
+            EditErrorMessage = "Bitte gib einen Namen ein.";
             return;
         }
 
         if (trimmedName.Length > MaxProjectNameLength)
         {
-            RenameErrorMessage = $"Der Name darf maximal {MaxProjectNameLength} Zeichen lang sein.";
+            EditErrorMessage = $"Der Name darf maximal {MaxProjectNameLength} Zeichen lang sein.";
             return;
         }
 
         try
         {
-            bool wasRenamed = ProjectMemoryStore.RenameProject(
-                ProjectPendingRename.Id,
-                trimmedName);
+            bool nameChanged = !string.Equals(
+                trimmedName,
+                ProjectPendingEdit.Name,
+                StringComparison.Ordinal);
 
-            if (!wasRenamed)
+            bool colorChanged = !string.Equals(
+                normalizedAccentColor,
+                ProjectAccentColors.Normalize(ProjectPendingEdit.AccentColor),
+                StringComparison.Ordinal);
+
+            if (nameChanged)
             {
-                RenameErrorMessage = "Das Projekt wurde nicht gefunden.";
-                return;
+                bool wasRenamed = ProjectMemoryStore.RenameProject(
+                    ProjectPendingEdit.Id,
+                    trimmedName);
+
+                if (!wasRenamed)
+                {
+                    EditErrorMessage = "Das Projekt wurde nicht gefunden.";
+                    return;
+                }
             }
 
-            CancelProjectRename();
+            if (colorChanged)
+            {
+                bool colorWasChanged = ProjectMemoryStore.ChangeProjectAccentColor(
+                    ProjectPendingEdit.Id,
+                    normalizedAccentColor);
+
+                if (!colorWasChanged)
+                {
+                    EditErrorMessage = "Die Farbe konnte nicht gespeichert werden.";
+                    return;
+                }
+            }
+
+            CancelProjectEdit();
         }
         catch (Exception ex)
         {
-            RenameErrorMessage = $"Das Projekt konnte nicht umbenannt werden: {ex.Message}";
+            EditErrorMessage = $"Das Projekt konnte nicht gespeichert werden: {ex.Message}";
         }
     }
 
-    private void CancelProjectRename()
+    private void CancelProjectEdit()
     {
-        ProjectPendingRename = null;
-        ProjectRenameText = string.Empty;
-        RenameErrorMessage = null;
+        ProjectPendingEdit = null;
+        ProjectEditName = string.Empty;
+        ProjectEditAccentColor = ProjectAccentColors.Default;
+        EditErrorMessage = null;
     }
 
     private void StartProjectRemoval(Project project)
@@ -283,9 +366,10 @@
         RemoveConfirmationText = string.Empty;
         RemoveErrorMessage = null;
 
-        ProjectPendingRename = null;
-        ProjectRenameText = string.Empty;
-        RenameErrorMessage = null;
+        ProjectPendingEdit = null;
+        ProjectEditName = string.Empty;
+        ProjectEditAccentColor = ProjectAccentColors.Default;
+        EditErrorMessage = null;
     }
 
     private void OnRemoveConfirmationTextChanged(ChangeEventArgs eventArgs)
@@ -342,9 +426,47 @@
             StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string GetRenameInputId(Guid projectId)
+    private static string GetProjectCardCssClass(Project project)
     {
-        return $"project-rename-name-{projectId}";
+        string accentColor = ProjectAccentColors.Normalize(project.AccentColor);
+
+        return $"project-navigation-card project-navigation-accent-{accentColor}";
+    }
+
+    private static string GetProjectMarkerCssClass(Project project)
+    {
+        string accentColor = ProjectAccentColors.Normalize(project.AccentColor);
+
+        return $"project-navigation-marker project-navigation-marker-{accentColor}";
+    }
+
+
+    private string GetColorOptionCssClassInstance(string accentColor)
+    {
+        string selectedClass = IsSelectedAccentColor(accentColor)
+            ? " is-selected"
+            : string.Empty;
+
+        return $"project-navigation-color-option project-navigation-color-option-{accentColor}{selectedClass}";
+    }
+
+
+    private string GetColorPreviewCssClass(string accentColor)
+    {
+        return $"project-navigation-color-preview project-navigation-color-preview-{ProjectAccentColors.Normalize(accentColor)}";
+    }
+
+    private bool IsSelectedAccentColor(string accentColor)
+    {
+        return string.Equals(
+            ProjectAccentColors.Normalize(ProjectEditAccentColor),
+            ProjectAccentColors.Normalize(accentColor),
+            StringComparison.Ordinal);
+    }
+
+    private static string GetEditInputId(Guid projectId)
+    {
+        return $"project-edit-name-{projectId}";
     }
 
     private static string GetRemoveInputId(Guid projectId)
@@ -390,4 +512,6 @@
     {
         ProjectMemoryStore.ProjectsChanged -= OnProjectsChanged;
     }
+
+    private sealed record ProjectAccentColorOption(string Key, string Label);
 }

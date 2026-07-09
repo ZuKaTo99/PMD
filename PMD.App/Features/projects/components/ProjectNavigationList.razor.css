@@ -479,3 +479,217 @@
         transform: translateY(-50%) scale(1);
     }
 }
+
+.project-navigation-card {
+    --project-accent: #7da5ff;
+    --project-accent-soft: rgba(125, 165, 255, 0.22);
+    border-left: 3px solid var(--project-accent);
+}
+
+    .project-navigation-card .project-navigation-marker {
+        color: #ffffff;
+        background: var(--project-accent-soft);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--project-accent) 45%, transparent);
+    }
+
+.project-navigation-accent-blue {
+    --project-accent: #7da5ff;
+    --project-accent-soft: rgba(125, 165, 255, 0.22);
+}
+
+.project-navigation-accent-violet {
+    --project-accent: #b48cff;
+    --project-accent-soft: rgba(180, 140, 255, 0.22);
+}
+
+.project-navigation-accent-cyan {
+    --project-accent: #64d7ff;
+    --project-accent-soft: rgba(100, 215, 255, 0.2);
+}
+
+.project-navigation-accent-emerald {
+    --project-accent: #61d394;
+    --project-accent-soft: rgba(97, 211, 148, 0.2);
+}
+
+.project-navigation-accent-amber {
+    --project-accent: #ffbf69;
+    --project-accent-soft: rgba(255, 191, 105, 0.22);
+}
+
+.project-navigation-accent-rose {
+    --project-accent: #ff7a90;
+    --project-accent-soft: rgba(255, 122, 144, 0.22);
+}
+
+.project-navigation-edit-panel {
+    display: grid;
+    gap: 0.65rem;
+    min-width: 0;
+    padding: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.78rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    border: 1px solid rgba(125, 165, 255, 0.28);
+    border-radius: 0.95rem;
+    background: linear-gradient(135deg, rgba(42, 74, 160, 0.42), rgba(52, 45, 125, 0.24));
+}
+
+    .project-navigation-edit-panel p {
+        margin: 0;
+        color: rgba(235, 241, 255, 0.84);
+    }
+
+.project-navigation-edit-title,
+.project-navigation-color-title {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.project-navigation-edit-label {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.74rem;
+}
+
+.project-navigation-edit-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.48rem 0.58rem;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 0.65rem;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+    .project-navigation-edit-input:focus {
+        outline: 2px solid rgba(160, 190, 255, 0.75);
+        outline-offset: 2px;
+    }
+
+.project-navigation-color-section {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.project-navigation-color-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.project-navigation-color-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    min-height: 2.1rem;
+    padding: 0.35rem 0.5rem;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 0.74rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.65rem;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+    .project-navigation-color-option:hover,
+    .project-navigation-color-option:focus,
+    .project-navigation-color-option.is-selected {
+        color: #ffffff;
+        border-color: var(--project-color-preview);
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .project-navigation-color-option:focus {
+        outline: 2px solid rgba(180, 210, 255, 0.72);
+        outline-offset: 2px;
+    }
+
+.project-navigation-color-preview {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: var(--project-color-preview);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+}
+
+.project-navigation-color-option-blue,
+.project-navigation-color-preview-blue {
+    --project-color-preview: #7da5ff;
+}
+
+.project-navigation-color-option-violet,
+.project-navigation-color-preview-violet {
+    --project-color-preview: #b48cff;
+}
+
+.project-navigation-color-option-cyan,
+.project-navigation-color-preview-cyan {
+    --project-color-preview: #64d7ff;
+}
+
+.project-navigation-color-option-emerald,
+.project-navigation-color-preview-emerald {
+    --project-color-preview: #61d394;
+}
+
+.project-navigation-color-option-amber,
+.project-navigation-color-preview-amber {
+    --project-color-preview: #ffbf69;
+}
+
+.project-navigation-color-option-rose,
+.project-navigation-color-preview-rose {
+    --project-color-preview: #ff7a90;
+}
+
+.project-navigation-edit-error {
+    color: #ffe4e4;
+    font-size: 0.74rem;
+}
+
+.project-navigation-edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.project-navigation-confirm-edit-button,
+.project-navigation-cancel-edit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.62rem;
+    font-size: 0.74rem;
+    font-weight: 760;
+    border-radius: 0.65rem;
+}
+
+.project-navigation-confirm-edit-button {
+    color: #ffffff;
+    border: 1px solid rgba(125, 165, 255, 0.42);
+    background: rgba(70, 105, 210, 0.46);
+}
+
+    .project-navigation-confirm-edit-button:disabled {
+        cursor: not-allowed;
+        color: rgba(255, 255, 255, 0.42);
+        border-color: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+.project-navigation-cancel-edit-button {
+    color: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.09);
+}
+
+@media (max-width: 420px) {
+    .project-navigation-color-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

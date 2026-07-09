@@ -13,6 +13,8 @@ public sealed class ProjectRecord
 
     public string Name { get; set; } = string.Empty;
 
+    public string AccentColor { get; set; } = "blue";
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime LastScannedAt { get; set; }

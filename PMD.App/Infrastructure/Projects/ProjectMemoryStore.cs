@@ -46,6 +46,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
                 Id = existingProject.Id,
                 Name = existingProject.Name,
                 RootPath = existingProject.RootPath,
+                AccentColor = existingProject.AccentColor,
                 CreatedAt = existingProject.CreatedAt,
                 LastScannedAt = scannedAt
             };
@@ -68,6 +69,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
             Id = Guid.NewGuid(),
             Name = projectName.Trim(),
             RootPath = normalizedRootPath,
+            AccentColor = ProjectAccentColors.Default,
             CreatedAt = DateTime.Now,
             LastScannedAt = scannedAt
         };
@@ -128,12 +130,56 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
             Id = existingProject.Id,
             Name = trimmedName,
             RootPath = existingProject.RootPath,
+            AccentColor = existingProject.AccentColor,
             CreatedAt = existingProject.CreatedAt,
             LastScannedAt = existingProject.LastScannedAt
         };
 
         projects[existingIndex] = renamedProject;
         projectRepository.Rename(projectId, trimmedName);
+        ProjectsChanged?.Invoke();
+
+        return true;
+    }
+
+    public bool ChangeProjectAccentColor(Guid projectId, string accentColor)
+    {
+        if (!ProjectAccentColors.IsKnown(accentColor))
+        {
+            return false;
+        }
+
+        string normalizedAccentColor = ProjectAccentColors.Normalize(accentColor);
+
+        int existingIndex = projects.FindIndex(project => project.Id == projectId);
+
+        if (existingIndex < 0)
+        {
+            return false;
+        }
+
+        Project existingProject = projects[existingIndex];
+
+        if (string.Equals(
+            ProjectAccentColors.Normalize(existingProject.AccentColor),
+            normalizedAccentColor,
+            StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var updatedProject = new Project
+        {
+            Id = existingProject.Id,
+            Name = existingProject.Name,
+            RootPath = existingProject.RootPath,
+            AccentColor = normalizedAccentColor,
+            CreatedAt = existingProject.CreatedAt,
+            LastScannedAt = existingProject.LastScannedAt
+        };
+
+        projects[existingIndex] = updatedProject;
+        projectRepository.ChangeAccentColor(projectId, normalizedAccentColor);
         ProjectsChanged?.Invoke();
 
         return true;

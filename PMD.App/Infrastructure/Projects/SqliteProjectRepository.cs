@@ -94,6 +94,18 @@ public sealed class SqliteProjectRepository : IProjectRepository
         connection.Update(record);
     }
 
+    public void ChangeAccentColor(Guid projectId, string accentColor)
+    {
+        string normalizedAccentColor = ProjectAccentColors.Normalize(accentColor);
+
+        using var connection = connectionFactory.CreateConnection();
+
+        connection.Execute(
+            "UPDATE Projects SET AccentColor = ? WHERE Id = ?",
+            normalizedAccentColor,
+            projectId.ToString());
+    }
+
     public void Delete(Guid projectId)
     {
         using var connection = connectionFactory.CreateConnection();
@@ -117,6 +129,7 @@ public sealed class SqliteProjectRepository : IProjectRepository
             Id = Guid.Parse(record.Id),
             Name = record.Name,
             RootPath = record.RootPath,
+            AccentColor = ProjectAccentColors.Normalize(record.AccentColor),
             CreatedAt = record.CreatedAt,
             LastScannedAt = record.LastScannedAt
         };
@@ -129,6 +142,7 @@ public sealed class SqliteProjectRepository : IProjectRepository
             Id = project.Id.ToString(),
             Name = project.Name,
             RootPath = project.RootPath,
+            AccentColor = ProjectAccentColors.Normalize(project.AccentColor),
             CreatedAt = project.CreatedAt,
             LastScannedAt = project.LastScannedAt
         };

@@ -21,6 +21,8 @@ public interface IProjectMemoryStore
 
     bool RenameProject(Guid projectId, string newName);
 
+    bool ChangeProjectAccentColor(Guid projectId, string accentColor);
+
     bool RemoveProject(Guid projectId);
 
     void Clear();

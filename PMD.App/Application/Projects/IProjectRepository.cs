@@ -16,6 +16,8 @@ public interface IProjectRepository
 
     void Rename(Guid projectId, string newName);
 
+    void ChangeAccentColor(Guid projectId, string accentColor);
+
     void Delete(Guid projectId);
 
     void DeleteAll();
