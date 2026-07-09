@@ -75,6 +75,25 @@ public sealed class SqliteProjectRepository : IProjectRepository
         connection.InsertOrReplace(MapToRecord(project));
     }
 
+    public void Rename(Guid projectId, string newName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(newName);
+
+        using var connection = connectionFactory.CreateConnection();
+
+        ProjectRecord? record = connection
+            .Table<ProjectRecord>()
+            .FirstOrDefault(project => project.Id == projectId.ToString());
+
+        if (record is null)
+        {
+            return;
+        }
+
+        record.Name = newName.Trim();
+        connection.Update(record);
+    }
+
     public void Delete(Guid projectId)
     {
         using var connection = connectionFactory.CreateConnection();

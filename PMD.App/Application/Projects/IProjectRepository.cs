@@ -14,6 +14,8 @@ public interface IProjectRepository
 
     void Save(Project project);
 
+    void Rename(Guid projectId, string newName);
+
     void Delete(Guid projectId);
 
     void DeleteAll();

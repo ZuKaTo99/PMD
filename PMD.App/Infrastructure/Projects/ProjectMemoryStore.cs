@@ -44,7 +44,7 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
             var updatedProject = new Project
             {
                 Id = existingProject.Id,
-                Name = projectName.Trim(),
+                Name = existingProject.Name,
                 RootPath = existingProject.RootPath,
                 CreatedAt = existingProject.CreatedAt,
                 LastScannedAt = scannedAt
@@ -98,6 +98,45 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
                 NormalizeRootPath(project.RootPath),
                 normalizedRootPath,
                 StringComparison.OrdinalIgnoreCase));
+    }
+
+    public bool RenameProject(Guid projectId, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            return false;
+        }
+
+        string trimmedName = newName.Trim();
+
+        int existingIndex = projects.FindIndex(project => project.Id == projectId);
+
+        if (existingIndex < 0)
+        {
+            return false;
+        }
+
+        Project existingProject = projects[existingIndex];
+
+        if (string.Equals(existingProject.Name, trimmedName, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var renamedProject = new Project
+        {
+            Id = existingProject.Id,
+            Name = trimmedName,
+            RootPath = existingProject.RootPath,
+            CreatedAt = existingProject.CreatedAt,
+            LastScannedAt = existingProject.LastScannedAt
+        };
+
+        projects[existingIndex] = renamedProject;
+        projectRepository.Rename(projectId, trimmedName);
+        ProjectsChanged?.Invoke();
+
+        return true;
     }
 
     public bool RemoveProject(Guid projectId)

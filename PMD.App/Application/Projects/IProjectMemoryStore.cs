@@ -19,6 +19,8 @@ public interface IProjectMemoryStore
 
     Project? GetProjectByRootPath(string rootPath);
 
+    bool RenameProject(Guid projectId, string newName);
+
     bool RemoveProject(Guid projectId);
 
     void Clear();

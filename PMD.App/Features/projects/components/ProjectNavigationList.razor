@@ -34,23 +34,89 @@
                             </span>
                         </NavLink>
 
-                        <button class="project-navigation-remove-button"
-                                type="button"
-                                title="Projekt aus PMD entfernen"
-                                aria-label="Projekt aus PMD entfernen"
-                                @onclick="() => StartProjectRemoval(project)">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 width="16"
-                                 height="16"
-                                 fill="currentColor"
-                                 class="project-navigation-remove-icon"
-                                 viewBox="0 0 16 16"
-                                 aria-hidden="true"
-                                 focusable="false">
-                                <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
-                            </svg>
-                        </button>
+                        <div class="project-navigation-actions">
+                            <button class="project-navigation-action-button project-navigation-edit-button"
+                                    type="button"
+                                    title="Projekt umbenennen"
+                                    aria-label="Projekt umbenennen"
+                                    @onclick="() => StartProjectRename(project)">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="16"
+                                     height="16"
+                                     fill="currentColor"
+                                     class="project-navigation-action-icon"
+                                     viewBox="0 0 16 16"
+                                     aria-hidden="true"
+                                     focusable="false">
+                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706l-1 1a.5.5 0 0 1-.707 0L12.354 2.207a.5.5 0 0 1 0-.707l1-1a.5.5 0 0 1 .707 0zm-1.75 2.456-2.147-2.147L4.939 8.914a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12z" />
+                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                </svg>
+                            </button>
+
+                            <button class="project-navigation-action-button project-navigation-remove-button"
+                                    type="button"
+                                    title="Projekt aus PMD entfernen"
+                                    aria-label="Projekt aus PMD entfernen"
+                                    @onclick="() => StartProjectRemoval(project)">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="16"
+                                     height="16"
+                                     fill="currentColor"
+                                     class="project-navigation-action-icon"
+                                     viewBox="0 0 16 16"
+                                     aria-hidden="true"
+                                     focusable="false">
+                                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
+
+                    @if (ProjectPendingRename?.Id == project.Id)
+                    {
+                        <div class="project-navigation-rename-panel">
+                            <div class="project-navigation-rename-title">
+                                Projekt umbenennen
+                            </div>
+
+                            <p>
+                                Geändert wird nur der Anzeigename in PMD. Der echte Ordnerpfad bleibt unverändert.
+                            </p>
+
+                            <label class="project-navigation-rename-label" for="@GetRenameInputId(project.Id)">
+                                Anzeigename
+                            </label>
+
+                            <input id="@GetRenameInputId(project.Id)"
+                                   class="project-navigation-rename-input"
+                                   value="@ProjectRenameText"
+                                   @oninput="OnProjectRenameTextChanged"
+                                   maxlength="@MaxProjectNameLength"
+                                   autocomplete="off" />
+
+                            @if (!string.IsNullOrWhiteSpace(RenameErrorMessage))
+                            {
+                                <div class="project-navigation-rename-error">
+                                    @RenameErrorMessage
+                                </div>
+                            }
+
+                            <div class="project-navigation-rename-actions">
+                                <button class="project-navigation-confirm-rename-button"
+                                        type="button"
+                                        disabled="@(!CanConfirmProjectRename)"
+                                        @onclick="ConfirmProjectRename">
+                                    Speichern
+                                </button>
+
+                                <button class="project-navigation-cancel-rename-button"
+                                        type="button"
+                                        @onclick="CancelProjectRename">
+                                    Abbrechen
+                                </button>
+                            </div>
+                        </div>
+                    }
 
                     @if (ProjectPendingRemoval?.Id == project.Id)
                     {
@@ -63,11 +129,11 @@
                                 Das Projekt wird nur aus PMD entfernt. Der echte Ordner auf deinem Computer bleibt bestehen.
                             </p>
 
-                            <label class="project-navigation-remove-label" for="project-remove-confirmation">
+                            <label class="project-navigation-remove-label" for="@GetRemoveInputId(project.Id)">
                                 Gib <strong>BESTÄTIGEN</strong> ein.
                             </label>
 
-                            <input id="project-remove-confirmation"
+                            <input id="@GetRemoveInputId(project.Id)"
                                    class="project-navigation-remove-input"
                                    value="@RemoveConfirmationText"
                                    @oninput="OnRemoveConfirmationTextChanged"
@@ -104,12 +170,36 @@
 
 @code {
     private const string RequiredRemoveConfirmationText = "BESTÄTIGEN";
+    private const int MaxProjectNameLength = 80;
+
+    private Project? ProjectPendingRename { get; set; }
+
+    private string ProjectRenameText { get; set; } = string.Empty;
+
+    private string? RenameErrorMessage { get; set; }
 
     private Project? ProjectPendingRemoval { get; set; }
 
     private string RemoveConfirmationText { get; set; } = string.Empty;
 
     private string? RemoveErrorMessage { get; set; }
+
+    private bool CanConfirmProjectRename
+    {
+        get
+        {
+            if (ProjectPendingRename is null)
+            {
+                return false;
+            }
+
+            string trimmedName = ProjectRenameText.Trim();
+
+            return trimmedName.Length > 0 &&
+                trimmedName.Length <= MaxProjectNameLength &&
+                !string.Equals(trimmedName, ProjectPendingRename.Name, StringComparison.Ordinal);
+        }
+    }
 
     private bool CanConfirmProjectRemoval =>
         string.Equals(
@@ -122,11 +212,80 @@
         ProjectMemoryStore.ProjectsChanged += OnProjectsChanged;
     }
 
+    private void StartProjectRename(Project project)
+    {
+        ProjectPendingRename = project;
+        ProjectRenameText = project.Name;
+        RenameErrorMessage = null;
+
+        ProjectPendingRemoval = null;
+        RemoveConfirmationText = string.Empty;
+        RemoveErrorMessage = null;
+    }
+
+    private void OnProjectRenameTextChanged(ChangeEventArgs eventArgs)
+    {
+        ProjectRenameText = eventArgs.Value?.ToString() ?? string.Empty;
+        RenameErrorMessage = null;
+    }
+
+    private void ConfirmProjectRename()
+    {
+        if (ProjectPendingRename is null)
+        {
+            return;
+        }
+
+        string trimmedName = ProjectRenameText.Trim();
+
+        if (trimmedName.Length == 0)
+        {
+            RenameErrorMessage = "Bitte gib einen Namen ein.";
+            return;
+        }
+
+        if (trimmedName.Length > MaxProjectNameLength)
+        {
+            RenameErrorMessage = $"Der Name darf maximal {MaxProjectNameLength} Zeichen lang sein.";
+            return;
+        }
+
+        try
+        {
+            bool wasRenamed = ProjectMemoryStore.RenameProject(
+                ProjectPendingRename.Id,
+                trimmedName);
+
+            if (!wasRenamed)
+            {
+                RenameErrorMessage = "Das Projekt wurde nicht gefunden.";
+                return;
+            }
+
+            CancelProjectRename();
+        }
+        catch (Exception ex)
+        {
+            RenameErrorMessage = $"Das Projekt konnte nicht umbenannt werden: {ex.Message}";
+        }
+    }
+
+    private void CancelProjectRename()
+    {
+        ProjectPendingRename = null;
+        ProjectRenameText = string.Empty;
+        RenameErrorMessage = null;
+    }
+
     private void StartProjectRemoval(Project project)
     {
         ProjectPendingRemoval = project;
         RemoveConfirmationText = string.Empty;
         RemoveErrorMessage = null;
+
+        ProjectPendingRename = null;
+        ProjectRenameText = string.Empty;
+        RenameErrorMessage = null;
     }
 
     private void OnRemoveConfirmationTextChanged(ChangeEventArgs eventArgs)
@@ -181,6 +340,16 @@
         return relativePath.StartsWith(
             $"projekte/{projectId}",
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetRenameInputId(Guid projectId)
+    {
+        return $"project-rename-name-{projectId}";
+    }
+
+    private static string GetRemoveInputId(Guid projectId)
+    {
+        return $"project-remove-confirmation-{projectId}";
     }
 
     private void OnProjectsChanged()
