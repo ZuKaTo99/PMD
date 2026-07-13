@@ -1,0 +1,46 @@
+@namespace PMD.App.Components.Appearance
+@using PMD.App.Application.Appearance
+@inject IAppThemeService ThemeService
+
+<button type="button"
+        class="theme-toggle"
+        title="@ToggleDescription"
+        aria-label="@ToggleDescription"
+        aria-pressed="@AriaPressed"
+        @onclick="ToggleTheme">
+    <span class="theme-toggle-track" aria-hidden="true">
+        <span class="theme-toggle-thumb">
+            @if (ThemeService.IsDarkMode)
+            {
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M12 3.25v1.5M12 19.25v1.5M20.75 12h-1.5M4.75 12h-1.5M18.19 5.81l-1.06 1.06M6.87 17.13l-1.06 1.06M18.19 18.19l-1.06-1.06M6.87 6.87L5.81 5.81M16.25 12A4.25 4.25 0 1 1 7.75 12a4.25 4.25 0 0 1 8.5 0Z" />
+                </svg>
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M20.18 15.71A8.3 8.3 0 0 1 8.29 3.82 8.3 8.3 0 1 0 20.18 15.71Z" />
+                </svg>
+            }
+        </span>
+    </span>
+
+    <span class="theme-toggle-label">
+        @(ThemeService.IsDarkMode ? "Hell" : "Dunkel")
+    </span>
+</button>
+
+@code {
+    private string AriaPressed =>
+        ThemeService.IsDarkMode ? "true" : "false";
+
+    private string ToggleDescription =>
+        ThemeService.IsDarkMode
+            ? "Hellen Modus einschalten"
+            : "Dunklen Modus einschalten";
+
+    private void ToggleTheme()
+    {
+        ThemeService.ToggleTheme();
+    }
+}

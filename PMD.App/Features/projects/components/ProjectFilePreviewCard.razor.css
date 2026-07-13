@@ -1,0 +1,51 @@
+.pmd-preview-card {
+    color: var(--bs-body-color);
+    background: var(--pmd-surface);
+    border-color: var(--pmd-preview-border) !important;
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.pmd-preview-header {
+    background:
+        linear-gradient(
+            135deg,
+            var(--pmd-preview-header-start) 0%,
+            var(--pmd-preview-header-end) 100%);
+}
+
+.pmd-code-preview {
+    min-height: 660px;
+    height: clamp(660px, 76vh, 980px);
+    overflow: auto;
+    background:
+        radial-gradient(
+            circle at top left,
+            var(--pmd-preview-glow),
+            transparent 34%),
+        linear-gradient(
+            135deg,
+            var(--pmd-preview-bg-start) 0%,
+            var(--pmd-preview-bg-middle) 52%,
+            var(--pmd-preview-bg-end) 100%);
+}
+
+.pmd-code-block {
+    color: var(--pmd-preview-code);
+    white-space: pre;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    tab-size: 4;
+}
+
+.pmd-code-content {
+    color: var(--pmd-preview-code);
+    font-weight: 500;
+}
+
+.pmd-code-content ::deep .pmd-code-symbol {
+    color: var(--pmd-preview-symbol);
+    font-weight: 700;
+}

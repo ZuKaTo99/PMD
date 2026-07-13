@@ -1,13 +1,21 @@
+@using PMD.App.Application.Appearance
+@implements IDisposable
 @inherits LayoutComponentBase
+@inject IAppThemeService ThemeService
+@inject IJSRuntime JavaScript
 
-<div class="page">
+<div class="page" data-bs-theme="@ThemeName">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
         <div class="top-row px-4">
-            <span>PMD - Projektübersicht</span>
+            <span class="top-row-title">
+                PMD - Projektübersicht
+            </span>
+
+            <ThemeToggleButton />
         </div>
 
         <article class="content px-4">
@@ -15,3 +23,46 @@
         </article>
     </main>
 </div>
+
+@code {
+    private string ThemeName =>
+        ThemeService.IsDarkMode
+            ? "dark"
+            : "light";
+
+    protected override void OnInitialized()
+    {
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ApplyThemeAsync();
+        }
+    }
+
+    private void OnThemeChanged()
+    {
+        _ = InvokeAsync(RefreshThemeAsync);
+    }
+
+    private async Task RefreshThemeAsync()
+    {
+        StateHasChanged();
+        await ApplyThemeAsync();
+    }
+
+    private async Task ApplyThemeAsync()
+    {
+        await JavaScript.InvokeVoidAsync(
+            "pmdTheme.apply",
+            ThemeName);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
+    }
+}

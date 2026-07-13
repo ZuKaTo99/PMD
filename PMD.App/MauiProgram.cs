@@ -2,7 +2,9 @@ using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using PMD.App.Application.Appearance;
 using PMD.App.Application.Database;
+using PMD.App.Infrastructure.Appearance;
 using PMD.App.Infrastructure.Database;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
@@ -29,6 +31,7 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
 
+        builder.Services.AddSingleton<IAppThemeService, AppThemeService>();
         builder.Services.AddSingleton<IProjectMemoryStore, ProjectMemoryStore>();
         builder.Services.AddSingleton<IProjectStateMemoryStore, ProjectStateMemoryStore>();
         builder.Services.AddSingleton<IProjectOverviewService, ProjectOverviewService>();

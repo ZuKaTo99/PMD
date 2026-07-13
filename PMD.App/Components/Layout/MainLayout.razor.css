@@ -2,10 +2,19 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    color: var(--bs-body-color);
+    background: var(--pmd-app-background);
+    transition:
+        color 0.2s ease,
+        background-color 0.2s ease;
 }
 
 main {
     flex: 1;
+    min-width: 0;
+    color: var(--bs-body-color);
+    background: transparent;
 }
 
 .sidebar {
@@ -19,36 +28,55 @@ main {
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
+    height: 3.5rem;
+    color: var(--bs-body-color);
+    background: var(--pmd-topbar-bg);
+    border-bottom: 1px solid var(--pmd-topbar-border);
+    box-shadow: var(--pmd-topbar-shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition:
+        color 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
+.top-row-title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--bs-emphasis-color);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
+.top-row ::deep a,
+.top-row ::deep .btn-link {
+    white-space: nowrap;
+    text-decoration: none;
+}
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.top-row ::deep a:hover,
+.top-row ::deep .btn-link:hover {
+    text-decoration: underline;
+}
 
 @media (max-width: 640.98px) {
     .top-row {
-        justify-content: space-between;
+        height: 3.5rem;
     }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
+    .top-row-title {
+        font-size: 0.92rem;
     }
 }
 
@@ -58,26 +86,15 @@ main {
     }
 
     .sidebar {
+        position: sticky;
+        top: 0;
         width: 300px;
         height: 100vh;
-        position: sticky;
-        top: 0;
     }
 
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
+    .top-row,
+    article {
         padding-right: 1.5rem !important;
+        padding-left: 2rem !important;
     }
 }
