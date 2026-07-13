@@ -24,6 +24,9 @@ public partial class ProjectDetailPage
     [Inject]
     private IProjectFolderScanner ProjectFolderScanner { get; set; } = default!;
 
+    [Inject]
+    private IProjectFolderLauncher ProjectFolderLauncher { get; set; } = default!;
+
     [Parameter]
     public Guid ProjectId { get; set; }
 
@@ -92,6 +95,29 @@ public partial class ProjectDetailPage
         catch (Exception ex)
         {
             ErrorMessage = $"Das Projekt konnte nicht geprüft werden: {ex.Message}";
+        }
+    }
+
+    protected void OpenCurrentProjectFolder()
+    {
+        InfoMessage = null;
+        ErrorMessage = null;
+
+        Project? project = CurrentProject;
+
+        if (project is null)
+        {
+            ErrorMessage = "Das Projekt wurde nicht gefunden.";
+            return;
+        }
+
+        try
+        {
+            ProjectFolderLauncher.OpenFolder(project.RootPath);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Der Projektordner konnte nicht geöffnet werden: {ex.Message}";
         }
     }
 

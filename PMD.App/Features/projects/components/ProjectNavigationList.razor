@@ -22,7 +22,7 @@
             {
                 <div class="project-navigation-entry">
                     <div class="project-navigation-card-row">
-                        <NavLink class="@GetProjectCardCssClass(project)" href="@($"projekte/{project.Id}")" title="@project.RootPath">
+                        <NavLink class="@GetProjectCardCssClass(project)" href="@($"projekte/{project.Id}")" title="@project.Name">
                             <span class="project-navigation-marker" aria-hidden="true">
                                 @GetProjectInitials(project.Name)
                             </span>
@@ -30,10 +30,6 @@
                             <span class="project-navigation-content">
                                 <span class="project-navigation-name">
                                     @project.Name
-                                </span>
-
-                                <span class="project-navigation-path">
-                                    @project.RootPath
                                 </span>
 
                                 <span class="project-navigation-meta">

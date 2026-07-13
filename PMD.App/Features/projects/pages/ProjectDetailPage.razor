@@ -21,11 +21,28 @@
                     <p class="text-muted mb-0">
                         Projektzentrale mit Status, Verlauf, Projektinhalt, Dateien und Änderungen.
                     </p>
+
+                    <div class="project-folder-location mt-3">
+                        <span class="project-folder-location-label">
+                            Projektordner
+                        </span>
+
+                        <code title="@CurrentProject.RootPath">
+                            @CurrentProject.RootPath
+                        </code>
+                    </div>
                 </div>
 
                 <div class="d-flex gap-2 flex-wrap align-self-xl-start">
                     <button class="btn btn-primary" @onclick="ScanCurrentProject">
                         Projekt erneut prüfen
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-primary"
+                            title="Projektordner im Windows-Explorer öffnen"
+                            @onclick="OpenCurrentProjectFolder">
+                        Projektordner öffnen
                     </button>
 
                     <a class="btn btn-outline-primary" href="@($"/projekte/{CurrentProject.Id}/dateien")">

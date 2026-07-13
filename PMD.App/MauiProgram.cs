@@ -35,6 +35,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IProjectMemoryStore, ProjectMemoryStore>();
         builder.Services.AddSingleton<IProjectStateMemoryStore, ProjectStateMemoryStore>();
         builder.Services.AddSingleton<IProjectOverviewService, ProjectOverviewService>();
+        builder.Services.AddSingleton<IProjectFolderLauncher, ProjectFolderLauncher>();
         builder.Services.AddSingleton<IProjectFolderScanner, ProjectFolderScanner>();
         builder.Services.AddSingleton<IFolderPicker>(FolderPicker.Default);
         builder.Services.AddSingleton<IPmdDatabasePathProvider, PmdDatabasePathProvider>();
