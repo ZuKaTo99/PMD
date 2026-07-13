@@ -28,7 +28,14 @@
                             </span>
 
                             <span class="project-navigation-content">
-                                <span class="project-navigation-name">@project.Name</span>
+                                <span class="project-navigation-name">
+                                    @project.Name
+                                </span>
+
+                                <span class="project-navigation-path">
+                                    @project.RootPath
+                                </span>
+
                                 <span class="project-navigation-meta">
                                     Geprüft @FormatNavigationDate(project.LastScannedAt)
                                 </span>

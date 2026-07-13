@@ -59,7 +59,7 @@
     align-items: center;
     gap: 0.7rem;
     width: 100%;
-    min-height: 3.75rem;
+    min-height: 5.35rem;
     padding: 0.72rem 5.4rem 0.72rem 0.78rem;
     color: rgba(255, 255, 255, 0.92);
     text-decoration: none;
@@ -195,6 +195,19 @@
     white-space: nowrap;
 }
 
+.project-navigation-path {
+    display: -webkit-box;
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(226, 238, 255, 0.66);
+    font-size: 0.68rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
 .project-navigation-meta {
     overflow: hidden;
     color: rgba(226, 238, 255, 0.72);
@@ -205,8 +218,10 @@
 }
 
 .project-navigation-list ::deep .project-navigation-card:hover .project-navigation-name,
+.project-navigation-list ::deep .project-navigation-card:hover .project-navigation-path,
 .project-navigation-list ::deep .project-navigation-card:hover .project-navigation-meta,
 .project-navigation-list ::deep .project-navigation-card.active .project-navigation-name,
+.project-navigation-list ::deep .project-navigation-card.active .project-navigation-path,
 .project-navigation-list ::deep .project-navigation-card.active .project-navigation-meta {
     text-decoration: none;
 }
