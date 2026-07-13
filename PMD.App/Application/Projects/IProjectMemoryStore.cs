@@ -19,9 +19,10 @@ public interface IProjectMemoryStore
 
     Project? GetProjectByRootPath(string rootPath);
 
-    bool RenameProject(Guid projectId, string newName);
-
-    bool ChangeProjectAccentColor(Guid projectId, string accentColor);
+    bool UpdateProjectDetails(
+        Guid projectId,
+        string newName,
+        string accentColor);
 
     bool RemoveProject(Guid projectId);
 

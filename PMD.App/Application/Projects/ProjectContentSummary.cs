@@ -7,7 +7,7 @@ public sealed class ProjectContentSummary
 {
     public static ProjectContentSummary Empty { get; } = new();
 
-    public string ProfileLabel { get; init; } = "Noch nicht ausgewertet";
+    public string ProfileLabel { get; init; } = "Keine Auswertung";
 
     public string ShortDescription { get; init; } = "Nach der ersten Prüfung fasst PMD den Projektinhalt zusammen.";
 

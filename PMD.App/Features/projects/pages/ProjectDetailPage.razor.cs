@@ -79,7 +79,7 @@ public partial class ProjectDetailPage
                 scanResult.ScannedAt);
 
             ProjectState projectState = ProjectStateBuilder.CreateFromScanResult(
-                scanResult.ProjectName,
+                updatedProject.Name,
                 scanResult,
                 updatedProject.Id);
 

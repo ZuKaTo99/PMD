@@ -2,23 +2,22 @@
 
 <PageTitle>PMD - Übersicht</PageTitle>
 
-<div class="container-fluid pmd-dashboard">
+<div class="container-fluid pmd-dashboard pmd-page">
     <div class="mb-4">
         <div class="text-muted small mb-1">PMD - Übersicht</div>
         <h1>Projektverwaltung</h1>
         <p class="text-muted mb-0">
-            Öffne ein Projekt, verstehe den aktuellen Status und nutze den Verlauf als Grundlage für Änderungen,
-            Dateien, Code-Ansicht und später KI-Auswertung.
+            Prüfe Projektordner, öffne gespeicherte Projekte und untersuche Dateien sowie Änderungen an einem Ort.
         </p>
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card h-100">
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card pmd-card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Projekt aufnehmen</h5>
+                    <h2 class="h5 card-title">Projekt aufnehmen</h2>
                     <p class="card-text">
-                        Prüfe einen Projektordner. Danach erscheint das Projekt links unter Meine Projekte.
+                        Wähle einen Projektordner aus und lasse ihn von PMD prüfen.
                     </p>
                     <a class="btn btn-primary" href="projektpruefung">
                         Projekt prüfen
@@ -27,38 +26,30 @@
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card h-100">
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card pmd-card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Projektverlauf</h5>
-                    <p class="card-text">
-                        Jede Prüfung wird automatisch gespeichert und später für Änderungsauswertungen genutzt.
+                    <h2 class="h5 card-title">Projekt öffnen</h2>
+                    <p class="card-text mb-0">
+                        Deine aufgenommenen Projekte stehen links unter „Meine Projekte“ bereit.
                     </p>
-                    <button class="btn btn-primary" disabled>
-                        Über Projekt öffnen
-                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card h-100">
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card pmd-card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Nächster technischer Schritt</h5>
-                    <p class="card-text">
-                        Die Projektzentrale ist vorbereitet. Danach kann der Speicher sauber auf SQLite wechseln.
+                    <h2 class="h5 card-title">Projekt verstehen</h2>
+                    <p class="card-text mb-0">
+                        Öffne den Projektverlauf, durchsuche Dateien und vergleiche die letzten beiden Prüfungen.
                     </p>
-                    <button class="btn btn-primary" disabled>
-                        SQLite später
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="alert alert-info mb-0">
-        <strong>Aktueller Stand:</strong>
-        PMD arbeitet jetzt als Projektverzeichnis mit Projektseite, automatischem Projektverlauf
-        und vorbereiteter Änderungsauswertung.
+        Projekte, Prüfungen, Dateidaten, Anzeigenamen und Projektfarben werden lokal in SQLite gespeichert.
     </div>
 </div>

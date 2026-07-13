@@ -271,20 +271,6 @@ public sealed class ProjectOverviewService : IProjectOverviewService
         return $"PMD erkennt {projectState.FileCount} Dateien in {allFileTypes.Count} Dateitypen. Häufigster Typ ist {mainFileType}.";
     }
 
-    private static bool BelongsToProject(
-        ProjectState projectState,
-        Project project)
-    {
-        if (projectState.ProjectId == project.Id)
-        {
-            return true;
-        }
-
-        return ProjectStateFolderMatcher.IsSameProjectFolder(
-            projectState,
-            project.RootPath);
-    }
-
     private static string NormalizeExtension(string? extension)
     {
         return string.IsNullOrWhiteSpace(extension)

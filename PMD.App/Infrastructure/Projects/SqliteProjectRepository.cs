@@ -75,35 +75,24 @@ public sealed class SqliteProjectRepository : IProjectRepository
         connection.InsertOrReplace(MapToRecord(project));
     }
 
-    public void Rename(Guid projectId, string newName)
+    public bool UpdateDetails(
+        Guid projectId,
+        string name,
+        string accentColor)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(newName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        using var connection = connectionFactory.CreateConnection();
-
-        ProjectRecord? record = connection
-            .Table<ProjectRecord>()
-            .FirstOrDefault(project => project.Id == projectId.ToString());
-
-        if (record is null)
-        {
-            return;
-        }
-
-        record.Name = newName.Trim();
-        connection.Update(record);
-    }
-
-    public void ChangeAccentColor(Guid projectId, string accentColor)
-    {
         string normalizedAccentColor = ProjectAccentColors.Normalize(accentColor);
 
         using var connection = connectionFactory.CreateConnection();
 
-        connection.Execute(
-            "UPDATE Projects SET AccentColor = ? WHERE Id = ?",
+        int affectedRows = connection.Execute(
+            "UPDATE Projects SET Name = ?, AccentColor = ? WHERE Id = ?",
+            name.Trim(),
             normalizedAccentColor,
             projectId.ToString());
+
+        return affectedRows == 1;
     }
 
     public void Delete(Guid projectId)

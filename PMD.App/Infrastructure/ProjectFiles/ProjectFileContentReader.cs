@@ -1,4 +1,5 @@
-﻿using PMD.App.Application.ProjectFiles;
+using PMD.App.Application.ProjectFiles;
+using PMD.App.Application.Scanner;
 using PMD.App.Domain.ProjectFiles;
 using System.Text;
 
@@ -8,33 +9,6 @@ public sealed class ProjectFileContentReader : IProjectFileContentReader
 {
     private const long MaxPreviewSizeInBytes = 200 * 1024;
     private const int MaxPreviewLineCount = 400;
-
-    private static readonly HashSet<string> SupportedTextExtensions = new(
-        StringComparer.OrdinalIgnoreCase)
-    {
-        ".cs",
-        ".razor",
-        ".xaml",
-        ".css",
-        ".scss",
-        ".html",
-        ".htm",
-        ".js",
-        ".ts",
-        ".json",
-        ".xml",
-        ".config",
-        ".csproj",
-        ".sln",
-        ".props",
-        ".targets",
-        ".md",
-        ".txt",
-        ".gitignore",
-        ".editorconfig",
-        ".yml",
-        ".yaml"
-    };
 
     public ProjectFileContentResult ReadPreview(
         string projectRootPath,
@@ -74,18 +48,18 @@ public sealed class ProjectFileContentReader : IProjectFileContentReader
 
             FileInfo fileInfo = new(fullPath);
 
-            if (!IsSupportedTextFile(fileInfo.Name, fileInfo.Extension))
+            if (!ProjectTextFileRules.IsSupportedTextFile(fileInfo.Name, fileInfo.Extension))
             {
                 return ProjectFileContentResult.Blocked(
                     fullPath,
-                    "Dieser Dateityp wird für die Vorschau noch nicht unterstützt.");
+                    "Dieser Dateityp wird für die Vorschau nicht unterstützt.");
             }
 
             if (fileInfo.Length > MaxPreviewSizeInBytes)
             {
                 return ProjectFileContentResult.Blocked(
                     fullPath,
-                    "Die Datei ist für die Vorschau noch zu groß.");
+                    "Die Datei ist zu groß für die Vorschau.");
             }
 
             return ReadSmallTextFile(fileInfo);
@@ -188,16 +162,6 @@ public sealed class ProjectFileContentReader : IProjectFileContentReader
             normalizedFullPath.StartsWith(
                 rootWithSeparator,
                 StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsSupportedTextFile(string fileName, string extension)
-    {
-        if (SupportedTextExtensions.Contains(fileName))
-        {
-            return true;
-        }
-
-        return SupportedTextExtensions.Contains(extension);
     }
 
     private static bool ContainsBinaryMarker(string line)

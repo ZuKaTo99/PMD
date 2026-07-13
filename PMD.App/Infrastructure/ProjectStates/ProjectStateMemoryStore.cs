@@ -66,6 +66,7 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
             return false;
         }
 
+        projectStateRepository.Save(projectState);
         projectStates.Insert(0, projectState);
 
         if (projectStates.Count > MaxRememberedProjectStates)
@@ -75,23 +76,21 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
                 projectStates.Count - MaxRememberedProjectStates);
         }
 
-        projectStateRepository.Save(projectState);
-
         ProjectStatesChanged?.Invoke();
         return true;
     }
 
     public void RemoveByProjectId(Guid projectId)
     {
-        projectStates.RemoveAll(projectState => projectState.ProjectId == projectId);
         projectStateRepository.DeleteByProjectId(projectId);
+        projectStates.RemoveAll(projectState => projectState.ProjectId == projectId);
         ProjectStatesChanged?.Invoke();
     }
 
     public void Clear()
     {
-        projectStates.Clear();
         projectStateRepository.DeleteAll();
+        projectStates.Clear();
         ProjectStatesChanged?.Invoke();
     }
 

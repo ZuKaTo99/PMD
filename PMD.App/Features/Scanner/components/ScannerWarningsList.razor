@@ -1,8 +1,39 @@
 @namespace PMD.App.Features.Scanner.Components
 @using Microsoft.AspNetCore.Components
+@using System
 @using System.Collections.Generic
+@using System.Linq
+
+@if (Warnings.Count > 0)
+{
+    <div class="alert alert-warning mt-4 mb-0">
+        <div class="fw-semibold mb-2">
+            Hinweise aus der Projektprüfung
+        </div>
+
+        <ul class="mb-0 ps-3">
+            @foreach (string warning in VisibleWarnings)
+            {
+                <li class="mb-1 pmd-text-break">@warning</li>
+            }
+        </ul>
+
+        @if (Warnings.Count > VisibleWarnings.Count)
+        {
+            <div class="small mt-2">
+                Zusätzlich gibt es @(Warnings.Count - VisibleWarnings.Count) weitere Hinweise.
+            </div>
+        }
+    </div>
+}
 
 @code {
-    [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+    private const int MaxVisibleWarningCount = 8;
+
+    [Parameter]
+    public IReadOnlyList<string> Warnings { get; set; } = Array.Empty<string>();
+
+    private IReadOnlyList<string> VisibleWarnings => Warnings
+        .Take(MaxVisibleWarningCount)
+        .ToList();
 }

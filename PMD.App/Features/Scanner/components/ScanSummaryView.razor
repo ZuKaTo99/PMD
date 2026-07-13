@@ -28,7 +28,7 @@
                 <div class="fw-semibold">@ScanResult.ProjectName</div>
 
                 <div class="text-muted small mt-3 mb-1">Projektordner</div>
-                <code class="small">@ScanResult.RootPath</code>
+                <code class="small pmd-path">@ScanResult.RootPath</code>
             </div>
 
             <div class="row g-3">
@@ -79,12 +79,7 @@
                 </div>
             </div>
 
-            @if (ScanResult.WarningCount > 0)
-            {
-                <div class="alert alert-warning mt-4 mb-0">
-                    Bei der Prüfung gab es Hinweise. Die ausführliche Hinweisansicht bauen wir später gezielt aus.
-                </div>
-            }
+            <ScannerWarningsList Warnings="@ScanResult.Warnings" />
         </div>
     </div>
 }

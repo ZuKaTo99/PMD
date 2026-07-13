@@ -1,4 +1,4 @@
-@namespace PMD.App.Features.Projects.Components
+﻿@namespace PMD.App.Features.Projects.Components
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Routing
 @using System
@@ -23,7 +23,7 @@
                 <div class="project-navigation-entry">
                     <div class="project-navigation-card-row">
                         <NavLink class="@GetProjectCardCssClass(project)" href="@($"projekte/{project.Id}")" title="@project.RootPath">
-                            <span class="@GetProjectMarkerCssClass(project)" aria-hidden="true">
+                            <span class="project-navigation-marker" aria-hidden="true">
                                 @GetProjectInitials(project.Name)
                             </span>
 
@@ -103,7 +103,7 @@
                                 <div class="project-navigation-color-options" role="radiogroup" aria-label="Projektfarbe auswählen">
                                     @foreach (ProjectAccentColorOption option in AccentColorOptions)
                                     {
-                                        <button class="@GetColorOptionCssClassInstance(option.Key)"
+                                        <button class="@GetColorOptionCssClass(option.Key)"
                                                 type="button"
                                                 role="radio"
                                                 aria-checked="@IsSelectedAccentColor(option.Key)"
@@ -308,40 +308,15 @@
 
         try
         {
-            bool nameChanged = !string.Equals(
+            bool wasUpdated = ProjectMemoryStore.UpdateProjectDetails(
+                ProjectPendingEdit.Id,
                 trimmedName,
-                ProjectPendingEdit.Name,
-                StringComparison.Ordinal);
+                normalizedAccentColor);
 
-            bool colorChanged = !string.Equals(
-                normalizedAccentColor,
-                ProjectAccentColors.Normalize(ProjectPendingEdit.AccentColor),
-                StringComparison.Ordinal);
-
-            if (nameChanged)
+            if (!wasUpdated)
             {
-                bool wasRenamed = ProjectMemoryStore.RenameProject(
-                    ProjectPendingEdit.Id,
-                    trimmedName);
-
-                if (!wasRenamed)
-                {
-                    EditErrorMessage = "Das Projekt wurde nicht gefunden.";
-                    return;
-                }
-            }
-
-            if (colorChanged)
-            {
-                bool colorWasChanged = ProjectMemoryStore.ChangeProjectAccentColor(
-                    ProjectPendingEdit.Id,
-                    normalizedAccentColor);
-
-                if (!colorWasChanged)
-                {
-                    EditErrorMessage = "Die Farbe konnte nicht gespeichert werden.";
-                    return;
-                }
+                EditErrorMessage = "Die Projektänderungen konnten nicht gespeichert werden.";
+                return;
             }
 
             CancelProjectEdit();
@@ -433,15 +408,7 @@
         return $"project-navigation-card project-navigation-accent-{accentColor}";
     }
 
-    private static string GetProjectMarkerCssClass(Project project)
-    {
-        string accentColor = ProjectAccentColors.Normalize(project.AccentColor);
-
-        return $"project-navigation-marker project-navigation-marker-{accentColor}";
-    }
-
-
-    private string GetColorOptionCssClassInstance(string accentColor)
+    private string GetColorOptionCssClass(string accentColor)
     {
         string selectedClass = IsSelectedAccentColor(accentColor)
             ? " is-selected"
@@ -449,7 +416,6 @@
 
         return $"project-navigation-color-option project-navigation-color-option-{accentColor}{selectedClass}";
     }
-
 
     private string GetColorPreviewCssClass(string accentColor)
     {

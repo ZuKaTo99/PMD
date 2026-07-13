@@ -81,13 +81,13 @@
         @if (ProjectStates.Count == 0)
         {
             <div class="alert alert-info">
-                Für dieses Projekt gibt es noch keine gespeicherte Prüfung. Prüfe das Projekt zuerst, damit PMD später Änderungen erkennen kann.
+                Für dieses Projekt gibt es noch keine gespeicherte Prüfung. Prüfe das Projekt zuerst, damit PMD Änderungen erkennen kann.
             </div>
         }
         else if (ProjectStates.Count == 1)
         {
             <div class="alert alert-info">
-                Für eine Änderungsanalyse braucht PMD mindestens zwei gespeicherte Prüfungen. Prüfe das Projekt später erneut, nachdem sich Dateien geändert haben.
+                Für eine Änderungsanalyse braucht PMD mindestens zwei gespeicherte Prüfungen. Prüfe das Projekt erneut, nachdem sich Dateien geändert haben.
             </div>
         }
         else if (ChangesResult is not null)

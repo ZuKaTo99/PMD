@@ -1,4 +1,4 @@
-﻿namespace PMD.App.Application.Scanner;
+namespace PMD.App.Application.Scanner;
 
 public static class ProjectTextFileRules
 {
@@ -179,7 +179,7 @@ public static class ProjectTextFileRules
         "CHANGELOG"
     };
 
-    public static bool IsSupportedTextSnapshotFile(string fileName, string extension)
+    public static bool IsSupportedTextFile(string fileName, string extension)
     {
         if (SupportedTextFileNames.Contains(fileName))
         {
@@ -192,6 +192,11 @@ public static class ProjectTextFileRules
         }
 
         return HasKnownCompoundExtension(fileName);
+    }
+
+    public static bool IsSupportedTextSnapshotFile(string fileName, string extension)
+    {
+        return IsSupportedTextFile(fileName, extension);
     }
 
     private static bool HasKnownCompoundExtension(string fileName)

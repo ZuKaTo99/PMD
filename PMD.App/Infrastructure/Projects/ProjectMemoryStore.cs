@@ -53,12 +53,14 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
 
             int existingIndex = projects.FindIndex(project => project.Id == existingProject.Id);
 
+            projectRepository.Save(updatedProject);
+
             if (existingIndex >= 0)
             {
                 projects[existingIndex] = updatedProject;
+                SortProjectsByLastScannedAt();
             }
 
-            projectRepository.Save(updatedProject);
             ProjectsChanged?.Invoke();
 
             return updatedProject;
@@ -74,8 +76,9 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
             LastScannedAt = scannedAt
         };
 
-        projects.Add(newProject);
         projectRepository.Save(newProject);
+        projects.Add(newProject);
+        SortProjectsByLastScannedAt();
         ProjectsChanged?.Invoke();
 
         return newProject;
@@ -102,53 +105,18 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
                 StringComparison.OrdinalIgnoreCase));
     }
 
-    public bool RenameProject(Guid projectId, string newName)
+    public bool UpdateProjectDetails(
+        Guid projectId,
+        string newName,
+        string accentColor)
     {
-        if (string.IsNullOrWhiteSpace(newName))
+        if (string.IsNullOrWhiteSpace(newName) ||
+            !ProjectAccentColors.IsKnown(accentColor))
         {
             return false;
         }
 
         string trimmedName = newName.Trim();
-
-        int existingIndex = projects.FindIndex(project => project.Id == projectId);
-
-        if (existingIndex < 0)
-        {
-            return false;
-        }
-
-        Project existingProject = projects[existingIndex];
-
-        if (string.Equals(existingProject.Name, trimmedName, StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        var renamedProject = new Project
-        {
-            Id = existingProject.Id,
-            Name = trimmedName,
-            RootPath = existingProject.RootPath,
-            AccentColor = existingProject.AccentColor,
-            CreatedAt = existingProject.CreatedAt,
-            LastScannedAt = existingProject.LastScannedAt
-        };
-
-        projects[existingIndex] = renamedProject;
-        projectRepository.Rename(projectId, trimmedName);
-        ProjectsChanged?.Invoke();
-
-        return true;
-    }
-
-    public bool ChangeProjectAccentColor(Guid projectId, string accentColor)
-    {
-        if (!ProjectAccentColors.IsKnown(accentColor))
-        {
-            return false;
-        }
-
         string normalizedAccentColor = ProjectAccentColors.Normalize(accentColor);
 
         int existingIndex = projects.FindIndex(project => project.Id == projectId);
@@ -160,26 +128,41 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
 
         Project existingProject = projects[existingIndex];
 
-        if (string.Equals(
+        bool nameChanged = !string.Equals(
+            existingProject.Name,
+            trimmedName,
+            StringComparison.Ordinal);
+
+        bool colorChanged = !string.Equals(
             ProjectAccentColors.Normalize(existingProject.AccentColor),
             normalizedAccentColor,
-            StringComparison.Ordinal))
+            StringComparison.Ordinal);
+
+        if (!nameChanged && !colorChanged)
         {
             return true;
         }
 
-        var updatedProject = new Project
+        bool wasUpdated = projectRepository.UpdateDetails(
+            projectId,
+            trimmedName,
+            normalizedAccentColor);
+
+        if (!wasUpdated)
+        {
+            return false;
+        }
+
+        projects[existingIndex] = new Project
         {
             Id = existingProject.Id,
-            Name = existingProject.Name,
+            Name = trimmedName,
             RootPath = existingProject.RootPath,
             AccentColor = normalizedAccentColor,
             CreatedAt = existingProject.CreatedAt,
             LastScannedAt = existingProject.LastScannedAt
         };
 
-        projects[existingIndex] = updatedProject;
-        projectRepository.ChangeAccentColor(projectId, normalizedAccentColor);
         ProjectsChanged?.Invoke();
 
         return true;
@@ -204,9 +187,16 @@ public sealed class ProjectMemoryStore : IProjectMemoryStore
 
     public void Clear()
     {
-        projects.Clear();
+        projectStateMemoryStore.Clear();
         projectRepository.DeleteAll();
+        projects.Clear();
         ProjectsChanged?.Invoke();
+    }
+
+    private void SortProjectsByLastScannedAt()
+    {
+        projects.Sort((first, second) =>
+            second.LastScannedAt.CompareTo(first.LastScannedAt));
     }
 
     private static string NormalizeRootPath(string rootPath)

@@ -15,7 +15,7 @@
             @if (ChangeSummary is not null)
             {
                 <span class="badge bg-secondary align-self-start align-self-lg-center">
-                    Automatisch vorbereitet
+                    Automatisch ausgewertet
                 </span>
             }
         </div>
@@ -32,7 +32,7 @@
         {
             <div class="alert alert-info mb-0">
                 Für eine Änderungsauswertung braucht PMD noch eine zweite Prüfung dieses Projekts.
-                Prüfe das Projekt später erneut, dann werden die Veränderungen hier zusammengefasst.
+                Prüfe das Projekt erneut, nachdem sich Dateien geändert haben.
             </div>
         }
         else
@@ -78,8 +78,7 @@
             else
             {
                 <div class="alert alert-light border mt-3 mb-0">
-                    Die Detailansicht für Änderungen wird später als eigener Bereich aufgebaut,
-                    damit die Projektseite übersichtlich bleibt.
+                    Öffne „Änderungen ansehen“, um betroffene Dateien und geänderte Codeabschnitte zu prüfen.
                 </div>
             }
         }

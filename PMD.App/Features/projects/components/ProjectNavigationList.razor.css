@@ -36,19 +36,42 @@
     gap: 0.55rem;
 }
 
+.project-navigation-entry {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.project-navigation-card-row {
+    position: relative;
+    display: block;
+    min-width: 0;
+}
+
 .project-navigation-list ::deep .project-navigation-card {
+    --project-accent: #7da5ff;
+    --project-accent-soft: rgba(125, 165, 255, 0.24);
+    --project-accent-card-strong: rgba(125, 165, 255, 0.28);
+    --project-accent-border: rgba(125, 165, 255, 0.62);
+
     display: grid;
     grid-template-columns: 2.15rem minmax(0, 1fr);
     align-items: center;
     gap: 0.7rem;
+    width: 100%;
     min-height: 3.75rem;
-    padding: 0.72rem 0.78rem;
+    padding: 0.72rem 5.4rem 0.72rem 0.78rem;
     color: rgba(255, 255, 255, 0.92);
     text-decoration: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--project-accent-border);
+    border-left: 4px solid var(--project-accent);
     border-radius: 1rem;
     background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.045));
+        linear-gradient(
+            135deg,
+            var(--project-accent-card-strong),
+            rgba(34, 38, 112, 0.66)
+        );
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.11);
     transition:
         background-color 0.15s ease,
@@ -60,9 +83,13 @@
 .project-navigation-list ::deep .project-navigation-card:hover {
     color: #ffffff;
     text-decoration: none;
-    border-color: rgba(255, 255, 255, 0.24);
+    border-color: var(--project-accent);
     background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07));
+        linear-gradient(
+            135deg,
+            var(--project-accent-card-strong),
+            rgba(31, 34, 105, 0.82)
+        );
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
     transform: translateX(2px);
 }
@@ -70,17 +97,63 @@
 .project-navigation-list ::deep .project-navigation-card.active {
     color: #ffffff;
     text-decoration: none;
-    border-color: rgba(111, 170, 255, 0.58);
+    border-color: var(--project-accent);
     background:
-        linear-gradient(135deg, rgba(58, 136, 255, 0.35), rgba(130, 83, 255, 0.18));
+        linear-gradient(
+            135deg,
+            var(--project-accent-card-strong),
+            rgba(31, 34, 105, 0.82)
+        );
     box-shadow:
-        inset 3px 0 0 rgba(132, 184, 255, 0.95),
+        inset 3px 0 0 var(--project-accent),
         0 14px 32px rgba(0, 0, 0, 0.18);
 }
 
 .project-navigation-list ::deep .project-navigation-card:focus {
-    outline: 2px solid rgba(132, 184, 255, 0.75);
+    outline: 2px solid var(--project-accent);
     outline-offset: 2px;
+}
+
+.project-navigation-list ::deep .project-navigation-card.project-navigation-accent-blue {
+    --project-accent: #7da5ff;
+    --project-accent-soft: rgba(125, 165, 255, 0.24);
+    --project-accent-card-strong: rgba(125, 165, 255, 0.28);
+    --project-accent-border: rgba(125, 165, 255, 0.62);
+}
+
+.project-navigation-list ::deep .project-navigation-card.project-navigation-accent-violet {
+    --project-accent: #b48cff;
+    --project-accent-soft: rgba(180, 140, 255, 0.24);
+    --project-accent-card-strong: rgba(180, 140, 255, 0.28);
+    --project-accent-border: rgba(180, 140, 255, 0.62);
+}
+
+.project-navigation-list ::deep .project-navigation-card.project-navigation-accent-cyan {
+    --project-accent: #64d7ff;
+    --project-accent-soft: rgba(100, 215, 255, 0.24);
+    --project-accent-card-strong: rgba(100, 215, 255, 0.28);
+    --project-accent-border: rgba(100, 215, 255, 0.62);
+}
+
+.project-navigation-list ::deep .project-navigation-card.project-navigation-accent-emerald {
+    --project-accent: #61d394;
+    --project-accent-soft: rgba(97, 211, 148, 0.24);
+    --project-accent-card-strong: rgba(97, 211, 148, 0.28);
+    --project-accent-border: rgba(97, 211, 148, 0.62);
+}
+
+.project-navigation-list ::deep .project-navigation-card.project-navigation-accent-amber {
+    --project-accent: #ffbf69;
+    --project-accent-soft: rgba(255, 191, 105, 0.24);
+    --project-accent-card-strong: rgba(255, 191, 105, 0.28);
+    --project-accent-border: rgba(255, 191, 105, 0.62);
+}
+
+.project-navigation-list ::deep .project-navigation-card.project-navigation-accent-rose {
+    --project-accent: #ff7a90;
+    --project-accent-soft: rgba(255, 122, 144, 0.24);
+    --project-accent-card-strong: rgba(255, 122, 144, 0.28);
+    --project-accent-border: rgba(255, 122, 144, 0.62);
 }
 
 .project-navigation-marker {
@@ -92,12 +165,18 @@
     color: #ffffff;
     font-size: 0.74rem;
     font-weight: 850;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--project-accent-border);
     border-radius: 0.82rem;
     background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), transparent 42%),
-        linear-gradient(135deg, rgba(52, 133, 255, 0.85), rgba(129, 87, 255, 0.75));
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.32), transparent 42%),
+        linear-gradient(
+            135deg,
+            var(--project-accent),
+            var(--project-accent-card-strong)
+        );
+    box-shadow:
+        inset 0 0 0 1px var(--project-accent-soft),
+        0 10px 20px rgba(0, 0, 0, 0.18);
 }
 
 .project-navigation-content {
@@ -132,176 +211,6 @@
     text-decoration: none;
 }
 
-.project-navigation-entry {
-    display: grid;
-    gap: 0.45rem;
-    min-width: 0;
-}
-
-.project-navigation-card-row {
-    position: relative;
-    display: block;
-    min-width: 0;
-}
-
-    .project-navigation-card-row .project-navigation-card {
-        width: 100%;
-        padding-right: 3rem;
-    }
-
-.project-navigation-remove-button {
-    position: absolute;
-    top: 50%;
-    right: 0.65rem;
-    z-index: 2;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    min-width: 2rem;
-    height: 2rem;
-    min-height: 2rem;
-    color: rgba(255, 235, 235, 0.9);
-    border: 1px solid rgba(255, 120, 120, 0.22);
-    border-radius: 999px;
-    background: rgba(255, 90, 90, 0.12);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-50%) scale(0.96);
-    transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-}
-
-.project-navigation-entry:hover .project-navigation-remove-button,
-.project-navigation-entry:focus-within .project-navigation-remove-button {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(-50%) scale(1);
-}
-
-.project-navigation-remove-button:hover,
-.project-navigation-remove-button:focus {
-    color: #ffffff;
-    border-color: rgba(255, 135, 135, 0.48);
-    background: rgba(210, 50, 50, 0.34);
-}
-
-.project-navigation-remove-button:focus {
-    outline: 2px solid rgba(255, 170, 170, 0.72);
-    outline-offset: 2px;
-}
-
-.project-navigation-remove-icon {
-    width: 1rem;
-    height: 1rem;
-    flex: 0 0 auto;
-}
-
-.project-navigation-remove-panel {
-    display: grid;
-    gap: 0.55rem;
-    min-width: 0;
-    padding: 0.8rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.78rem;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
-    border: 1px solid rgba(255, 160, 92, 0.28);
-    border-radius: 0.95rem;
-    background: linear-gradient(135deg, rgba(145, 63, 20, 0.42), rgba(95, 35, 35, 0.24));
-}
-
-    .project-navigation-remove-panel p {
-        margin: 0;
-        color: rgba(255, 244, 232, 0.84);
-    }
-
-.project-navigation-remove-title {
-    color: #ffffff;
-    font-weight: 800;
-}
-
-.project-navigation-remove-label {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.74rem;
-}
-
-.project-navigation-remove-input {
-    width: 100%;
-    min-width: 0;
-    padding: 0.48rem 0.58rem;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 0.65rem;
-    background: rgba(0, 0, 0, 0.18);
-}
-
-    .project-navigation-remove-input:focus {
-        outline: 2px solid rgba(255, 203, 145, 0.75);
-        outline-offset: 2px;
-    }
-
-.project-navigation-remove-error {
-    color: #ffe4e4;
-    font-size: 0.74rem;
-}
-
-.project-navigation-remove-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-}
-
-.project-navigation-confirm-remove-button,
-.project-navigation-cancel-remove-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2rem;
-    padding: 0.35rem 0.62rem;
-    font-size: 0.74rem;
-    font-weight: 760;
-    border-radius: 0.65rem;
-}
-
-.project-navigation-confirm-remove-button {
-    color: #ffffff;
-    border: 1px solid rgba(255, 120, 120, 0.42);
-    background: rgba(200, 45, 45, 0.46);
-}
-
-    .project-navigation-confirm-remove-button:disabled {
-        cursor: not-allowed;
-        color: rgba(255, 255, 255, 0.42);
-        border-color: rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-.project-navigation-cancel-remove-button {
-    color: rgba(255, 255, 255, 0.86);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.09);
-}
-
-@media (hover: none), (pointer: coarse) {
-    .project-navigation-remove-button {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(-50%) scale(1);
-    }
-}
-
-.project-navigation-card-row {
-    position: relative;
-    display: block;
-    min-width: 0;
-}
-
-    .project-navigation-card-row .project-navigation-card {
-        width: 100%;
-        padding-right: 5.4rem;
-    }
-
 .project-navigation-actions {
     position: absolute;
     top: 50%;
@@ -313,7 +222,9 @@
     opacity: 0;
     pointer-events: none;
     transform: translateY(-50%) scale(0.96);
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
 }
 
 .project-navigation-entry:hover .project-navigation-actions,
@@ -323,13 +234,7 @@
     transform: translateY(-50%) scale(1);
 }
 
-.project-navigation-action-button,
-.project-navigation-actions .project-navigation-remove-button,
-.project-navigation-actions .project-navigation-edit-button {
-    position: static;
-    top: auto;
-    right: auto;
-    z-index: auto;
+.project-navigation-action-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -340,44 +245,45 @@
     padding: 0;
     color: rgba(255, 255, 255, 0.88);
     border-radius: 999px;
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
 }
 
-    .project-navigation-action-button:hover,
-    .project-navigation-action-button:focus {
-        color: #ffffff;
-        transform: translateY(-1px);
-    }
+.project-navigation-action-button:hover,
+.project-navigation-action-button:focus {
+    color: #ffffff;
+    transform: translateY(-1px);
+}
 
-    .project-navigation-action-button:focus {
-        outline: 2px solid rgba(180, 210, 255, 0.72);
-        outline-offset: 2px;
-    }
+.project-navigation-action-button:focus {
+    outline: 2px solid rgba(180, 210, 255, 0.72);
+    outline-offset: 2px;
+}
 
 .project-navigation-edit-button {
     border: 1px solid rgba(125, 165, 255, 0.24);
     background: rgba(95, 125, 255, 0.14);
 }
 
-    .project-navigation-edit-button:hover,
-    .project-navigation-edit-button:focus {
-        border-color: rgba(150, 185, 255, 0.48);
-        background: rgba(95, 125, 255, 0.32);
-    }
+.project-navigation-edit-button:hover,
+.project-navigation-edit-button:focus {
+    border-color: rgba(150, 185, 255, 0.48);
+    background: rgba(95, 125, 255, 0.32);
+}
 
 .project-navigation-remove-button {
     border: 1px solid rgba(255, 120, 120, 0.24);
     background: rgba(255, 90, 90, 0.14);
 }
 
-    .project-navigation-remove-button:hover,
-    .project-navigation-remove-button:focus {
-        border-color: rgba(255, 135, 135, 0.48);
-        background: rgba(210, 50, 50, 0.34);
-    }
+.project-navigation-remove-button:hover,
+.project-navigation-remove-button:focus {
+    border-color: rgba(255, 135, 135, 0.48);
+    background: rgba(210, 50, 50, 0.34);
+}
 
 .project-navigation-action-icon {
     width: 1rem;
@@ -385,206 +291,61 @@
     flex: 0 0 auto;
 }
 
-.project-navigation-rename-panel {
+.project-navigation-edit-panel,
+.project-navigation-remove-panel {
     display: grid;
-    gap: 0.55rem;
     min-width: 0;
     padding: 0.8rem;
     color: rgba(255, 255, 255, 0.9);
     font-size: 0.78rem;
     line-height: 1.35;
     overflow-wrap: anywhere;
-    border: 1px solid rgba(125, 165, 255, 0.28);
     border-radius: 0.95rem;
-    background: linear-gradient(135deg, rgba(42, 74, 160, 0.42), rgba(52, 45, 125, 0.24));
 }
-
-    .project-navigation-rename-panel p {
-        margin: 0;
-        color: rgba(235, 241, 255, 0.84);
-    }
-
-.project-navigation-rename-title {
-    color: #ffffff;
-    font-weight: 800;
-}
-
-.project-navigation-rename-label {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.74rem;
-}
-
-.project-navigation-rename-input {
-    width: 100%;
-    min-width: 0;
-    padding: 0.48rem 0.58rem;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 0.65rem;
-    background: rgba(0, 0, 0, 0.18);
-}
-
-    .project-navigation-rename-input:focus {
-        outline: 2px solid rgba(160, 190, 255, 0.75);
-        outline-offset: 2px;
-    }
-
-.project-navigation-rename-error {
-    color: #ffe4e4;
-    font-size: 0.74rem;
-}
-
-.project-navigation-rename-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-}
-
-.project-navigation-confirm-rename-button,
-.project-navigation-cancel-rename-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2rem;
-    padding: 0.35rem 0.62rem;
-    font-size: 0.74rem;
-    font-weight: 760;
-    border-radius: 0.65rem;
-}
-
-.project-navigation-confirm-rename-button {
-    color: #ffffff;
-    border: 1px solid rgba(125, 165, 255, 0.42);
-    background: rgba(70, 105, 210, 0.46);
-}
-
-    .project-navigation-confirm-rename-button:disabled {
-        cursor: not-allowed;
-        color: rgba(255, 255, 255, 0.42);
-        border-color: rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-.project-navigation-cancel-rename-button {
-    color: rgba(255, 255, 255, 0.86);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.09);
-}
-
-@media (hover: none), (pointer: coarse) {
-    .project-navigation-actions {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(-50%) scale(1);
-    }
-}
-
-.project-navigation-list ::deep .project-navigation-card {
-    --project-accent: #7da5ff;
-    --project-accent-soft: rgba(125, 165, 255, 0.24);
-    --project-accent-card: rgba(125, 165, 255, 0.16);
-    --project-accent-card-strong: rgba(125, 165, 255, 0.28);
-    --project-accent-border: rgba(125, 165, 255, 0.62);
-    border-color: var(--project-accent-border);
-    border-left: 4px solid var(--project-accent);
-    background: linear-gradient( 135deg, var(--project-accent-card-strong), rgba(34, 38, 112, 0.66) );
-}
-
-    .project-navigation-list ::deep .project-navigation-card:hover,
-    .project-navigation-list ::deep .project-navigation-card.active {
-        border-color: var(--project-accent);
-        background: linear-gradient( 135deg, var(--project-accent-card-strong), rgba(31, 34, 105, 0.82) );
-        box-shadow: inset 3px 0 0 var(--project-accent), 0 14px 32px rgba(0, 0, 0, 0.18);
-    }
-
-    .project-navigation-list ::deep .project-navigation-card .project-navigation-marker {
-        color: #ffffff;
-        border-color: var(--project-accent-border);
-        background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.32), transparent 42%), linear-gradient( 135deg, var(--project-accent), var(--project-accent-card-strong) );
-        box-shadow: inset 0 0 0 1px var(--project-accent-soft), 0 0 14px var(--project-accent-soft);
-    }
-
-    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-blue {
-        --project-accent: #7da5ff;
-        --project-accent-soft: rgba(125, 165, 255, 0.24);
-        --project-accent-card: rgba(125, 165, 255, 0.16);
-        --project-accent-card-strong: rgba(125, 165, 255, 0.28);
-        --project-accent-border: rgba(125, 165, 255, 0.62);
-    }
-
-    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-violet {
-        --project-accent: #b48cff;
-        --project-accent-soft: rgba(180, 140, 255, 0.24);
-        --project-accent-card: rgba(180, 140, 255, 0.16);
-        --project-accent-card-strong: rgba(180, 140, 255, 0.28);
-        --project-accent-border: rgba(180, 140, 255, 0.62);
-    }
-
-    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-cyan {
-        --project-accent: #64d7ff;
-        --project-accent-soft: rgba(100, 215, 255, 0.24);
-        --project-accent-card: rgba(100, 215, 255, 0.16);
-        --project-accent-card-strong: rgba(100, 215, 255, 0.28);
-        --project-accent-border: rgba(100, 215, 255, 0.62);
-    }
-
-    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-emerald {
-        --project-accent: #61d394;
-        --project-accent-soft: rgba(97, 211, 148, 0.24);
-        --project-accent-card: rgba(97, 211, 148, 0.16);
-        --project-accent-card-strong: rgba(97, 211, 148, 0.28);
-        --project-accent-border: rgba(97, 211, 148, 0.62);
-    }
-
-    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-amber {
-        --project-accent: #ffbf69;
-        --project-accent-soft: rgba(255, 191, 105, 0.24);
-        --project-accent-card: rgba(255, 191, 105, 0.16);
-        --project-accent-card-strong: rgba(255, 191, 105, 0.28);
-        --project-accent-border: rgba(255, 191, 105, 0.62);
-    }
-
-    .project-navigation-list ::deep .project-navigation-card.project-navigation-accent-rose {
-        --project-accent: #ff7a90;
-        --project-accent-soft: rgba(255, 122, 144, 0.24);
-        --project-accent-card: rgba(255, 122, 144, 0.16);
-        --project-accent-card-strong: rgba(255, 122, 144, 0.28);
-        --project-accent-border: rgba(255, 122, 144, 0.62);
-    }
 
 .project-navigation-edit-panel {
-    display: grid;
     gap: 0.65rem;
-    min-width: 0;
-    padding: 0.8rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.78rem;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
     border: 1px solid rgba(125, 165, 255, 0.28);
-    border-radius: 0.95rem;
-    background: linear-gradient(135deg, rgba(42, 74, 160, 0.42), rgba(52, 45, 125, 0.24));
+    background:
+        linear-gradient(135deg, rgba(42, 74, 160, 0.42), rgba(52, 45, 125, 0.24));
 }
 
-    .project-navigation-edit-panel p {
-        margin: 0;
-        color: rgba(235, 241, 255, 0.84);
-    }
+.project-navigation-remove-panel {
+    gap: 0.55rem;
+    border: 1px solid rgba(255, 160, 92, 0.28);
+    background:
+        linear-gradient(135deg, rgba(145, 63, 20, 0.42), rgba(95, 35, 35, 0.24));
+}
+
+.project-navigation-edit-panel p,
+.project-navigation-remove-panel p {
+    margin: 0;
+}
+
+.project-navigation-edit-panel p {
+    color: rgba(235, 241, 255, 0.84);
+}
+
+.project-navigation-remove-panel p {
+    color: rgba(255, 244, 232, 0.84);
+}
 
 .project-navigation-edit-title,
-.project-navigation-color-title {
+.project-navigation-color-title,
+.project-navigation-remove-title {
     color: #ffffff;
     font-weight: 800;
 }
 
-.project-navigation-edit-label {
+.project-navigation-edit-label,
+.project-navigation-remove-label {
     margin: 0;
     color: rgba(255, 255, 255, 0.9);
     font-size: 0.74rem;
 }
 
-.project-navigation-edit-input {
+.project-navigation-edit-input,
+.project-navigation-remove-input {
     width: 100%;
     min-width: 0;
     padding: 0.48rem 0.58rem;
@@ -594,10 +355,15 @@
     background: rgba(0, 0, 0, 0.18);
 }
 
-    .project-navigation-edit-input:focus {
-        outline: 2px solid rgba(160, 190, 255, 0.75);
-        outline-offset: 2px;
-    }
+.project-navigation-edit-input:focus {
+    outline: 2px solid rgba(160, 190, 255, 0.75);
+    outline-offset: 2px;
+}
+
+.project-navigation-remove-input:focus {
+    outline: 2px solid rgba(255, 203, 145, 0.75);
+    outline-offset: 2px;
+}
 
 .project-navigation-color-section {
     display: grid;
@@ -625,18 +391,18 @@
     background: rgba(255, 255, 255, 0.07);
 }
 
-    .project-navigation-color-option:hover,
-    .project-navigation-color-option:focus,
-    .project-navigation-color-option.is-selected {
-        color: #ffffff;
-        border-color: var(--project-color-preview);
-        background: rgba(255, 255, 255, 0.12);
-    }
+.project-navigation-color-option:hover,
+.project-navigation-color-option:focus,
+.project-navigation-color-option.is-selected {
+    color: #ffffff;
+    border-color: var(--project-color-preview);
+    background: rgba(255, 255, 255, 0.12);
+}
 
-    .project-navigation-color-option:focus {
-        outline: 2px solid rgba(180, 210, 255, 0.72);
-        outline-offset: 2px;
-    }
+.project-navigation-color-option:focus {
+    outline: 2px solid rgba(180, 210, 255, 0.72);
+    outline-offset: 2px;
+}
 
 .project-navigation-color-preview {
     width: 0.85rem;
@@ -677,19 +443,23 @@
     --project-color-preview: #ff7a90;
 }
 
-.project-navigation-edit-error {
+.project-navigation-edit-error,
+.project-navigation-remove-error {
     color: #ffe4e4;
     font-size: 0.74rem;
 }
 
-.project-navigation-edit-actions {
+.project-navigation-edit-actions,
+.project-navigation-remove-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.45rem;
 }
 
 .project-navigation-confirm-edit-button,
-.project-navigation-cancel-edit-button {
+.project-navigation-cancel-edit-button,
+.project-navigation-confirm-remove-button,
+.project-navigation-cancel-remove-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -706,17 +476,33 @@
     background: rgba(70, 105, 210, 0.46);
 }
 
-    .project-navigation-confirm-edit-button:disabled {
-        cursor: not-allowed;
-        color: rgba(255, 255, 255, 0.42);
-        border-color: rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.08);
-    }
+.project-navigation-confirm-remove-button {
+    color: #ffffff;
+    border: 1px solid rgba(255, 120, 120, 0.42);
+    background: rgba(200, 45, 45, 0.46);
+}
 
-.project-navigation-cancel-edit-button {
+.project-navigation-confirm-edit-button:disabled,
+.project-navigation-confirm-remove-button:disabled {
+    cursor: not-allowed;
+    color: rgba(255, 255, 255, 0.42);
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.project-navigation-cancel-edit-button,
+.project-navigation-cancel-remove-button {
     color: rgba(255, 255, 255, 0.86);
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: rgba(255, 255, 255, 0.09);
+}
+
+@media (hover: none), (pointer: coarse) {
+    .project-navigation-actions {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(-50%) scale(1);
+    }
 }
 
 @media (max-width: 420px) {
