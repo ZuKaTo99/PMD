@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Application.Home
 @using PMD.App.Domain.Home
+@using System.Linq
 
 <section class="home-widget-settings"
          aria-labelledby="home-widget-settings-title">
@@ -13,11 +14,11 @@
 
             <h2 id="home-widget-settings-title"
                 class="h5 mb-1">
-                Sichtbare Widgets
+                Sichtbarkeit und Reihenfolge
             </h2>
 
             <p class="text-muted small mb-0">
-                Deine Auswahl wird auf diesem Gerät dauerhaft gespeichert.
+                Auswahl und Position werden auf diesem Gerät dauerhaft gespeichert.
             </p>
         </div>
 
@@ -29,29 +30,56 @@
     </div>
 
     <div class="home-widget-settings-grid">
-        @foreach (HomeWidgetOption option in WidgetOptions)
+        @foreach (HomeWidgetOption option in OrderedWidgetOptions)
         {
-            <label class="home-widget-setting-option">
-                <span class="home-widget-setting-copy">
-                    <span class="home-widget-setting-title">
-                        @option.Title
+            <div class="home-widget-setting-option">
+                <div class="home-widget-order-actions"
+                     aria-label="Reihenfolge für @option.Title">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            title="Widget nach oben verschieben"
+                            aria-label="@option.Title nach oben verschieben"
+                            disabled="@(!WidgetPreferencesService.CanMoveEarlier(option.Id))"
+                            @onclick="() => MoveEarlier(option.Id)">
+                        ↑
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            title="Widget nach unten verschieben"
+                            aria-label="@option.Title nach unten verschieben"
+                            disabled="@(!WidgetPreferencesService.CanMoveLater(option.Id))"
+                            @onclick="() => MoveLater(option.Id)">
+                        ↓
+                    </button>
+                </div>
+
+                <label class="home-widget-setting-toggle">
+                    <span class="home-widget-setting-copy">
+                        <span class="home-widget-setting-title">
+                            @option.Title
+                        </span>
+
+                        <span class="home-widget-setting-description">
+                            @option.Description
+                        </span>
                     </span>
 
-                    <span class="home-widget-setting-description">
-                        @option.Description
+                    <span class="form-check form-switch m-0">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               aria-label="@($"Widget {option.Title} anzeigen")"
+                               checked="@WidgetPreferencesService.IsVisible(option.Id)"
+                               @onchange="eventArgs => SetVisibility(option.Id, eventArgs)" />
                     </span>
-                </span>
-
-                <span class="form-check form-switch m-0">
-                    <input class="form-check-input"
-                           type="checkbox"
-                           role="switch"
-                           aria-label="@($"Widget {option.Title} anzeigen")"
-                           checked="@WidgetPreferencesService.IsVisible(option.Id)"
-                           @onchange="eventArgs => SetVisibility(option.Id, eventArgs)" />
-                </span>
-            </label>
+                </label>
+            </div>
         }
+    </div>
+
+    <div class="text-muted small mt-3">
+        Die Pfeile ändern die Reihenfolge innerhalb des jeweiligen Home-Bereichs.
     </div>
 </section>
 
@@ -83,6 +111,12 @@
         set;
     } = default!;
 
+    private IReadOnlyList<HomeWidgetOption> OrderedWidgetOptions =>
+        WidgetPreferencesService
+            .GetWidgetOrder()
+            .Select(widgetId => WidgetOptions.First(option => option.Id == widgetId))
+            .ToList();
+
     private void SetVisibility(
         HomeWidgetId widgetId,
         ChangeEventArgs eventArgs)
@@ -92,6 +126,16 @@
         WidgetPreferencesService.SetVisibility(
             widgetId,
             isVisible);
+    }
+
+    private void MoveEarlier(HomeWidgetId widgetId)
+    {
+        WidgetPreferencesService.MoveEarlier(widgetId);
+    }
+
+    private void MoveLater(HomeWidgetId widgetId)
+    {
+        WidgetPreferencesService.MoveLater(widgetId);
     }
 
     private void ResetToDefaults()

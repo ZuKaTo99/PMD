@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Components;
 using PMD.App.Application.Home;
 using PMD.App.Domain.Home;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PMD.App.Features.Home.Pages;
 
@@ -24,13 +26,25 @@ public partial class HomePage : IDisposable
     protected string WidgetSettingsAriaExpanded =>
         AreWidgetSettingsOpen ? "true" : "false";
 
+    protected IReadOnlyList<HomeWidgetId> VisibleTopWidgets =>
+        HomeWidgetPreferencesService
+            .GetWidgetOrder()
+            .Where(IsTopWidget)
+            .Where(IsWidgetVisible)
+            .ToList();
+
+    protected IReadOnlyList<HomeWidgetId> VisibleRecentWidgets =>
+        HomeWidgetPreferencesService
+            .GetWidgetOrder()
+            .Where(widgetId => !IsTopWidget(widgetId))
+            .Where(IsWidgetVisible)
+            .ToList();
+
     protected bool HasVisibleTopWidgets =>
-        IsWidgetVisible(HomeWidgetId.ProjectOverview) ||
-        IsWidgetVisible(HomeWidgetId.QuickActions);
+        VisibleTopWidgets.Count > 0;
 
     protected bool HasVisibleRecentWidgets =>
-        IsWidgetVisible(HomeWidgetId.RecentProjects) ||
-        IsWidgetVisible(HomeWidgetId.RecentChecks);
+        VisibleRecentWidgets.Count > 0;
 
     protected bool HasVisibleWidgets =>
         HasVisibleTopWidgets ||
@@ -116,5 +130,12 @@ public partial class HomePage : IDisposable
     private void RefreshOverview()
     {
         Overview = HomeOverviewService.GetOverview();
+    }
+
+    private static bool IsTopWidget(HomeWidgetId widgetId)
+    {
+        return widgetId is
+            HomeWidgetId.ProjectOverview or
+            HomeWidgetId.QuickActions;
     }
 }

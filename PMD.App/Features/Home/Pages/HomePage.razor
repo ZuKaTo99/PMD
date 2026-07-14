@@ -48,17 +48,19 @@
     @if (HasVisibleTopWidgets)
     {
         <div class="row g-3 mb-3">
-            @if (IsWidgetVisible(HomeWidgetId.ProjectOverview))
+            @foreach (HomeWidgetId widgetId in VisibleTopWidgets)
             {
-                <div class="@GetTopWidgetColumnClass(HomeWidgetId.ProjectOverview)">
-                    <HomeSummaryWidget Overview="@Overview" />
-                </div>
-            }
+                <div class="@GetTopWidgetColumnClass(widgetId)">
+                    @switch (widgetId)
+                    {
+                        case HomeWidgetId.ProjectOverview:
+                            <HomeSummaryWidget Overview="@Overview" />
+                            break;
 
-            @if (IsWidgetVisible(HomeWidgetId.QuickActions))
-            {
-                <div class="@GetTopWidgetColumnClass(HomeWidgetId.QuickActions)">
-                    <HomeQuickActionsWidget MostRecentProject="@Overview.MostRecentProject" />
+                        case HomeWidgetId.QuickActions:
+                            <HomeQuickActionsWidget MostRecentProject="@Overview.MostRecentProject" />
+                            break;
+                    }
                 </div>
             }
         </div>
@@ -67,17 +69,19 @@
     @if (HasVisibleRecentWidgets)
     {
         <div class="row g-3 mb-3">
-            @if (IsWidgetVisible(HomeWidgetId.RecentProjects))
+            @foreach (HomeWidgetId widgetId in VisibleRecentWidgets)
             {
-                <div class="@GetRecentWidgetColumnClass(HomeWidgetId.RecentProjects)">
-                    <HomeRecentProjectsWidget Projects="@Overview.RecentProjects" />
-                </div>
-            }
+                <div class="@GetRecentWidgetColumnClass(widgetId)">
+                    @switch (widgetId)
+                    {
+                        case HomeWidgetId.RecentProjects:
+                            <HomeRecentProjectsWidget Projects="@Overview.RecentProjects" />
+                            break;
 
-            @if (IsWidgetVisible(HomeWidgetId.RecentChecks))
-            {
-                <div class="@GetRecentWidgetColumnClass(HomeWidgetId.RecentChecks)">
-                    <HomeRecentChecksWidget Checks="@Overview.RecentChecks" />
+                        case HomeWidgetId.RecentChecks:
+                            <HomeRecentChecksWidget Checks="@Overview.RecentChecks" />
+                            break;
+                    }
                 </div>
             }
         </div>
