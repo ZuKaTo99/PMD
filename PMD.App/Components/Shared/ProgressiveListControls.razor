@@ -1,0 +1,78 @@
+@namespace PMD.App.Components.Shared
+@using Microsoft.AspNetCore.Components
+
+@if (TotalCount > InitialCount)
+{
+    <div class="pmd-list-controls"
+         aria-live="polite">
+        <div class="pmd-list-controls-summary">
+            @if (VisibleCount < TotalCount)
+            {
+                <span>
+                    @VisibleCount von @TotalCount @ItemLabel sichtbar
+                    · @(TotalCount - VisibleCount) ausgeblendet
+                </span>
+            }
+            else
+            {
+                <span>
+                    Alle @TotalCount @ItemLabel werden angezeigt.
+                </span>
+            }
+        </div>
+
+        <div class="pmd-list-controls-actions">
+            @if (VisibleCount < TotalCount)
+            {
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        @onclick="OnShowMore">
+                    Mehr anzeigen
+                </button>
+
+                @if (VisibleCount + StepCount < TotalCount)
+                {
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            @onclick="OnShowAll">
+                        Alle anzeigen
+                    </button>
+                }
+            }
+            else
+            {
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        @onclick="OnCollapse">
+                    Weniger anzeigen
+                </button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int TotalCount { get; set; }
+
+    [Parameter]
+    public int VisibleCount { get; set; }
+
+    [Parameter]
+    public int InitialCount { get; set; }
+
+    [Parameter]
+    public int StepCount { get; set; }
+
+    [Parameter]
+    public string ItemLabel { get; set; } = "Einträge";
+
+    [Parameter]
+    public EventCallback OnShowMore { get; set; }
+
+    [Parameter]
+    public EventCallback OnShowAll { get; set; }
+
+    [Parameter]
+    public EventCallback OnCollapse { get; set; }
+}

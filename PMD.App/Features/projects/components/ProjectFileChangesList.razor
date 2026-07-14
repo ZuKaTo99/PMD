@@ -11,7 +11,7 @@
         </div>
 
         <div class="card-body">
-            @if (VisibleChanges.Count == 0)
+            @if (FilteredChanges.Count == 0)
             {
                 <div class="alert alert-success mb-0">
                     @EmptyText
@@ -23,9 +23,10 @@
                     @foreach (ProjectFileChange change in VisibleChanges)
                     {
                         <div class="@GetChangeCardCssClass(change)">
-                            <div class="pmd-change-list-item">
-                                <div class="pmd-change-list-text">
-                                    <code class="pmd-path">
+                            <div class="pmd-list-item-row">
+                                <div class="pmd-list-item-text">
+                                    <code class="pmd-truncated-path"
+                                          title="@change.RelativePath">
                                         @change.RelativePath
                                     </code>
 
@@ -34,7 +35,7 @@
                                     </div>
                                 </div>
 
-                                <div class="pmd-change-list-actions">
+                                <div class="pmd-list-item-actions">
                                     <span class="badge bg-light text-dark border">
                                         @FormatChangeKind(change.ChangeKind)
                                     </span>
@@ -50,19 +51,26 @@
                     }
                 </div>
 
-                @if (TotalVisibleChangeCount > VisibleChanges.Count)
-                {
-                    <div class="alert alert-secondary mt-3 mb-0">
-                        Es werden die ersten @VisibleChanges.Count von @TotalVisibleChangeCount passenden Dateien angezeigt.
-                    </div>
-                }
+                <ProgressiveListControls TotalCount="@FilteredChanges.Count"
+                                         VisibleCount="@CurrentVisibleCount"
+                                         InitialCount="@InitialVisibleChangeCount"
+                                         StepCount="@VisibleChangeStepCount"
+                                         ItemLabel="Dateien"
+                                         OnShowMore="ShowMore"
+                                         OnShowAll="ShowAll"
+                                         OnCollapse="Collapse" />
             }
         </div>
     </div>
 }
 
 @code {
-    private const int MaxVisibleChangeCount = 25;
+    private const int InitialVisibleChangeCount = 8;
+    private const int VisibleChangeStepCount = 8;
+
+    private int visibleChangeCount = InitialVisibleChangeCount;
+    private string lastResetKey = string.Empty;
+    private ProjectChangesResult? lastChangesResult;
 
     [Parameter]
     public ProjectChangesResult? ChangesResult { get; set; }
@@ -79,13 +87,55 @@
     [Parameter]
     public EventCallback<ProjectFileChange> OnSelectChange { get; set; }
 
+    private IReadOnlyList<ProjectFileChange> FilteredChanges =>
+        GetFilteredChanges().ToList();
+
+    private int CurrentVisibleCount => Math.Min(
+        visibleChangeCount,
+        FilteredChanges.Count);
+
     private IReadOnlyList<ProjectFileChange> VisibleChanges =>
-        GetFilteredChanges()
-            .Take(MaxVisibleChangeCount)
+        FilteredChanges
+            .Take(CurrentVisibleCount)
             .ToList();
 
-    private int TotalVisibleChangeCount =>
-        GetFilteredChanges().Count();
+    private string ResetKey =>
+        $"{SelectedChangeKind?.ToString() ?? "all"}\u001f{SearchText}";
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(lastChangesResult, ChangesResult) ||
+            !string.Equals(lastResetKey, ResetKey, StringComparison.Ordinal))
+        {
+            visibleChangeCount = InitialVisibleChangeCount;
+            lastResetKey = ResetKey;
+            lastChangesResult = ChangesResult;
+        }
+
+        if (FilteredChanges.Count < visibleChangeCount)
+        {
+            visibleChangeCount = Math.Max(
+                InitialVisibleChangeCount,
+                FilteredChanges.Count);
+        }
+    }
+
+    private void ShowMore()
+    {
+        visibleChangeCount = Math.Min(
+            FilteredChanges.Count,
+            visibleChangeCount + VisibleChangeStepCount);
+    }
+
+    private void ShowAll()
+    {
+        visibleChangeCount = FilteredChanges.Count;
+    }
+
+    private void Collapse()
+    {
+        visibleChangeCount = InitialVisibleChangeCount;
+    }
 
     private string ListTitle
     {
@@ -162,8 +212,8 @@
         bool isSelected = IsSameChange(change, SelectedChange);
 
         return isSelected
-            ? "pmd-change-list-card pmd-card border border-primary rounded p-3 bg-light"
-            : "pmd-change-list-card pmd-card border rounded p-3";
+            ? "pmd-list-card pmd-card border border-primary rounded p-3 bg-light"
+            : "pmd-list-card pmd-card border rounded p-3";
     }
 
     private static bool IsSameChange(

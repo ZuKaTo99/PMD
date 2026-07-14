@@ -1,6 +1,7 @@
 @namespace PMD.App.Features.Projects.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectStates
+@using System.Linq
 
 <div class="card mb-4">
     <div class="card-header">
@@ -31,9 +32,9 @@
         else
         {
             <div class="d-flex flex-column gap-3">
-                @for (var index = 0; index < ProjectStates.Count; index++)
+                @for (var index = 0; index < VisibleProjectStates.Count; index++)
                 {
-                    ProjectState projectState = ProjectStates[index];
+                    ProjectState projectState = VisibleProjectStates[index];
                     int projectStateNumber = ProjectStates.Count - index;
 
                     <div class="border rounded p-3">
@@ -74,11 +75,67 @@
                     </div>
                 }
             </div>
+
+            <ProgressiveListControls TotalCount="@ProjectStates.Count"
+                                     VisibleCount="@CurrentVisibleCount"
+                                     InitialCount="@InitialVisibleStateCount"
+                                     StepCount="@VisibleStateStepCount"
+                                     ItemLabel="Prüfungen"
+                                     OnShowMore="ShowMore"
+                                     OnShowAll="ShowAll"
+                                     OnCollapse="Collapse" />
         }
     </div>
 </div>
 
 @code {
+    private const int InitialVisibleStateCount = 5;
+    private const int VisibleStateStepCount = 5;
+
+    private int visibleStateCount = InitialVisibleStateCount;
+    private int lastProjectStateCount = -1;
+    private Guid? lastProjectId;
+
     [Parameter]
-    public IReadOnlyList<ProjectState> ProjectStates { get; set; } = Array.Empty<ProjectState>();
+    public IReadOnlyList<ProjectState> ProjectStates { get; set; } =
+        Array.Empty<ProjectState>();
+
+    private int CurrentVisibleCount => Math.Min(
+        visibleStateCount,
+        ProjectStates.Count);
+
+    private IReadOnlyList<ProjectState> VisibleProjectStates =>
+        ProjectStates
+            .Take(CurrentVisibleCount)
+            .ToList();
+
+    protected override void OnParametersSet()
+    {
+        Guid? currentProjectId = ProjectStates.FirstOrDefault()?.ProjectId;
+
+        if (ProjectStates.Count != lastProjectStateCount ||
+            currentProjectId != lastProjectId)
+        {
+            visibleStateCount = InitialVisibleStateCount;
+            lastProjectStateCount = ProjectStates.Count;
+            lastProjectId = currentProjectId;
+        }
+    }
+
+    private void ShowMore()
+    {
+        visibleStateCount = Math.Min(
+            ProjectStates.Count,
+            visibleStateCount + VisibleStateStepCount);
+    }
+
+    private void ShowAll()
+    {
+        visibleStateCount = ProjectStates.Count;
+    }
+
+    private void Collapse()
+    {
+        visibleStateCount = InitialVisibleStateCount;
+    }
 }

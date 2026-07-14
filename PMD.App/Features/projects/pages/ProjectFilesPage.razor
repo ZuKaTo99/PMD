@@ -109,7 +109,7 @@
                                 </div>
                             }
 
-                            <code class="d-block mt-2 text-break">
+                            <code class="d-block mt-2 text-break" title="@FocusedFileDisplayPath">
                                 @FocusedFileDisplayPath
                             </code>
                         </div>
@@ -159,17 +159,18 @@
                                           OnSelectedSortModeChanged="OnSelectedSortModeChanged"
                                           OnClearFilters="ClearFilters" />
 
-                    <div class="row g-3">
-                        <div class="col-12 col-xl-6">
+                    <div class="pmd-master-detail-layout">
+                        <div class="pmd-master-pane">
                             <ProjectFileList TotalFileCount="Files.Count"
                                              FilteredFiles="FilteredFiles"
-                                             VisibleFiles="VisibleFiles"
+                                             VisibleFilesSource="VisibleFiles"
                                              SelectedFile="SelectedFile"
+                                             ResetKey="@FileListResetKey"
                                              SelectedSortLabel="@SelectedSortLabel"
                                              OnSelectFile="SelectFile" />
                         </div>
 
-                        <div class="col-12 col-xl-6">
+                        <div class="pmd-detail-pane">
                             <ProjectFileDetailCard SelectedFile="SelectedFile"
                                                    SelectedFileContentResult="SelectedFileContentResult"
                                                    OnLoadPreview="LoadSelectedFilePreview" />

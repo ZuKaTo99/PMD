@@ -1,6 +1,7 @@
 @namespace PMD.App.Features.Projects.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectStates
+@using System.Linq
 
 @if (TotalFileCount == 0)
 {
@@ -21,10 +22,10 @@ else
             @FilteredFiles.Count Treffer · sortiert nach @SelectedSortLabel
         </div>
 
-        @if (FilteredFiles.Count > VisibleFiles.Count)
+        @if (FilteredFiles.Count > CurrentVisibleCount)
         {
             <div class="text-muted small">
-                @VisibleFiles.Count von @FilteredFiles.Count sichtbar
+                @CurrentVisibleCount von @FilteredFiles.Count sichtbar
             </div>
         }
     </div>
@@ -33,11 +34,12 @@ else
         @foreach (ProjectStateFile file in VisibleFiles)
         {
             <div class="@GetFileCardCssClass(file)">
-                <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
-                    <div class="min-w-0">
-                        <div class="text-truncate">
-                            <code>@file.RelativePath</code>
-                        </div>
+                <div class="pmd-list-item-row">
+                    <div class="pmd-list-item-text">
+                        <code class="pmd-truncated-path"
+                              title="@file.RelativePath">
+                            @file.RelativePath
+                        </code>
 
                         <div class="text-muted small mt-1">
                             @ProjectOverviewFormatter.FormatExtension(file.Extension)
@@ -46,7 +48,7 @@ else
                         </div>
                     </div>
 
-                    <div class="align-self-lg-start">
+                    <div class="pmd-list-item-actions">
                         <button class="btn btn-sm btn-outline-primary"
                                 type="button"
                                 @onclick="() => OnSelectFile.InvokeAsync(file)">
@@ -58,16 +60,23 @@ else
         }
     </div>
 
-    @if (FilteredFiles.Count > VisibleFiles.Count)
-    {
-        <div class="alert alert-secondary mt-3 mb-0">
-            Es werden die ersten @VisibleFiles.Count von @FilteredFiles.Count Treffern angezeigt.
-            Nutze die Suche oder den Dateityp-Filter, um die Auswahl einzugrenzen.
-        </div>
-    }
+    <ProgressiveListControls TotalCount="@FilteredFiles.Count"
+                             VisibleCount="@CurrentVisibleCount"
+                             InitialCount="@InitialVisibleFileCount"
+                             StepCount="@VisibleFileStepCount"
+                             ItemLabel="Dateien"
+                             OnShowMore="ShowMore"
+                             OnShowAll="ShowAll"
+                             OnCollapse="Collapse" />
 }
 
 @code {
+    private const int InitialVisibleFileCount = 8;
+    private const int VisibleFileStepCount = 8;
+
+    private int visibleFileCount = InitialVisibleFileCount;
+    private string lastResetKey = string.Empty;
+
     [Parameter]
     public int TotalFileCount { get; set; }
 
@@ -76,7 +85,7 @@ else
         Array.Empty<ProjectStateFile>();
 
     [Parameter]
-    public IReadOnlyList<ProjectStateFile> VisibleFiles { get; set; } =
+    public IReadOnlyList<ProjectStateFile> VisibleFilesSource { get; set; } =
         Array.Empty<ProjectStateFile>();
 
     [Parameter]
@@ -86,15 +95,60 @@ else
     public string SelectedSortLabel { get; set; } = "Pfad";
 
     [Parameter]
+    public string ResetKey { get; set; } = string.Empty;
+
+    [Parameter]
     public EventCallback<ProjectStateFile> OnSelectFile { get; set; }
+
+    private int CurrentVisibleCount => Math.Min(
+        visibleFileCount,
+        VisibleFilesSource.Count);
+
+    private IReadOnlyList<ProjectStateFile> VisibleFiles =>
+        VisibleFilesSource
+            .Take(CurrentVisibleCount)
+            .ToList();
+
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(lastResetKey, ResetKey, StringComparison.Ordinal))
+        {
+            visibleFileCount = InitialVisibleFileCount;
+            lastResetKey = ResetKey;
+        }
+
+        if (VisibleFilesSource.Count < visibleFileCount)
+        {
+            visibleFileCount = Math.Max(
+                InitialVisibleFileCount,
+                VisibleFilesSource.Count);
+        }
+    }
+
+    private void ShowMore()
+    {
+        visibleFileCount = Math.Min(
+            VisibleFilesSource.Count,
+            visibleFileCount + VisibleFileStepCount);
+    }
+
+    private void ShowAll()
+    {
+        visibleFileCount = VisibleFilesSource.Count;
+    }
+
+    private void Collapse()
+    {
+        visibleFileCount = InitialVisibleFileCount;
+    }
 
     private string GetFileCardCssClass(ProjectStateFile file)
     {
         bool isSelected = IsSameFile(file, SelectedFile);
 
         return isSelected
-            ? "border border-primary rounded p-3 bg-light"
-            : "border rounded p-3";
+            ? "pmd-list-card border border-primary rounded p-3 bg-light"
+            : "pmd-list-card border rounded p-3";
     }
 
     private static bool IsSameFile(

@@ -312,3 +312,92 @@ h1:focus {
         padding-left: env(safe-area-inset-left);
     }
 }
+
+/* Shared responsive list and master-detail behavior */
+.pmd-master-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(24rem, 1.1fr);
+    align-items: start;
+    gap: 1rem;
+}
+
+.pmd-master-pane,
+.pmd-detail-pane,
+.pmd-list-item-text {
+    min-width: 0;
+}
+
+.pmd-detail-pane {
+    position: sticky;
+    top: 5.25rem;
+    max-height: calc(100vh - 6.25rem);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.pmd-list-item-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.75rem;
+}
+
+.pmd-list-item-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.pmd-truncated-text,
+.pmd-truncated-path {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pmd-truncated-path code,
+code.pmd-truncated-path {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pmd-list-card {
+    min-width: 0;
+}
+
+@media (max-width: 1199.98px) {
+    .pmd-master-detail-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pmd-detail-pane {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pmd-list-item-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pmd-list-item-actions {
+        justify-content: stretch;
+    }
+
+    .pmd-list-item-actions .btn {
+        flex: 1 1 auto;
+    }
+}

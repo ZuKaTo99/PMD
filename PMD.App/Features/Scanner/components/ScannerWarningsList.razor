@@ -18,22 +18,57 @@
             }
         </ul>
 
-        @if (Warnings.Count > VisibleWarnings.Count)
-        {
-            <div class="small mt-2">
-                Zusätzlich gibt es @(Warnings.Count - VisibleWarnings.Count) weitere Hinweise.
-            </div>
-        }
+        <ProgressiveListControls TotalCount="@Warnings.Count"
+                                 VisibleCount="@VisibleWarnings.Count"
+                                 InitialCount="@InitialVisibleWarningCount"
+                                 StepCount="@VisibleWarningStepCount"
+                                 ItemLabel="Hinweise"
+                                 OnShowMore="ShowMore"
+                                 OnShowAll="ShowAll"
+                                 OnCollapse="Collapse" />
     </div>
 }
 
 @code {
-    private const int MaxVisibleWarningCount = 8;
+    private const int InitialVisibleWarningCount = 8;
+    private const int VisibleWarningStepCount = 8;
+
+    private int visibleWarningCount = InitialVisibleWarningCount;
+    private int lastWarningCount = -1;
+    private IReadOnlyList<string>? lastWarnings;
 
     [Parameter]
     public IReadOnlyList<string> Warnings { get; set; } = Array.Empty<string>();
 
     private IReadOnlyList<string> VisibleWarnings => Warnings
-        .Take(MaxVisibleWarningCount)
+        .Take(visibleWarningCount)
         .ToList();
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(lastWarnings, Warnings) ||
+            Warnings.Count != lastWarningCount)
+        {
+            visibleWarningCount = InitialVisibleWarningCount;
+            lastWarningCount = Warnings.Count;
+            lastWarnings = Warnings;
+        }
+    }
+
+    private void ShowMore()
+    {
+        visibleWarningCount = Math.Min(
+            Warnings.Count,
+            visibleWarningCount + VisibleWarningStepCount);
+    }
+
+    private void ShowAll()
+    {
+        visibleWarningCount = Warnings.Count;
+    }
+
+    private void Collapse()
+    {
+        visibleWarningCount = InitialVisibleWarningCount;
+    }
 }

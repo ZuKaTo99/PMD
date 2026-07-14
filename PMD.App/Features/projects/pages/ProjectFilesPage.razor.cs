@@ -18,8 +18,6 @@ public partial class ProjectFilesPage
     protected const string SortBySizeDescending = "size-desc";
     protected const string SortByLastChangedDescending = "last-changed-desc";
 
-    private const int MaxVisibleFileCount = 100;
-
     [Inject]
     private IProjectMemoryStore ProjectMemoryStore { get; set; } = default!;
 
@@ -90,6 +88,9 @@ public partial class ProjectFilesPage
         !string.IsNullOrWhiteSpace(SearchText) ||
         !string.IsNullOrWhiteSpace(SelectedExtension);
 
+    protected string FileListResetKey =>
+        $"{ProjectId}\u001f{SearchText}\u001f{SelectedExtension}\u001f{SelectedSortMode}";
+
     protected string SelectedSortLabel => SelectedSortMode switch
     {
         SortByExtension => "Dateityp",
@@ -111,7 +112,6 @@ public partial class ProjectFilesPage
         .ToList();
 
     protected IReadOnlyList<ProjectStateFile> VisibleFiles => SortFiles(FilteredFiles)
-        .Take(MaxVisibleFileCount)
         .ToList();
 
     protected override void OnParametersSet()

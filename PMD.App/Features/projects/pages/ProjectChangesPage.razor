@@ -99,8 +99,8 @@
             <ProjectChangeSearchBar SearchText="@ChangeSearchText"
                                     SearchTextChanged="OnChangeSearchTextChanged" />
 
-            <div class="pmd-change-layout">
-                <div class="pmd-change-layout-column">
+            <div class="pmd-master-detail-layout">
+                <div class="pmd-master-pane">
                     <ProjectFileChangesList ChangesResult="@ChangesResult"
                                             SelectedChangeKind="@SelectedChangeKind"
                                             SearchText="@ChangeSearchText"
@@ -108,7 +108,7 @@
                                             OnSelectChange="@SelectChange" />
                 </div>
 
-                <div class="pmd-change-layout-column">
+                <div class="pmd-detail-pane">
                     <ProjectFileChangeDetailCard ProjectId="@ProjectId"
                                                  SelectedChange="@SelectedChange" />
                 </div>

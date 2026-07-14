@@ -84,13 +84,22 @@
                 </div>
 
                 <div class="d-flex gap-2 flex-wrap">
-                    @foreach (var fileType in summary.AllFileTypes)
+                    @foreach (var fileType in VisibleFileTypes)
                     {
                         <span class="badge bg-light text-dark border">
                             @fileType.Extension · @fileType.FileCount
                         </span>
                     }
                 </div>
+
+                <ProgressiveListControls TotalCount="@summary.AllFileTypes.Count"
+                                         VisibleCount="@VisibleFileTypes.Count"
+                                         InitialCount="@InitialVisibleFileTypeCount"
+                                         StepCount="@VisibleFileTypeStepCount"
+                                         ItemLabel="Dateitypen"
+                                         OnShowMore="ShowMoreFileTypes"
+                                         OnShowAll="ShowAllFileTypes"
+                                         OnCollapse="CollapseFileTypes" />
             </div>
 
             <div class="border rounded p-3 mb-3">
@@ -119,7 +128,7 @@
                                     @foreach (var file in fileGroup.Files)
                                     {
                                         <div class="d-flex justify-content-between gap-3">
-                                            <code class="text-truncate">@file.RelativePath</code>
+                                            <code class="pmd-truncated-path" title="@file.RelativePath">@file.RelativePath</code>
                                             <span class="text-muted small text-nowrap">
                                                 @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
                                             </span>
@@ -153,7 +162,7 @@
                         {
                             <div class="col-12 col-lg-6">
                                 <div class="d-flex justify-content-between gap-3 border rounded p-2 h-100">
-                                    <span class="text-truncate">@file.FileName</span>
+                                    <span class="pmd-truncated-text" title="@file.RelativePath">@file.FileName</span>
                                     <span class="text-muted small text-nowrap">
                                         @ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes)
                                     </span>
@@ -168,6 +177,62 @@
 </div>
 
 @code {
+    private const int InitialVisibleFileTypeCount = 12;
+    private const int VisibleFileTypeStepCount = 12;
+
+    private int visibleFileTypeCount = InitialVisibleFileTypeCount;
+    private int lastFileTypeCount = -1;
+    private Guid? lastProjectId;
+
     [Parameter]
     public ProjectOverview? Overview { get; set; }
+
+    private IReadOnlyList<ProjectFileTypeSummary> VisibleFileTypes
+    {
+        get
+        {
+            if (Overview is null)
+            {
+                return Array.Empty<ProjectFileTypeSummary>();
+            }
+
+            return Overview.ContentSummary.AllFileTypes
+                .Take(visibleFileTypeCount)
+                .ToList();
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        int currentFileTypeCount =
+            Overview?.ContentSummary.AllFileTypes.Count ?? 0;
+        Guid? currentProjectId = Overview?.Project.Id;
+
+        if (currentFileTypeCount != lastFileTypeCount ||
+            currentProjectId != lastProjectId)
+        {
+            visibleFileTypeCount = InitialVisibleFileTypeCount;
+            lastFileTypeCount = currentFileTypeCount;
+            lastProjectId = currentProjectId;
+        }
+    }
+
+    private void ShowMoreFileTypes()
+    {
+        int totalCount = Overview?.ContentSummary.AllFileTypes.Count ?? 0;
+        visibleFileTypeCount = Math.Min(
+            totalCount,
+            visibleFileTypeCount + VisibleFileTypeStepCount);
+    }
+
+    private void ShowAllFileTypes()
+    {
+        visibleFileTypeCount =
+            Overview?.ContentSummary.AllFileTypes.Count ?? 0;
+    }
+
+    private void CollapseFileTypes()
+    {
+        visibleFileTypeCount = InitialVisibleFileTypeCount;
+    }
 }
