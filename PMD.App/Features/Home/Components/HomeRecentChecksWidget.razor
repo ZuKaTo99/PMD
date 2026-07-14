@@ -1,0 +1,82 @@
+@namespace PMD.App.Features.Home.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.Home
+
+<section class="card pmd-card home-widget h-100"
+         aria-labelledby="home-recent-checks-title">
+    <div class="card-body">
+        <div class="home-widget-heading">
+            <div>
+                <div class="home-widget-eyebrow">
+                    Projektverlauf
+                </div>
+
+                <h2 id="home-recent-checks-title"
+                    class="h5 mb-0">
+                    Letzte manuelle Prüfungen
+                </h2>
+            </div>
+
+            <span class="home-widget-count">
+                @Checks.Count
+            </span>
+        </div>
+
+        @if (Checks.Count == 0)
+        {
+            <div class="home-empty-state">
+                <strong>Noch keine Prüfung vorhanden.</strong>
+                <span>
+                    Manuell gespeicherte Projektstände erscheinen hier in zeitlicher Reihenfolge.
+                </span>
+            </div>
+        }
+        else
+        {
+            <div class="home-check-list">
+                @foreach (HomeProjectCheckSummary check in Checks)
+                {
+                    <a class="home-check-entry home-accent-@check.AccentColor"
+                       href="@($"/projekte/{check.ProjectId}")">
+                        <span class="home-check-accent"
+                              aria-hidden="true">
+                        </span>
+
+                        <span class="home-check-content">
+                            <span class="home-check-project">
+                                @check.ProjectName
+                            </span>
+
+                            <span class="home-check-meta">
+                                @HomeDisplayFormatter.FormatDateTime(
+                                    check.ScannedAt)
+                                ·
+                                @HomeDisplayFormatter.FormatFileCount(
+                                    check.FileCount)
+                                ·
+                                @HomeDisplayFormatter.FormatDuration(
+                                    check.ScanDuration)
+                            </span>
+
+                            @if (check.WarningCount > 0)
+                            {
+                                <span class="home-check-warning">
+                                    @check.WarningCount
+                                    @(check.WarningCount == 1
+                                        ? "Hinweis"
+                                        : "Hinweise")
+                                </span>
+                            }
+                        </span>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<HomeProjectCheckSummary> Checks { get; set; } =
+        Array.Empty<HomeProjectCheckSummary>();
+}

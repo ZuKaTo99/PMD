@@ -1,0 +1,75 @@
+@namespace PMD.App.Features.Home.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.Home
+
+<section class="card pmd-card home-widget home-actions-widget h-100"
+         aria-labelledby="home-actions-title">
+    <div class="card-body">
+        <div class="home-widget-heading">
+            <div>
+                <div class="home-widget-eyebrow">
+                    Schnellzugriffe
+                </div>
+
+                <h2 id="home-actions-title"
+                    class="h5 mb-0">
+                    Direkt weiterarbeiten
+                </h2>
+            </div>
+        </div>
+
+        <div class="home-action-grid">
+            <a class="home-action home-action-primary"
+               href="projektpruefung">
+                <span class="home-action-title">
+                    Projekt prüfen
+                </span>
+
+                <span class="home-action-text">
+                    Neuen Projektstand bewusst erstellen
+                </span>
+            </a>
+
+            @if (MostRecentProject is not null)
+            {
+                <a class="home-action"
+                   href="@($"/projekte/{MostRecentProject.ProjectId}")">
+                    <span class="home-action-title">
+                        Letztes Projekt öffnen
+                    </span>
+
+                    <span class="home-action-text">
+                        @MostRecentProject.Name
+                    </span>
+                </a>
+            }
+
+            <a class="home-action"
+               href="dashboard">
+                <span class="home-action-title">
+                    Dashboard
+                </span>
+
+                <span class="home-action-text">
+                    Projektübergreifende Auswertungen
+                </span>
+            </a>
+
+            <a class="home-action"
+               href="kanban">
+                <span class="home-action-title">
+                    Kanban
+                </span>
+
+                <span class="home-action-text">
+                    Aufgabenbereich öffnen
+                </span>
+            </a>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public HomeProjectSummary? MostRecentProject { get; set; }
+}

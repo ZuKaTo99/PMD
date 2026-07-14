@@ -1,0 +1,84 @@
+@namespace PMD.App.Features.Home.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.Home
+
+<section class="card pmd-card home-widget h-100"
+         aria-labelledby="home-recent-projects-title">
+    <div class="card-body">
+        <div class="home-widget-heading">
+            <div>
+                <div class="home-widget-eyebrow">
+                    Projekte
+                </div>
+
+                <h2 id="home-recent-projects-title"
+                    class="h5 mb-0">
+                    Zuletzt geprüfte Projekte
+                </h2>
+            </div>
+
+            <span class="home-widget-count">
+                @Projects.Count
+            </span>
+        </div>
+
+        @if (Projects.Count == 0)
+        {
+            <div class="home-empty-state">
+                <strong>Noch kein Projekt gespeichert.</strong>
+                <span>
+                    Starte eine manuelle Projektprüfung, um dein erstes Projekt anzulegen.
+                </span>
+            </div>
+        }
+        else
+        {
+            <div class="home-project-list">
+                @foreach (HomeProjectSummary project in Projects)
+                {
+                    <a class="home-project-entry home-accent-@project.AccentColor"
+                       href="@($"/projekte/{project.ProjectId}")">
+                        <span class="home-project-marker"
+                              aria-hidden="true">
+                            @GetProjectMarker(project.Name)
+                        </span>
+
+                        <span class="home-project-content">
+                            <span class="home-project-name">
+                                @project.Name
+                            </span>
+
+                            <span class="home-project-meta">
+                                Zuletzt geprüft:
+                                @HomeDisplayFormatter.FormatDateTime(
+                                    project.LastScannedAt)
+                            </span>
+                        </span>
+
+                        <span class="home-entry-link-text">
+                            Öffnen
+                        </span>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<HomeProjectSummary> Projects { get; set; } =
+        Array.Empty<HomeProjectSummary>();
+
+    private static string GetProjectMarker(string projectName)
+    {
+        if (string.IsNullOrWhiteSpace(projectName))
+        {
+            return "P";
+        }
+
+        return projectName.Trim()[0]
+            .ToString()
+            .ToUpperInvariant();
+    }
+}

@@ -1,0 +1,52 @@
+@namespace PMD.App.Features.Home.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.Home
+
+<section class="card pmd-card home-widget home-summary-widget h-100"
+         aria-labelledby="home-summary-title">
+    <div class="card-body">
+        <div class="home-widget-heading">
+            <div>
+                <div class="home-widget-eyebrow">
+                    Projektübersicht
+                </div>
+
+                <h2 id="home-summary-title"
+                    class="h5 mb-0">
+                    Deine PMD-Projekte
+                </h2>
+            </div>
+        </div>
+
+        <div class="home-summary-metrics">
+            <div class="home-summary-metric">
+                <span class="home-summary-value">
+                    @Overview.ProjectCount
+                </span>
+
+                <span class="home-summary-label">
+                    @HomeDisplayFormatter.FormatProjectLabel(
+                        Overview.ProjectCount)
+                </span>
+            </div>
+
+            <div class="home-summary-metric">
+                <span class="home-summary-value home-summary-value-date">
+                    @(Overview.LatestCheckAt is null
+                        ? "–"
+                        : HomeDisplayFormatter.FormatDateTime(
+                            Overview.LatestCheckAt.Value))
+                </span>
+
+                <span class="home-summary-label">
+                    Letzte manuelle Prüfung
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public HomeOverview Overview { get; set; } = new();
+}
