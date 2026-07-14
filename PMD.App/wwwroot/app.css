@@ -401,3 +401,43 @@ code.pmd-truncated-path {
         flex: 1 1 auto;
     }
 }
+
+/* Pointer-based Home widget drag-and-drop */
+body.pmd-home-widget-drag-active,
+body.pmd-home-widget-drag-active * {
+    cursor: grabbing !important;
+}
+
+.pmd-home-widget-drag-ghost {
+    position: fixed;
+    z-index: 2147483000;
+    display: inline-flex;
+    align-items: center;
+    max-width: min(20rem, calc(100vw - 1rem));
+    gap: 0.55rem;
+    padding: 0.65rem 0.85rem;
+    overflow: hidden;
+    color: var(--bs-emphasis-color);
+    font-size: 0.8rem;
+    font-weight: 760;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.58);
+    border-radius: 0.8rem;
+    background: var(--pmd-surface);
+    box-shadow:
+        0 0 0 4px rgba(var(--bs-primary-rgb), 0.12),
+        0 16px 38px rgba(7, 23, 34, 0.24);
+    opacity: 0.96;
+}
+
+.pmd-home-widget-drag-ghost-grip {
+    flex: 0 0 auto;
+    color: var(--bs-primary);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.22rem;
+    line-height: 0.8;
+    transform: rotate(90deg);
+}

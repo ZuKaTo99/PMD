@@ -1,9 +1,12 @@
 @namespace PMD.App.Features.Home.Components
 @using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
 @using PMD.App.Application.Home
 @using PMD.App.Domain.Home
 @using System
 @using System.Linq
+@using System.Threading.Tasks
+@implements IAsyncDisposable
 
 <section class="home-widget-settings"
          aria-labelledby="home-widget-settings-title">
@@ -15,11 +18,11 @@
 
             <h2 id="home-widget-settings-title"
                 class="h5 mb-1">
-                Sichtbarkeit, Reihenfolge und Breite
+                Sichtbarkeit und Kartenformat
             </h2>
 
             <p class="text-muted small mb-0">
-                Deine Auswahl wird auf diesem Gerät dauerhaft gespeichert.
+                Halte einen Ziehgriff gedrückt und bewege die Karte an die gewünschte Position. Deine Auswahl wird dauerhaft gespeichert.
             </p>
         </div>
 
@@ -30,80 +33,80 @@
         </button>
     </div>
 
-    <div class="home-widget-settings-grid">
+    <div class="home-widget-settings-grid"
+         @ref="widgetSettingsGridElement">
         @foreach (HomeWidgetOption option in OrderedWidgetOptions)
         {
-            <div class="home-widget-setting-option">
-                <div class="home-widget-order-actions"
-                     aria-label="Reihenfolge für @option.Title">
-                    <button type="button"
-                            class="btn btn-sm btn-outline-secondary"
-                            title="Widget nach oben verschieben"
-                            aria-label="@option.Title nach oben verschieben"
-                            disabled="@(!WidgetPreferencesService.CanMoveEarlier(option.Id))"
-                            @onclick="() => MoveEarlier(option.Id)">
-                        ↑
-                    </button>
+            <div @key="option.Id"
+                 class="home-widget-setting-option"
+                 data-home-widget-id="@option.Id"
+                 data-home-widget-title="@option.Title">
+                <div class="home-widget-setting-header">
+                    <span class="home-widget-drag-handle"
+                          role="button"
+                          tabindex="0"
+                          data-home-widget-drag-handle="true"
+                          title="@($"{option.Title} ziehen und neu anordnen")"
+                          aria-label="@($"{option.Title} ziehen und neu anordnen")">
+                        <span class="home-widget-drag-grip"
+                              aria-hidden="true">
+                            ⋮⋮
+                        </span>
 
-                    <button type="button"
-                            class="btn btn-sm btn-outline-secondary"
-                            title="Widget nach unten verschieben"
-                            aria-label="@option.Title nach unten verschieben"
-                            disabled="@(!WidgetPreferencesService.CanMoveLater(option.Id))"
-                            @onclick="() => MoveLater(option.Id)">
-                        ↓
-                    </button>
+                        <span>Ziehen</span>
+                    </span>
+
+                    <label class="form-check form-switch m-0">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               aria-label="@($"Widget {option.Title} anzeigen")"
+                               checked="@WidgetPreferencesService.IsVisible(option.Id)"
+                               @onchange="eventArgs => SetVisibility(option.Id, eventArgs)" />
+                    </label>
                 </div>
 
-                <div class="home-widget-setting-content">
-                    <label class="home-widget-setting-toggle">
-                        <span class="home-widget-setting-copy">
-                            <span class="home-widget-setting-title">
-                                @option.Title
-                            </span>
+                <div class="home-widget-setting-copy">
+                    <span class="home-widget-setting-title">
+                        @option.Title
+                    </span>
 
-                            <span class="home-widget-setting-description">
-                                @option.Description
-                            </span>
-                        </span>
+                    <span class="home-widget-setting-description">
+                        @option.Description
+                    </span>
+                </div>
 
-                        <span class="form-check form-switch m-0">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   role="switch"
-                                   aria-label="@($"Widget {option.Title} anzeigen")"
-                                   checked="@WidgetPreferencesService.IsVisible(option.Id)"
-                                   @onchange="eventArgs => SetVisibility(option.Id, eventArgs)" />
-                        </span>
-                    </label>
+                <div class="home-widget-format-setting">
+                    <span class="home-widget-format-label">
+                        Kartenformat
+                    </span>
 
-                    <label class="home-widget-size-setting"
-                           for="@GetSizeSelectId(option.Id)">
-                        <span>
-                            Breite
-                        </span>
+                    <div class="home-widget-format-options"
+                         role="group"
+                         aria-label="Kartenformat für @option.Title">
+                        @foreach (HomeWidgetSize size in WidgetSizes)
+                        {
+                            <button type="button"
+                                    class="home-widget-format-option @GetSizeOptionClass(option.Id, size)"
+                                    aria-pressed="@IsSelectedSize(option.Id, size)"
+                                    title="@GetSizeDescription(size)"
+                                    @onclick="() => SetSize(option.Id, size)">
+                                <span class="home-widget-format-preview @GetSizePreviewClass(size)"
+                                      aria-hidden="true">
+                                </span>
 
-                        <select id="@GetSizeSelectId(option.Id)"
-                                class="form-select form-select-sm"
-                                value="@WidgetPreferencesService.GetSize(option.Id)"
-                                aria-label="Breite für @option.Title"
-                                @onchange="eventArgs => SetSize(option.Id, eventArgs)">
-                            @foreach (HomeWidgetSize size in WidgetSizes)
-                            {
-                                <option value="@size">
-                                    @GetSizeLabel(size)
-                                </option>
-                            }
-                        </select>
-                    </label>
+                                <span>@GetSizeLabel(size)</span>
+                            </button>
+                        }
+                    </div>
                 </div>
             </div>
         }
     </div>
 
     <div class="text-muted small mt-3">
-        Die Pfeile ändern die Reihenfolge innerhalb des jeweiligen Home-Bereichs.
-        Auf kleineren Fenstern werden Widgets unabhängig von der gewählten Breite automatisch untereinander angezeigt.
+        Du kannst die sichtbaren Widgets zusätzlich direkt auf der Home-Seite ziehen.
+        Auf kleineren Fenstern werden alle Karten automatisch untereinander dargestellt.
     </div>
 </section>
 
@@ -131,6 +134,10 @@
     private static readonly IReadOnlyList<HomeWidgetSize> WidgetSizes =
         Enum.GetValues<HomeWidgetSize>();
 
+    private ElementReference widgetSettingsGridElement;
+    private DotNetObjectReference<HomeWidgetSettingsPanel>? dragDropReference;
+    private bool isDisposed;
+
     [Inject]
     private IHomeWidgetPreferencesService WidgetPreferencesService
     {
@@ -138,11 +145,75 @@
         set;
     } = default!;
 
+    [Inject]
+    private IJSRuntime JavaScriptRuntime { get; set; } = default!;
+
     private IReadOnlyList<HomeWidgetOption> OrderedWidgetOptions =>
         WidgetPreferencesService
             .GetWidgetOrder()
             .Select(widgetId => WidgetOptions.First(option => option.Id == widgetId))
             .ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        dragDropReference ??= DotNetObjectReference.Create(this);
+
+        await JavaScriptRuntime.InvokeVoidAsync(
+            "pmdHomeWidgetDragDrop.initialize",
+            widgetSettingsGridElement,
+            dragDropReference,
+            new
+            {
+                itemSelector = ".home-widget-setting-option",
+                handleSelector = ".home-widget-drag-handle",
+                draggingClass = "is-dragging",
+                dropTargetClass = "is-drop-target"
+            });
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        isDisposed = true;
+
+        try
+        {
+            await JavaScriptRuntime.InvokeVoidAsync(
+                "pmdHomeWidgetDragDrop.dispose",
+                widgetSettingsGridElement);
+        }
+        catch (JSException)
+        {
+            // The WebView can already be unavailable while the panel is being disposed.
+        }
+        catch (InvalidOperationException)
+        {
+            // JavaScript interop is not available during every disposal phase.
+        }
+
+        dragDropReference?.Dispose();
+        dragDropReference = null;
+    }
+
+    [JSInvokable]
+    public async Task MoveWidgetFromJavaScript(
+        string sourceWidgetValue,
+        string targetWidgetValue)
+    {
+        if (TryParseWidgetId(sourceWidgetValue, out HomeWidgetId sourceWidgetId) &&
+            TryParseWidgetId(targetWidgetValue, out HomeWidgetId targetWidgetId))
+        {
+            WidgetPreferencesService.MoveTo(
+                sourceWidgetId,
+                targetWidgetId);
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
     private void SetVisibility(
         HomeWidgetId widgetId,
@@ -157,30 +228,11 @@
 
     private void SetSize(
         HomeWidgetId widgetId,
-        ChangeEventArgs eventArgs)
+        HomeWidgetSize size)
     {
-        if (eventArgs.Value is not string value ||
-            !Enum.TryParse(
-                value,
-                ignoreCase: true,
-                out HomeWidgetSize size))
-        {
-            return;
-        }
-
         WidgetPreferencesService.SetSize(
             widgetId,
             size);
-    }
-
-    private void MoveEarlier(HomeWidgetId widgetId)
-    {
-        WidgetPreferencesService.MoveEarlier(widgetId);
-    }
-
-    private void MoveLater(HomeWidgetId widgetId)
-    {
-        WidgetPreferencesService.MoveLater(widgetId);
     }
 
     private void ResetToDefaults()
@@ -188,21 +240,67 @@
         WidgetPreferencesService.ResetToDefaults();
     }
 
-    private static string GetSizeSelectId(HomeWidgetId widgetId)
+    private bool IsSelectedSize(
+        HomeWidgetId widgetId,
+        HomeWidgetSize size)
     {
-        return $"home-widget-size-{widgetId}";
+        return WidgetPreferencesService.GetSize(widgetId) == size;
+    }
+
+    private string GetSizeOptionClass(
+        HomeWidgetId widgetId,
+        HomeWidgetSize size)
+    {
+        return IsSelectedSize(widgetId, size)
+            ? "is-selected"
+            : string.Empty;
     }
 
     private static string GetSizeLabel(HomeWidgetSize size)
     {
         return size switch
         {
-            HomeWidgetSize.Compact => "Kompakt",
-            HomeWidgetSize.Standard => "Standard",
-            HomeWidgetSize.Wide => "Breit",
-            HomeWidgetSize.Full => "Volle Breite",
-            _ => "Standard"
+            HomeWidgetSize.Compact => "Mini-Karte",
+            HomeWidgetSize.Standard => "Karteikarte",
+            HomeWidgetSize.Wide => "Breite Karte",
+            HomeWidgetSize.Full => "Volle Zeile",
+            _ => "Karteikarte"
         };
+    }
+
+    private static string GetSizeDescription(HomeWidgetSize size)
+    {
+        return size switch
+        {
+            HomeWidgetSize.Compact => "Kleine Karte mit einem Drittel der verfügbaren Breite.",
+            HomeWidgetSize.Standard => "Klassische Karte mit der halben verfügbaren Breite.",
+            HomeWidgetSize.Wide => "Breite Karte mit zwei Dritteln der verfügbaren Breite.",
+            HomeWidgetSize.Full => "Karte über die gesamte verfügbare Zeile.",
+            _ => "Klassische Karte."
+        };
+    }
+
+    private static string GetSizePreviewClass(HomeWidgetSize size)
+    {
+        return size switch
+        {
+            HomeWidgetSize.Compact => "home-widget-format-preview-mini",
+            HomeWidgetSize.Standard => "home-widget-format-preview-card",
+            HomeWidgetSize.Wide => "home-widget-format-preview-wide",
+            HomeWidgetSize.Full => "home-widget-format-preview-full",
+            _ => "home-widget-format-preview-card"
+        };
+    }
+
+    private static bool TryParseWidgetId(
+        string value,
+        out HomeWidgetId widgetId)
+    {
+        return Enum.TryParse(
+                value,
+                ignoreCase: true,
+                out widgetId) &&
+            Enum.IsDefined(typeof(HomeWidgetId), widgetId);
     }
 
     private sealed record HomeWidgetOption(

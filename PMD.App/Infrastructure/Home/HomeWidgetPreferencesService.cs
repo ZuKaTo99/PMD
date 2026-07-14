@@ -67,16 +67,6 @@ public sealed class HomeWidgetPreferencesService
         return widgetOrder.ToList();
     }
 
-    public bool CanMoveEarlier(HomeWidgetId widgetId)
-    {
-        return FindSiblingIndex(widgetId, searchEarlier: true) >= 0;
-    }
-
-    public bool CanMoveLater(HomeWidgetId widgetId)
-    {
-        return FindSiblingIndex(widgetId, searchEarlier: false) >= 0;
-    }
-
     public void SetVisibility(
         HomeWidgetId widgetId,
         bool isVisible)
@@ -110,14 +100,27 @@ public sealed class HomeWidgetPreferencesService
         PreferencesChanged?.Invoke();
     }
 
-    public void MoveEarlier(HomeWidgetId widgetId)
+    public void MoveTo(
+        HomeWidgetId widgetId,
+        HomeWidgetId targetWidgetId)
     {
-        MoveWidget(widgetId, searchEarlier: true);
-    }
+        int currentIndex = widgetOrder.IndexOf(widgetId);
+        int targetIndex = widgetOrder.IndexOf(targetWidgetId);
 
-    public void MoveLater(HomeWidgetId widgetId)
-    {
-        MoveWidget(widgetId, searchEarlier: false);
+        if (currentIndex < 0 ||
+            targetIndex < 0 ||
+            currentIndex == targetIndex)
+        {
+            return;
+        }
+
+        widgetOrder.RemoveAt(currentIndex);
+        widgetOrder.Insert(
+            Math.Min(targetIndex, widgetOrder.Count),
+            widgetId);
+
+        SaveWidgetOrder();
+        PreferencesChanged?.Invoke();
     }
 
     public void ResetToDefaults()
@@ -147,51 +150,6 @@ public sealed class HomeWidgetPreferencesService
         Preferences.Default.Remove(WidgetOrderPreferenceKey);
         Preferences.Default.Remove(WidgetSizesPreferenceKey);
         PreferencesChanged?.Invoke();
-    }
-
-    private void MoveWidget(
-        HomeWidgetId widgetId,
-        bool searchEarlier)
-    {
-        int currentIndex = widgetOrder.IndexOf(widgetId);
-        int siblingIndex = FindSiblingIndex(widgetId, searchEarlier);
-
-        if (currentIndex < 0 || siblingIndex < 0)
-        {
-            return;
-        }
-
-        (widgetOrder[currentIndex], widgetOrder[siblingIndex]) =
-            (widgetOrder[siblingIndex], widgetOrder[currentIndex]);
-
-        SaveWidgetOrder();
-        PreferencesChanged?.Invoke();
-    }
-
-    private int FindSiblingIndex(
-        HomeWidgetId widgetId,
-        bool searchEarlier)
-    {
-        int currentIndex = widgetOrder.IndexOf(widgetId);
-
-        if (currentIndex < 0)
-        {
-            return -1;
-        }
-
-        int direction = searchEarlier ? -1 : 1;
-
-        for (int index = currentIndex + direction;
-             index >= 0 && index < widgetOrder.Count;
-             index += direction)
-        {
-            if (IsSameLayoutSection(widgetId, widgetOrder[index]))
-            {
-                return index;
-            }
-        }
-
-        return -1;
     }
 
     private void SaveHiddenWidgets()
@@ -340,17 +298,4 @@ public sealed class HomeWidgetPreferencesService
                 : HomeWidgetSize.Standard;
     }
 
-    private static bool IsSameLayoutSection(
-        HomeWidgetId first,
-        HomeWidgetId second)
-    {
-        return IsTopWidget(first) == IsTopWidget(second);
-    }
-
-    private static bool IsTopWidget(HomeWidgetId widgetId)
-    {
-        return widgetId is
-            HomeWidgetId.ProjectOverview or
-            HomeWidgetId.QuickActions;
-    }
 }

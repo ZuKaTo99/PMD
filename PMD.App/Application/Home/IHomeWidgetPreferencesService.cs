@@ -14,10 +14,6 @@ public interface IHomeWidgetPreferencesService
 
     IReadOnlyList<HomeWidgetId> GetWidgetOrder();
 
-    bool CanMoveEarlier(HomeWidgetId widgetId);
-
-    bool CanMoveLater(HomeWidgetId widgetId);
-
     void SetVisibility(
         HomeWidgetId widgetId,
         bool isVisible);
@@ -26,9 +22,9 @@ public interface IHomeWidgetPreferencesService
         HomeWidgetId widgetId,
         HomeWidgetSize size);
 
-    void MoveEarlier(HomeWidgetId widgetId);
-
-    void MoveLater(HomeWidgetId widgetId);
+    void MoveTo(
+        HomeWidgetId widgetId,
+        HomeWidgetId targetWidgetId);
 
     void ResetToDefaults();
 }

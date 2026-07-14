@@ -25,6 +25,100 @@
     min-width: 0;
 }
 
+.home-widget-layout {
+    position: relative;
+    transition:
+        opacity 0.16s ease,
+        transform 0.16s ease;
+}
+
+.home-widget-is-editing,
+.home-widget-is-drop-target {
+    padding-top: 2.4rem;
+    border: 1px dashed rgba(var(--bs-primary-rgb), 0.38);
+    border-radius: 1.2rem;
+}
+
+.home-widget-is-dragging {
+    padding-top: 2.4rem;
+    opacity: 0.46;
+    transform: scale(0.985);
+}
+
+.home-widget-is-drop-target {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb), 0.12);
+}
+
+.home-widget-edit-toolbar {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.45rem;
+    left: 0.45rem;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+}
+
+.home-widget-direct-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    color: var(--bs-primary);
+    font-size: 0.72rem;
+    font-weight: 760;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.36);
+    border-radius: 0.65rem;
+    background: var(--pmd-surface);
+    box-shadow: 0 5px 14px rgba(24, 48, 64, 0.08);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+}
+
+.home-widget-direct-drag-handle:hover,
+.home-widget-direct-drag-handle:focus-visible {
+    border-color: var(--bs-primary);
+    outline: none;
+}
+
+.home-widget-direct-drag-handle:active {
+    cursor: grabbing;
+}
+
+.home-widget-direct-drag-grip {
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.22rem;
+    line-height: 0.8;
+    transform: rotate(90deg);
+}
+
+.home-widget-format-name {
+    overflow: hidden;
+    color: var(--bs-secondary-color);
+    font-size: 0.7rem;
+    font-weight: 720;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-widget-edit-note {
+    padding: 0.8rem 1rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+    border: 1px dashed rgba(var(--bs-primary-rgb), 0.38);
+    border-radius: 0.9rem;
+    background: rgba(var(--bs-primary-rgb), 0.06);
+}
+
+.home-widget-edit-note strong {
+    color: var(--bs-emphasis-color);
+}
+
 .home-widget-layout ::deep .home-widget {
     width: 100%;
 }

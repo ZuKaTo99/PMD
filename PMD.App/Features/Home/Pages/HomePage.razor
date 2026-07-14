@@ -43,14 +43,46 @@
              class="mb-3">
             <HomeWidgetSettingsPanel />
         </div>
+
+        <div class="home-widget-edit-note mb-3">
+            <strong>Direkt anordnen:</strong>
+            Halte den Ziehgriff gedrückt und bewege die Karte auf die gewünschte Position.
+        </div>
     }
 
-    @if (HasVisibleTopWidgets)
+    @if (HasVisibleWidgets)
     {
-        <div class="home-widget-grid mb-3">
-            @foreach (HomeWidgetId widgetId in VisibleTopWidgets)
+        <div class="home-widget-grid mb-3"
+             @ref="homeWidgetGridElement">
+            @foreach (HomeWidgetId widgetId in VisibleWidgets)
             {
-                <div class="home-widget-layout @GetWidgetSizeClass(widgetId)">
+                <div @key="widgetId"
+                     class="home-widget-layout @GetWidgetSizeClass(widgetId) @(AreWidgetSettingsOpen ? "home-widget-is-editing" : string.Empty)"
+                     data-home-widget-id="@widgetId"
+                     data-home-widget-title="@GetWidgetTitle(widgetId)">
+                    @if (AreWidgetSettingsOpen)
+                    {
+                        <div class="home-widget-edit-toolbar">
+                            <span class="home-widget-direct-drag-handle"
+                                  role="button"
+                                  tabindex="0"
+                                  data-home-widget-drag-handle="true"
+                                  title="Widget ziehen und neu anordnen"
+                                  aria-label="Widget ziehen und neu anordnen">
+                                <span class="home-widget-direct-drag-grip"
+                                      aria-hidden="true">
+                                    ⋮⋮
+                                </span>
+
+                                <span>Ziehen</span>
+                            </span>
+
+                            <span class="home-widget-format-name">
+                                @GetWidgetSizeLabel(widgetId)
+                            </span>
+                        </div>
+                    }
+
                     @switch (widgetId)
                     {
                         case HomeWidgetId.ProjectOverview:
@@ -60,20 +92,7 @@
                         case HomeWidgetId.QuickActions:
                             <HomeQuickActionsWidget MostRecentProject="@Overview.MostRecentProject" />
                             break;
-                    }
-                </div>
-            }
-        </div>
-    }
 
-    @if (HasVisibleRecentWidgets)
-    {
-        <div class="home-widget-grid mb-3">
-            @foreach (HomeWidgetId widgetId in VisibleRecentWidgets)
-            {
-                <div class="home-widget-layout @GetWidgetSizeClass(widgetId)">
-                    @switch (widgetId)
-                    {
                         case HomeWidgetId.RecentProjects:
                             <HomeRecentProjectsWidget Projects="@Overview.RecentProjects" />
                             break;
