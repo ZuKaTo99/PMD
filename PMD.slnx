@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="PMD.App/PMD.App.csproj" />
+  <Project Path="PMD.App.Tests/PMD.App.Tests.csproj" Id="32d01dec-4574-4006-87a1-fecfd7a7399d" />
 </Solution>
