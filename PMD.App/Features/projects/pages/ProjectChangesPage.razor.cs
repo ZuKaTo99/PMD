@@ -59,9 +59,12 @@ public partial class ProjectChangesPage
             return;
         }
 
-        ProjectStates = ProjectStateMemoryStore.GetByProjectId(
-            ProjectId,
-            LoadedProjectStateCount);
+        ProjectStates = ProjectStateMemoryStore
+            .GetByProjectId(
+                ProjectId,
+                LoadedProjectStateCount)
+            .Select(ProjectStateMemoryStore.LoadFiles)
+            .ToList();
 
         if (PreviousProjectState is not null && LatestProjectState is not null)
         {

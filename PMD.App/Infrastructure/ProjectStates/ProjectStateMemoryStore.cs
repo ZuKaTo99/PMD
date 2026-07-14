@@ -13,7 +13,8 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
     private readonly IProjectStateRepository projectStateRepository;
     private readonly List<ProjectState> projectStates;
 
-    public ProjectStateMemoryStore(IProjectStateRepository projectStateRepository)
+    public ProjectStateMemoryStore(
+        IProjectStateRepository projectStateRepository)
     {
         this.projectStateRepository = projectStateRepository;
 
@@ -24,7 +25,8 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
 
     public event Action? ProjectStatesChanged;
 
-    public IReadOnlyList<ProjectState> ProjectStates => projectStates;
+    public IReadOnlyList<ProjectState> ProjectStates =>
+        projectStates;
 
     public ProjectState? GetLatestByProjectId(Guid projectId)
     {
@@ -39,27 +41,50 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
         return loadedProjectState;
     }
 
-    public IReadOnlyList<ProjectState> GetByProjectId(Guid projectId, int maxCount)
+    public IReadOnlyList<ProjectState> GetByProjectId(
+        Guid projectId,
+        int maxCount)
     {
         IReadOnlyList<ProjectState> loadedProjectStates =
-            projectStateRepository.GetByProjectId(projectId, maxCount);
+            projectStateRepository.GetByProjectId(
+                projectId,
+                maxCount);
 
         MergeIntoMemory(loadedProjectStates);
 
         return loadedProjectStates;
     }
 
-    public IReadOnlyList<ProjectStateFile> GetFilesByProjectStateId(Guid projectStateId)
+    public IReadOnlyList<ProjectStateFile>
+        GetFilesByProjectStateId(Guid projectStateId)
     {
-        return projectStateRepository.GetFilesByProjectStateId(projectStateId);
+        return projectStateRepository
+            .GetFilesByProjectStateId(projectStateId);
+    }
+
+    public ProjectState LoadFiles(ProjectState projectState)
+    {
+        ArgumentNullException.ThrowIfNull(projectState);
+
+        if (projectState.Files.Count == projectState.FileCount)
+        {
+            return projectState;
+        }
+
+        IReadOnlyList<ProjectStateFile> files =
+            projectStateRepository.GetFilesByProjectStateId(
+                projectState.Id);
+
+        return CopyWithFiles(projectState, files);
     }
 
     public bool Remember(ProjectState projectState)
     {
         ArgumentNullException.ThrowIfNull(projectState);
 
-        bool alreadyRemembered = projectStates
-            .Any(existingProjectState => existingProjectState.Id == projectState.Id);
+        bool alreadyRemembered = projectStates.Any(
+            existingProjectState =>
+                existingProjectState.Id == projectState.Id);
 
         if (alreadyRemembered)
         {
@@ -69,21 +94,21 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
         projectStateRepository.Save(projectState);
         projectStates.Insert(0, projectState);
 
-        if (projectStates.Count > MaxRememberedProjectStates)
-        {
-            projectStates.RemoveRange(
-                MaxRememberedProjectStates,
-                projectStates.Count - MaxRememberedProjectStates);
-        }
+        TrimRememberedProjectStates();
 
         ProjectStatesChanged?.Invoke();
+
         return true;
     }
 
     public void RemoveByProjectId(Guid projectId)
     {
         projectStateRepository.DeleteByProjectId(projectId);
-        projectStates.RemoveAll(projectState => projectState.ProjectId == projectId);
+
+        projectStates.RemoveAll(
+            projectState =>
+                projectState.ProjectId == projectId);
+
         ProjectStatesChanged?.Invoke();
     }
 
@@ -91,15 +116,20 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
     {
         projectStateRepository.DeleteAll();
         projectStates.Clear();
+
         ProjectStatesChanged?.Invoke();
     }
 
-    private void MergeIntoMemory(IReadOnlyList<ProjectState> loadedProjectStates)
+    private void MergeIntoMemory(
+        IReadOnlyList<ProjectState> loadedProjectStates)
     {
-        foreach (ProjectState loadedProjectState in loadedProjectStates)
+        foreach (ProjectState loadedProjectState
+                 in loadedProjectStates)
         {
-            bool alreadyRemembered = projectStates
-                .Any(existingProjectState => existingProjectState.Id == loadedProjectState.Id);
+            bool alreadyRemembered = projectStates.Any(
+                existingProjectState =>
+                    existingProjectState.Id ==
+                    loadedProjectState.Id);
 
             if (!alreadyRemembered)
             {
@@ -107,14 +137,47 @@ public sealed class ProjectStateMemoryStore : IProjectStateMemoryStore
             }
         }
 
-        projectStates.Sort((first, second) =>
-            second.ScannedAt.CompareTo(first.ScannedAt));
+        projectStates.Sort(
+            (first, second) =>
+                second.ScannedAt.CompareTo(first.ScannedAt));
 
-        if (projectStates.Count > MaxRememberedProjectStates)
+        TrimRememberedProjectStates();
+    }
+
+    private void TrimRememberedProjectStates()
+    {
+        if (projectStates.Count <= MaxRememberedProjectStates)
         {
-            projectStates.RemoveRange(
-                MaxRememberedProjectStates,
-                projectStates.Count - MaxRememberedProjectStates);
+            return;
         }
+
+        projectStates.RemoveRange(
+            MaxRememberedProjectStates,
+            projectStates.Count - MaxRememberedProjectStates);
+    }
+
+    private static ProjectState CopyWithFiles(
+        ProjectState projectState,
+        IReadOnlyList<ProjectStateFile> files)
+    {
+        return new ProjectState
+        {
+            Id = projectState.Id,
+            ProjectId = projectState.ProjectId,
+            ProjectName = projectState.ProjectName,
+            RootPath = projectState.RootPath,
+            CreatedAt = projectState.CreatedAt,
+            ScannedAt = projectState.ScannedAt,
+            ScanDuration = projectState.ScanDuration,
+            FileCount = projectState.FileCount,
+            ScannedFolderCount =
+                projectState.ScannedFolderCount,
+            IgnoredFolderCount =
+                projectState.IgnoredFolderCount,
+            WarningCount = projectState.WarningCount,
+            TotalSizeInBytes =
+                projectState.TotalSizeInBytes,
+            Files = files.ToList()
+        };
     }
 }

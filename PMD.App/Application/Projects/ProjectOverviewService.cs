@@ -45,13 +45,21 @@ public sealed class ProjectOverviewService : IProjectOverviewService
             return null;
         }
 
-        IReadOnlyList<ProjectState> projectStates = GetProjectStates(project);
-        ProjectState? latestProjectState = projectStates.FirstOrDefault();
-        ProjectState? previousProjectState = projectStates.Skip(1).FirstOrDefault();
+        List<ProjectState> projectStates = GetProjectStates(project)
+            .ToList();
+
+        LoadRequiredProjectStateFiles(projectStates);
+
+        ProjectState? latestProjectState =
+            projectStates.FirstOrDefault();
+
+        ProjectState? previousProjectState =
+            projectStates.Skip(1).FirstOrDefault();
 
         ProjectStateComparisonResult? changesSinceLastCheck = null;
 
-        if (latestProjectState is not null && previousProjectState is not null)
+        if (latestProjectState is not null &&
+            previousProjectState is not null)
         {
             changesSinceLastCheck = ProjectStateComparer.Compare(
                 previousProjectState,
@@ -62,9 +70,27 @@ public sealed class ProjectOverviewService : IProjectOverviewService
         {
             Project = project,
             ProjectStates = projectStates,
-            ContentSummary = CreateContentSummary(latestProjectState),
+            ContentSummary = CreateContentSummary(
+                latestProjectState),
             ChangesSinceLastCheck = changesSinceLastCheck
         };
+    }
+
+    private void LoadRequiredProjectStateFiles(
+    List<ProjectState> projectStates)
+    {
+        int projectStatesToLoad = Math.Min(
+            2,
+            projectStates.Count);
+
+        for (int index = 0;
+             index < projectStatesToLoad;
+             index++)
+        {
+            projectStates[index] =
+                projectStateStore.LoadFiles(
+                    projectStates[index]);
+        }
     }
 
     private IReadOnlyList<ProjectState> GetProjectStates(Project project)

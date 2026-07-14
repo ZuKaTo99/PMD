@@ -12,9 +12,14 @@ public interface IProjectStateMemoryStore
 
     ProjectState? GetLatestByProjectId(Guid projectId);
 
-    IReadOnlyList<ProjectState> GetByProjectId(Guid projectId, int maxCount);
+    IReadOnlyList<ProjectState> GetByProjectId(
+        Guid projectId,
+        int maxCount);
 
-    IReadOnlyList<ProjectStateFile> GetFilesByProjectStateId(Guid projectStateId);
+    IReadOnlyList<ProjectStateFile> GetFilesByProjectStateId(
+        Guid projectStateId);
+
+    ProjectState LoadFiles(ProjectState projectState);
 
     bool Remember(ProjectState projectState);
 
