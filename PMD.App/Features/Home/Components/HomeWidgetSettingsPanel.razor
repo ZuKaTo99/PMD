@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Application.Home
 @using PMD.App.Domain.Home
+@using System
 @using System.Linq
 
 <section class="home-widget-settings"
@@ -14,11 +15,11 @@
 
             <h2 id="home-widget-settings-title"
                 class="h5 mb-1">
-                Sichtbarkeit und Reihenfolge
+                Sichtbarkeit, Reihenfolge und Breite
             </h2>
 
             <p class="text-muted small mb-0">
-                Auswahl und Position werden auf diesem Gerät dauerhaft gespeichert.
+                Deine Auswahl wird auf diesem Gerät dauerhaft gespeichert.
             </p>
         </div>
 
@@ -54,32 +55,55 @@
                     </button>
                 </div>
 
-                <label class="home-widget-setting-toggle">
-                    <span class="home-widget-setting-copy">
-                        <span class="home-widget-setting-title">
-                            @option.Title
+                <div class="home-widget-setting-content">
+                    <label class="home-widget-setting-toggle">
+                        <span class="home-widget-setting-copy">
+                            <span class="home-widget-setting-title">
+                                @option.Title
+                            </span>
+
+                            <span class="home-widget-setting-description">
+                                @option.Description
+                            </span>
                         </span>
 
-                        <span class="home-widget-setting-description">
-                            @option.Description
+                        <span class="form-check form-switch m-0">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   role="switch"
+                                   aria-label="@($"Widget {option.Title} anzeigen")"
+                                   checked="@WidgetPreferencesService.IsVisible(option.Id)"
+                                   @onchange="eventArgs => SetVisibility(option.Id, eventArgs)" />
                         </span>
-                    </span>
+                    </label>
 
-                    <span class="form-check form-switch m-0">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               role="switch"
-                               aria-label="@($"Widget {option.Title} anzeigen")"
-                               checked="@WidgetPreferencesService.IsVisible(option.Id)"
-                               @onchange="eventArgs => SetVisibility(option.Id, eventArgs)" />
-                    </span>
-                </label>
+                    <label class="home-widget-size-setting"
+                           for="@GetSizeSelectId(option.Id)">
+                        <span>
+                            Breite
+                        </span>
+
+                        <select id="@GetSizeSelectId(option.Id)"
+                                class="form-select form-select-sm"
+                                value="@WidgetPreferencesService.GetSize(option.Id)"
+                                aria-label="Breite für @option.Title"
+                                @onchange="eventArgs => SetSize(option.Id, eventArgs)">
+                            @foreach (HomeWidgetSize size in WidgetSizes)
+                            {
+                                <option value="@size">
+                                    @GetSizeLabel(size)
+                                </option>
+                            }
+                        </select>
+                    </label>
+                </div>
             </div>
         }
     </div>
 
     <div class="text-muted small mt-3">
         Die Pfeile ändern die Reihenfolge innerhalb des jeweiligen Home-Bereichs.
+        Auf kleineren Fenstern werden Widgets unabhängig von der gewählten Breite automatisch untereinander angezeigt.
     </div>
 </section>
 
@@ -103,6 +127,9 @@
             "Letzte manuelle Prüfungen",
             "Zeigt die neuesten gespeicherten Projektstände.")
     ];
+
+    private static readonly IReadOnlyList<HomeWidgetSize> WidgetSizes =
+        Enum.GetValues<HomeWidgetSize>();
 
     [Inject]
     private IHomeWidgetPreferencesService WidgetPreferencesService
@@ -128,6 +155,24 @@
             isVisible);
     }
 
+    private void SetSize(
+        HomeWidgetId widgetId,
+        ChangeEventArgs eventArgs)
+    {
+        if (eventArgs.Value is not string value ||
+            !Enum.TryParse(
+                value,
+                ignoreCase: true,
+                out HomeWidgetSize size))
+        {
+            return;
+        }
+
+        WidgetPreferencesService.SetSize(
+            widgetId,
+            size);
+    }
+
     private void MoveEarlier(HomeWidgetId widgetId)
     {
         WidgetPreferencesService.MoveEarlier(widgetId);
@@ -141,6 +186,23 @@
     private void ResetToDefaults()
     {
         WidgetPreferencesService.ResetToDefaults();
+    }
+
+    private static string GetSizeSelectId(HomeWidgetId widgetId)
+    {
+        return $"home-widget-size-{widgetId}";
+    }
+
+    private static string GetSizeLabel(HomeWidgetSize size)
+    {
+        return size switch
+        {
+            HomeWidgetSize.Compact => "Kompakt",
+            HomeWidgetSize.Standard => "Standard",
+            HomeWidgetSize.Wide => "Breit",
+            HomeWidgetSize.Full => "Volle Breite",
+            _ => "Standard"
+        };
     }
 
     private sealed record HomeWidgetOption(

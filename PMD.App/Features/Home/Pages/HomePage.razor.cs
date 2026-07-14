@@ -71,36 +71,16 @@ public partial class HomePage : IDisposable
         return HomeWidgetPreferencesService.IsVisible(widgetId);
     }
 
-    protected string GetTopWidgetColumnClass(HomeWidgetId widgetId)
+    protected string GetWidgetSizeClass(HomeWidgetId widgetId)
     {
-        HomeWidgetId companion = widgetId == HomeWidgetId.ProjectOverview
-            ? HomeWidgetId.QuickActions
-            : HomeWidgetId.ProjectOverview;
-
-        if (!IsWidgetVisible(companion))
+        return HomeWidgetPreferencesService.GetSize(widgetId) switch
         {
-            return "col-12";
-        }
-
-        return widgetId == HomeWidgetId.ProjectOverview
-            ? "col-12 col-xl-4"
-            : "col-12 col-xl-8";
-    }
-
-    protected string GetRecentWidgetColumnClass(HomeWidgetId widgetId)
-    {
-        HomeWidgetId companion = widgetId == HomeWidgetId.RecentProjects
-            ? HomeWidgetId.RecentChecks
-            : HomeWidgetId.RecentProjects;
-
-        if (!IsWidgetVisible(companion))
-        {
-            return "col-12";
-        }
-
-        return widgetId == HomeWidgetId.RecentProjects
-            ? "col-12 col-xxl-7"
-            : "col-12 col-xxl-5";
+            HomeWidgetSize.Compact => "home-widget-size-compact",
+            HomeWidgetSize.Standard => "home-widget-size-standard",
+            HomeWidgetSize.Wide => "home-widget-size-wide",
+            HomeWidgetSize.Full => "home-widget-size-full",
+            _ => "home-widget-size-standard"
+        };
     }
 
     protected void ToggleWidgetSettings()

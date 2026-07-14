@@ -52,6 +52,12 @@
     line-height: 1;
 }
 
+.home-widget-setting-content {
+    display: grid;
+    min-width: 0;
+    gap: 0.7rem;
+}
+
 .home-widget-setting-toggle {
     display: flex;
     align-items: center;
@@ -86,6 +92,20 @@
     cursor: pointer;
 }
 
+.home-widget-size-setting {
+    display: grid;
+    grid-template-columns: auto minmax(8.5rem, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.home-widget-size-setting .form-select {
+    min-width: 0;
+}
+
 [data-bs-theme="dark"] .home-widget-settings {
     box-shadow: 0 14px 34px rgba(3, 10, 15, 0.18);
 }
@@ -115,5 +135,9 @@
 
     .home-widget-order-actions .btn {
         width: 100%;
+    }
+
+    .home-widget-size-setting {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

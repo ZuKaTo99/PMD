@@ -47,10 +47,10 @@
 
     @if (HasVisibleTopWidgets)
     {
-        <div class="row g-3 mb-3">
+        <div class="home-widget-grid mb-3">
             @foreach (HomeWidgetId widgetId in VisibleTopWidgets)
             {
-                <div class="@GetTopWidgetColumnClass(widgetId)">
+                <div class="home-widget-layout @GetWidgetSizeClass(widgetId)">
                     @switch (widgetId)
                     {
                         case HomeWidgetId.ProjectOverview:
@@ -68,10 +68,10 @@
 
     @if (HasVisibleRecentWidgets)
     {
-        <div class="row g-3 mb-3">
+        <div class="home-widget-grid mb-3">
             @foreach (HomeWidgetId widgetId in VisibleRecentWidgets)
             {
-                <div class="@GetRecentWidgetColumnClass(widgetId)">
+                <div class="home-widget-layout @GetWidgetSizeClass(widgetId)">
                     @switch (widgetId)
                     {
                         case HomeWidgetId.RecentProjects:
