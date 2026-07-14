@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace PMD.App.Features.Scanner.Pages;
 
-public partial class ProjectScannerPage
+public partial class ProjectScannerPage : IDisposable
 {
     [Inject]
     private IProjectFolderScanner ProjectFolderScanner { get; set; } = default!;
@@ -28,8 +28,23 @@ public partial class ProjectScannerPage
     private string folderPath = string.Empty;
     private string? errorMessage;
     private string? infoMessage;
+    private string scanStatusText = string.Empty;
+
     private ProjectFolderScanResult? scanResult;
+    private ProjectFolderScanProgress? scanProgress;
     private Project? currentProject;
+
+    private CancellationTokenSource? scanCancellationTokenSource;
+
+    private bool isScanOperationActive;
+    private bool isSavingProjectState;
+    private bool isCancellationRequested;
+
+    private bool CanCancelScan =>
+        isScanOperationActive &&
+        !isSavingProjectState &&
+        !isCancellationRequested &&
+        scanCancellationTokenSource is not null;
 
     private void ClearMessages()
     {
@@ -57,6 +72,11 @@ public partial class ProjectScannerPage
 
     private async Task PickFolderAsync()
     {
+        if (isScanOperationActive)
+        {
+            return;
+        }
+
         ClearMessages();
         ClearScanData();
 
@@ -71,17 +91,24 @@ public partial class ProjectScannerPage
             }
             else if (result.Exception is not null)
             {
-                ShowErrorMessage($"Der Ordner konnte nicht ausgewählt werden: {result.Exception.Message}");
+                ShowErrorMessage(
+                    $"Der Ordner konnte nicht ausgewählt werden: {result.Exception.Message}");
             }
         }
         catch (Exception ex)
         {
-            ShowErrorMessage($"Der Ordner konnte nicht ausgewählt werden: {ex.Message}");
+            ShowErrorMessage(
+                $"Der Ordner konnte nicht ausgewählt werden: {ex.Message}");
         }
     }
 
-    private void ScanProjectFolder()
+    private async Task ScanProjectFolderAsync()
     {
+        if (isScanOperationActive)
+        {
+            return;
+        }
+
         ClearMessages();
         ClearScanData();
 
@@ -89,37 +116,136 @@ public partial class ProjectScannerPage
 
         if (string.IsNullOrWhiteSpace(folderPath))
         {
-            ShowErrorMessage("Bitte geben Sie zuerst einen Projektordner an.");
+            ShowErrorMessage(
+                "Bitte geben Sie zuerst einen Projektordner an.");
+
             return;
         }
 
         if (!Directory.Exists(folderPath))
         {
-            ShowErrorMessage("Der angegebene Projektordner wurde nicht gefunden.");
+            ShowErrorMessage(
+                "Der angegebene Projektordner wurde nicht gefunden.");
+
             return;
         }
 
+        using var cancellationTokenSource = new CancellationTokenSource();
+
+        scanCancellationTokenSource = cancellationTokenSource;
+        isScanOperationActive = true;
+        isSavingProjectState = false;
+        isCancellationRequested = false;
+        scanProgress = null;
+        scanStatusText = "Projekt wird geprüft";
+
+        var progress = new Progress<ProjectFolderScanProgress>(
+            OnScanProgressChanged);
+
         try
         {
-            scanResult = ProjectFolderScanner.ScanFolder(folderPath);
+            ProjectFolderScanResult completedScanResult =
+                await ProjectFolderScanner.ScanFolderAsync(
+                    folderPath,
+                    progress,
+                    cancellationTokenSource.Token);
+
+            cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+            scanResult = completedScanResult;
+            isSavingProjectState = true;
+            scanStatusText = "Projektstand wird gespeichert";
+
+            await InvokeAsync(StateHasChanged);
+            await Task.Yield();
 
             currentProject = ProjectMemoryStore.RememberScannedProject(
                 scanResult.ProjectName,
                 scanResult.RootPath,
                 scanResult.ScannedAt);
 
-            ProjectState projectState = ProjectStateBuilder.CreateFromScanResult(
-                currentProject.Name,
-                scanResult,
-                currentProject.Id);
+            ProjectState projectState =
+                ProjectStateBuilder.CreateFromScanResult(
+                    currentProject.Name,
+                    scanResult,
+                    currentProject.Id);
 
             ProjectStateMemoryStore.Remember(projectState);
 
-            ShowInfoMessage("Projektprüfung abgeschlossen. Das Projekt wurde aufgenommen und der Verlauf wurde aktualisiert.");
+            ShowInfoMessage(
+                "Projektprüfung abgeschlossen. Das Projekt wurde aufgenommen und der Verlauf wurde aktualisiert.");
+        }
+        catch (OperationCanceledException)
+        {
+            ClearScanData();
+
+            ShowInfoMessage(
+                "Die Projektprüfung wurde abgebrochen. Es wurde kein neuer Projektstand gespeichert.");
         }
         catch (Exception ex)
         {
-            ShowErrorMessage($"Die Projektprüfung konnte nicht abgeschlossen werden: {ex.Message}");
+            ClearScanData();
+
+            ShowErrorMessage(
+                $"Die Projektprüfung konnte nicht abgeschlossen werden: {ex.Message}");
         }
+        finally
+        {
+            if (ReferenceEquals(
+                    scanCancellationTokenSource,
+                    cancellationTokenSource))
+            {
+                scanCancellationTokenSource = null;
+            }
+
+            isScanOperationActive = false;
+            isSavingProjectState = false;
+            isCancellationRequested = false;
+            scanProgress = null;
+            scanStatusText = string.Empty;
+        }
+    }
+
+    private void OnScanProgressChanged(
+        ProjectFolderScanProgress progress)
+    {
+        scanProgress = progress;
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void CancelScan()
+    {
+        if (!CanCancelScan)
+        {
+            return;
+        }
+
+        CancellationTokenSource? cancellationTokenSource =
+            scanCancellationTokenSource;
+
+        if (cancellationTokenSource is null)
+        {
+            return;
+        }
+
+        isCancellationRequested = true;
+        scanStatusText = "Projektprüfung wird abgebrochen";
+
+        cancellationTokenSource.Cancel();
+    }
+
+    public void Dispose()
+    {
+        CancellationTokenSource? cancellationTokenSource =
+            scanCancellationTokenSource;
+
+        if (cancellationTokenSource is null ||
+            cancellationTokenSource.IsCancellationRequested)
+        {
+            return;
+        }
+
+        cancellationTokenSource.Cancel();
     }
 }

@@ -4,13 +4,16 @@ using PMD.App.Application.Projects;
 using PMD.App.Application.Scanner;
 using PMD.App.Domain.ProjectStates;
 using PMD.App.Domain.Projects;
+using PMD.App.Domain.Scanner;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PMD.App.Features.Projects.Pages;
 
-public partial class ProjectDetailPage
+public partial class ProjectDetailPage : IDisposable
 {
     [Inject]
     private IProjectMemoryStore ProjectMemoryStore { get; set; } = default!;
@@ -37,9 +40,11 @@ public partial class ProjectDetailPage
     protected IReadOnlyList<ProjectState> CurrentProjectStates =>
         CurrentOverview?.ProjectStates ?? Array.Empty<ProjectState>();
 
-    protected ProjectState? LatestProjectState => CurrentOverview?.LatestProjectState;
+    protected ProjectState? LatestProjectState =>
+        CurrentOverview?.LatestProjectState;
 
-    protected ProjectState? PreviousProjectState => CurrentOverview?.PreviousProjectState;
+    protected ProjectState? PreviousProjectState =>
+        CurrentOverview?.PreviousProjectState;
 
     protected ProjectStateComparisonResult? ChangesSinceLastCheck =>
         CurrentOverview?.ChangesSinceLastCheck;
@@ -48,15 +53,37 @@ public partial class ProjectDetailPage
 
     protected string? ErrorMessage { get; private set; }
 
+    private CancellationTokenSource? scanCancellationTokenSource;
+
+    private ProjectFolderScanProgress? scanProgress;
+
+    private string scanStatusText = string.Empty;
+
+    private bool isScanOperationActive;
+
+    private bool isSavingProjectState;
+
+    private bool isCancellationRequested;
+
+    private bool CanCancelScan =>
+        isScanOperationActive &&
+        !isSavingProjectState &&
+        !isCancellationRequested &&
+        scanCancellationTokenSource is not null;
+
     protected override void OnParametersSet()
     {
         LoadProjectData();
     }
 
-    protected void ScanCurrentProject()
+    private async Task ScanCurrentProjectAsync()
     {
-        InfoMessage = null;
-        ErrorMessage = null;
+        if (isScanOperationActive)
+        {
+            return;
+        }
+
+        ClearMessages();
 
         Project? project = CurrentProject;
 
@@ -72,36 +99,117 @@ public partial class ProjectDetailPage
             return;
         }
 
+        using var cancellationTokenSource = new CancellationTokenSource();
+
+        scanCancellationTokenSource = cancellationTokenSource;
+        isScanOperationActive = true;
+        isSavingProjectState = false;
+        isCancellationRequested = false;
+        scanProgress = null;
+        scanStatusText = "Projekt wird erneut geprüft";
+
+        var progress = new Progress<ProjectFolderScanProgress>(
+            OnScanProgressChanged);
+
         try
         {
-            var scanResult = ProjectFolderScanner.ScanFolder(project.RootPath);
+            ProjectFolderScanResult scanResult =
+                await ProjectFolderScanner.ScanFolderAsync(
+                    project.RootPath,
+                    progress,
+                    cancellationTokenSource.Token);
 
-            Project updatedProject = ProjectMemoryStore.RememberScannedProject(
-                scanResult.ProjectName,
-                scanResult.RootPath,
-                scanResult.ScannedAt);
+            cancellationTokenSource.Token.ThrowIfCancellationRequested();
 
-            ProjectState projectState = ProjectStateBuilder.CreateFromScanResult(
-                updatedProject.Name,
-                scanResult,
-                updatedProject.Id);
+            isSavingProjectState = true;
+            scanStatusText = "Projektstand wird gespeichert";
+
+            await InvokeAsync(StateHasChanged);
+            await Task.Yield();
+
+            Project updatedProject =
+                ProjectMemoryStore.RememberScannedProject(
+                    scanResult.ProjectName,
+                    scanResult.RootPath,
+                    scanResult.ScannedAt);
+
+            ProjectState projectState =
+                ProjectStateBuilder.CreateFromScanResult(
+                    updatedProject.Name,
+                    scanResult,
+                    updatedProject.Id);
 
             ProjectStateMemoryStore.Remember(projectState);
 
             LoadProjectData();
 
-            InfoMessage = "Projekt wurde erneut geprüft. Der Projektverlauf wurde aktualisiert.";
+            InfoMessage =
+                "Projekt wurde erneut geprüft. Der Projektverlauf wurde aktualisiert.";
+        }
+        catch (OperationCanceledException)
+        {
+            InfoMessage =
+                "Die Projektprüfung wurde abgebrochen. Es wurde kein neuer Projektstand gespeichert.";
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Das Projekt konnte nicht geprüft werden: {ex.Message}";
+            ErrorMessage =
+                $"Das Projekt konnte nicht geprüft werden: {ex.Message}";
+        }
+        finally
+        {
+            if (ReferenceEquals(
+                    scanCancellationTokenSource,
+                    cancellationTokenSource))
+            {
+                scanCancellationTokenSource = null;
+            }
+
+            isScanOperationActive = false;
+            isSavingProjectState = false;
+            isCancellationRequested = false;
+            scanProgress = null;
+            scanStatusText = string.Empty;
         }
     }
 
-    protected void OpenCurrentProjectFolder()
+    private void OnScanProgressChanged(
+        ProjectFolderScanProgress progress)
     {
-        InfoMessage = null;
-        ErrorMessage = null;
+        if (!isScanOperationActive)
+        {
+            return;
+        }
+
+        scanProgress = progress;
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void CancelScan()
+    {
+        if (!CanCancelScan)
+        {
+            return;
+        }
+
+        CancellationTokenSource? cancellationTokenSource =
+            scanCancellationTokenSource;
+
+        if (cancellationTokenSource is null)
+        {
+            return;
+        }
+
+        isCancellationRequested = true;
+        scanStatusText = "Projektprüfung wird abgebrochen";
+
+        cancellationTokenSource.Cancel();
+    }
+
+    private void OpenCurrentProjectFolder()
+    {
+        ClearMessages();
 
         Project? project = CurrentProject;
 
@@ -117,12 +225,34 @@ public partial class ProjectDetailPage
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Der Projektordner konnte nicht geöffnet werden: {ex.Message}";
+            ErrorMessage =
+                $"Der Projektordner konnte nicht geöffnet werden: {ex.Message}";
         }
+    }
+
+    private void ClearMessages()
+    {
+        InfoMessage = null;
+        ErrorMessage = null;
     }
 
     private void LoadProjectData()
     {
-        CurrentOverview = ProjectOverviewService.GetProjectOverview(ProjectId);
+        CurrentOverview =
+            ProjectOverviewService.GetProjectOverview(ProjectId);
+    }
+
+    public void Dispose()
+    {
+        CancellationTokenSource? cancellationTokenSource =
+            scanCancellationTokenSource;
+
+        if (cancellationTokenSource is null ||
+            cancellationTokenSource.IsCancellationRequested)
+        {
+            return;
+        }
+
+        cancellationTokenSource.Cancel();
     }
 }

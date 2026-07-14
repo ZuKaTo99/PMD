@@ -10,8 +10,11 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
 {
     private const long MaxTextSnapshotSizeInBytes = 200 * 1024;
     private const int MaxTextSnapshotLineCount = 400;
+    private const int ProgressReportIntervalInMilliseconds = 100;
+    private const int FileStreamBufferSize = 81920;
 
-    private static readonly HashSet<string> IgnoredFolderNames = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> IgnoredFolderNames = new(
+        StringComparer.OrdinalIgnoreCase)
     {
         "bin",
         "obj",
@@ -22,181 +25,324 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
         "Temp"
     };
 
+    private readonly SemaphoreSlim scanSemaphore = new(1, 1);
+
     public ProjectFolderScanResult ScanFolder(string folderPath)
     {
-        if (string.IsNullOrWhiteSpace(folderPath))
+        return ScanFolderAsync(
+                folderPath,
+                progress: null,
+                CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public async Task<ProjectFolderScanResult> ScanFolderAsync(
+        string folderPath,
+        IProgress<ProjectFolderScanProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        bool scanStarted = await scanSemaphore
+            .WaitAsync(0, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!scanStarted)
         {
-            throw new ArgumentException("Der Projektordner darf nicht leer sein.", nameof(folderPath));
+            throw new InvalidOperationException(
+                "Es läuft bereits eine Projektprüfung.");
         }
 
-        if (!Directory.Exists(folderPath))
+        try
         {
-            throw new DirectoryNotFoundException($"Der Projektordner wurde nicht gefunden: {folderPath}");
+            return await Task.Run(
+                    () => ScanFolderCoreAsync(
+                        folderPath,
+                        progress,
+                        cancellationToken),
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
+        finally
+        {
+            scanSemaphore.Release();
+        }
+    }
 
-        var stopwatch = Stopwatch.StartNew();
+    private static async Task<ProjectFolderScanResult> ScanFolderCoreAsync(
+        string folderPath,
+        IProgress<ProjectFolderScanProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        ValidateFolderPath(folderPath);
 
         string rootPath = Path.GetFullPath(folderPath);
+
+        var scanStopwatch = Stopwatch.StartNew();
+        var progressStopwatch = Stopwatch.StartNew();
+
         var files = new List<ProjectFileEntry>();
         var ignoredFolders = new List<string>();
         var warnings = new List<string>();
-        var scannedFolderCount = 0;
+        var foldersToCheck = new Stack<string>();
 
-        foreach (string filePath in EnumerateFilesSafe(
-            rootPath,
-            ignoredFolders,
-            warnings,
-            () => scannedFolderCount++))
+        int foundFileCount = 0;
+        int processedFileCount = 0;
+        int scannedFolderCount = 0;
+
+        string currentFolder = GetRelativeDisplayPath(rootPath, rootPath);
+        string currentFile = string.Empty;
+
+        foldersToCheck.Push(rootPath);
+
+        ReportProgress(force: true);
+
+        while (foldersToCheck.Count > 0)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string currentFolderPath = foldersToCheck.Pop();
+
+            currentFolder = GetRelativeDisplayPath(
+                rootPath,
+                currentFolderPath);
+
+            currentFile = string.Empty;
+            scannedFolderCount++;
+
+            ReportProgress(force: true);
+
+            string[] subFolders;
+            string[] folderFiles;
+
             try
             {
-                var fileInfo = new FileInfo(filePath);
-
-                if (!fileInfo.Exists)
-                {
-                    continue;
-                }
-
-                string relativePath = Path.GetRelativePath(rootPath, fileInfo.FullName);
-
-                string contentHashSha256 = TryComputeFileHashSha256(
-                    fileInfo.FullName,
-                    relativePath,
-                    warnings);
-
-                ProjectTextSnapshot textSnapshot = TryCreateTextSnapshot(
-                    fileInfo,
-                    relativePath,
-                    warnings);
-
-                files.Add(new ProjectFileEntry
-                {
-                    FullPath = fileInfo.FullName,
-                    RelativePath = relativePath,
-                    FileName = fileInfo.Name,
-                    Extension = fileInfo.Extension,
-                    SizeInBytes = fileInfo.Length,
-                    LastChangedAt = fileInfo.LastWriteTime,
-                    ContentHashSha256 = contentHashSha256,
-                    TextSnapshotContent = textSnapshot.Content,
-                    TextSnapshotLineCount = textSnapshot.LineCount,
-                    TextSnapshotWasTruncated = textSnapshot.WasTruncated
-                });
+                subFolders = Directory.GetDirectories(currentFolderPath);
+                folderFiles = Directory.GetFiles(currentFolderPath);
             }
             catch (UnauthorizedAccessException)
             {
-                warnings.Add($"Datei konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, filePath)}");
+                warnings.Add(
+                    $"Ordner konnte nicht gelesen werden: {currentFolder}");
+
+                continue;
             }
             catch (IOException)
             {
-                warnings.Add($"Datei konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, filePath)}");
+                warnings.Add(
+                    $"Ordner konnte nicht gelesen werden: {currentFolder}");
+
+                continue;
+            }
+
+            foreach (string subFolder in subFolders)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                string folderName = Path.GetFileName(subFolder);
+
+                if (IgnoredFolderNames.Contains(folderName))
+                {
+                    ignoredFolders.Add(
+                        Path.GetRelativePath(rootPath, subFolder));
+
+                    continue;
+                }
+
+                foldersToCheck.Push(subFolder);
+            }
+
+            foundFileCount += folderFiles.Length;
+
+            ReportProgress(force: true);
+
+            foreach (string filePath in folderFiles)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                currentFile = Path.GetRelativePath(rootPath, filePath);
+
+                ReportProgress();
+
+                try
+                {
+                    var fileInfo = new FileInfo(filePath);
+
+                    if (fileInfo.Exists)
+                    {
+                        string contentHashSha256 =
+                            await TryComputeFileHashSha256Async(
+                                    fileInfo.FullName,
+                                    currentFile,
+                                    warnings,
+                                    cancellationToken)
+                                .ConfigureAwait(false);
+
+                        ProjectTextSnapshot textSnapshot =
+                            await TryCreateTextSnapshotAsync(
+                                    fileInfo,
+                                    currentFile,
+                                    warnings,
+                                    cancellationToken)
+                                .ConfigureAwait(false);
+
+                        files.Add(new ProjectFileEntry
+                        {
+                            FullPath = fileInfo.FullName,
+                            RelativePath = currentFile,
+                            FileName = fileInfo.Name,
+                            Extension = fileInfo.Extension,
+                            SizeInBytes = fileInfo.Length,
+                            LastChangedAt = fileInfo.LastWriteTime,
+                            ContentHashSha256 = contentHashSha256,
+                            TextSnapshotContent = textSnapshot.Content,
+                            TextSnapshotLineCount = textSnapshot.LineCount,
+                            TextSnapshotWasTruncated =
+                                textSnapshot.WasTruncated
+                        });
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    warnings.Add(
+                        $"Datei konnte nicht gelesen werden: {currentFile}");
+                }
+                catch (IOException)
+                {
+                    warnings.Add(
+                        $"Datei konnte nicht gelesen werden: {currentFile}");
+                }
+
+                processedFileCount++;
+
+                ReportProgress();
             }
         }
 
-        stopwatch.Stop();
+        cancellationToken.ThrowIfCancellationRequested();
+
+        scanStopwatch.Stop();
+
+        currentFile = string.Empty;
+
+        ReportProgress(force: true);
 
         return new ProjectFolderScanResult
         {
             ProjectName = new DirectoryInfo(rootPath).Name,
             RootPath = rootPath,
             ScannedAt = DateTime.Now,
-            ScanDuration = stopwatch.Elapsed,
+            ScanDuration = scanStopwatch.Elapsed,
             ScannedFolderCount = scannedFolderCount,
             Files = files
-                .OrderBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(
+                    file => file.RelativePath,
+                    StringComparer.OrdinalIgnoreCase)
                 .ToList(),
             IgnoredFolders = ignoredFolders
-                .OrderBy(folder => folder, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(
+                    folder => folder,
+                    StringComparer.OrdinalIgnoreCase)
                 .ToList(),
             Warnings = warnings
-                .OrderBy(warning => warning, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(
+                    warning => warning,
+                    StringComparer.OrdinalIgnoreCase)
                 .ToList()
         };
-    }
 
-    private static IEnumerable<string> EnumerateFilesSafe(
-        string rootPath,
-        List<string> ignoredFolders,
-        List<string> warnings,
-        Action countScannedFolder)
-    {
-        var foldersToCheck = new Stack<string>();
-        foldersToCheck.Push(rootPath);
-
-        while (foldersToCheck.Count > 0)
+        void ReportProgress(bool force = false)
         {
-            string currentFolder = foldersToCheck.Pop();
-            countScannedFolder();
-
-            string[] subFolders;
-            string[] files;
-
-            try
+            if (progress is null)
             {
-                subFolders = Directory.GetDirectories(currentFolder);
-                files = Directory.GetFiles(currentFolder);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                warnings.Add($"Ordner konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, currentFolder)}");
-                continue;
-            }
-            catch (IOException)
-            {
-                warnings.Add($"Ordner konnte nicht gelesen werden: {Path.GetRelativePath(rootPath, currentFolder)}");
-                continue;
+                return;
             }
 
-            foreach (string subFolder in subFolders)
+            if (!force &&
+                progressStopwatch.ElapsedMilliseconds <
+                ProgressReportIntervalInMilliseconds)
             {
-                string folderName = Path.GetFileName(subFolder);
-
-                if (IgnoredFolderNames.Contains(folderName))
-                {
-                    ignoredFolders.Add(Path.GetRelativePath(rootPath, subFolder));
-                    continue;
-                }
-
-                foldersToCheck.Push(subFolder);
+                return;
             }
-            
-            foreach (string file in files)
-            {
-                yield return file;
-            }
+
+            progress.Report(new ProjectFolderScanProgress(
+                foundFileCount,
+                processedFileCount,
+                scannedFolderCount,
+                ignoredFolders.Count,
+                currentFolder,
+                currentFile));
+
+            progressStopwatch.Restart();
         }
     }
 
-    private static string TryComputeFileHashSha256(
+    private static void ValidateFolderPath(string folderPath)
+    {
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            throw new ArgumentException(
+                "Der Projektordner darf nicht leer sein.",
+                nameof(folderPath));
+        }
+
+        if (!Directory.Exists(folderPath))
+        {
+            throw new DirectoryNotFoundException(
+                $"Der Projektordner wurde nicht gefunden: {folderPath}");
+        }
+    }
+
+    private static async Task<string> TryComputeFileHashSha256Async(
         string filePath,
         string relativePath,
-        List<string> warnings)
+        List<string> warnings,
+        CancellationToken cancellationToken)
     {
         try
         {
-            using FileStream fileStream = File.OpenRead(filePath);
-            byte[] hashBytes = SHA256.HashData(fileStream);
+            await using var fileStream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                FileStreamBufferSize,
+                FileOptions.Asynchronous |
+                FileOptions.SequentialScan);
 
-            return Convert.ToHexString(hashBytes).ToLowerInvariant();
+            byte[] hashBytes = await SHA256
+                .HashDataAsync(fileStream, cancellationToken)
+                .ConfigureAwait(false);
+
+            return Convert
+                .ToHexString(hashBytes)
+                .ToLowerInvariant();
         }
         catch (UnauthorizedAccessException)
         {
-            warnings.Add($"Dateiinhalt konnte nicht geprüft werden: {relativePath}");
+            warnings.Add(
+                $"Dateiinhalt konnte nicht geprüft werden: {relativePath}");
+
             return string.Empty;
         }
         catch (IOException)
         {
-            warnings.Add($"Dateiinhalt konnte nicht geprüft werden: {relativePath}");
+            warnings.Add(
+                $"Dateiinhalt konnte nicht geprüft werden: {relativePath}");
+
             return string.Empty;
         }
     }
 
-    private static ProjectTextSnapshot TryCreateTextSnapshot(
-        FileInfo fileInfo,
-        string relativePath,
-        List<string> warnings)
+    private static async Task<ProjectTextSnapshot>
+        TryCreateTextSnapshotAsync(
+            FileInfo fileInfo,
+            string relativePath,
+            List<string> warnings,
+            CancellationToken cancellationToken)
     {
-        if (!IsSupportedTextSnapshotFile(fileInfo.Name, fileInfo.Extension))
+        if (!IsSupportedTextSnapshotFile(
+                fileInfo.Name,
+                fileInfo.Extension))
         {
             return ProjectTextSnapshot.Empty;
         }
@@ -216,9 +362,13 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
                 Encoding.UTF8,
                 detectEncodingFromByteOrderMarks: true);
 
-            while (!reader.EndOfStream)
+            while (true)
             {
-                string? line = reader.ReadLine();
+                cancellationToken.ThrowIfCancellationRequested();
+
+                string? line = await reader
+                    .ReadLineAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
                 if (line is null)
                 {
@@ -246,19 +396,38 @@ public sealed class ProjectFolderScanner : IProjectFolderScanner
         }
         catch (UnauthorizedAccessException)
         {
-            warnings.Add($"Textinhalt konnte nicht gespeichert werden: {relativePath}");
+            warnings.Add(
+                $"Textinhalt konnte nicht gespeichert werden: {relativePath}");
+
             return ProjectTextSnapshot.Empty;
         }
         catch (IOException)
         {
-            warnings.Add($"Textinhalt konnte nicht gespeichert werden: {relativePath}");
+            warnings.Add(
+                $"Textinhalt konnte nicht gespeichert werden: {relativePath}");
+
             return ProjectTextSnapshot.Empty;
         }
     }
 
-    private static bool IsSupportedTextSnapshotFile(string fileName, string extension)
+    private static string GetRelativeDisplayPath(
+        string rootPath,
+        string path)
     {
-        return ProjectTextFileRules.IsSupportedTextSnapshotFile(fileName, extension);
+        string relativePath = Path.GetRelativePath(rootPath, path);
+
+        return relativePath == "."
+            ? "Projektstamm"
+            : relativePath;
+    }
+
+    private static bool IsSupportedTextSnapshotFile(
+        string fileName,
+        string extension)
+    {
+        return ProjectTextFileRules.IsSupportedTextSnapshotFile(
+            fileName,
+            extension);
     }
 
     private sealed record ProjectTextSnapshot(

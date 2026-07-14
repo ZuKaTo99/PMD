@@ -7,11 +7,19 @@
 <div class="container-fluid pmd-scanner-page">
     <ProjectScannerPageHeader />
 
-    <ProjectFolderScanInputCard 
-        @bind-FolderPath="folderPath"
-        ErrorMessage="@errorMessage"
-        OnPickFolder="PickFolderAsync"
-        OnScanProjectFolder="ScanProjectFolder" />
+    <ProjectFolderScanInputCard @bind-FolderPath="folderPath"
+                                ErrorMessage="@errorMessage"
+                                IsScanning="@isScanOperationActive"
+                                OnPickFolder="PickFolderAsync"
+                                OnScanProjectFolder="ScanProjectFolderAsync" />
+
+    @if (isScanOperationActive)
+    {
+        <ProjectScanProgressCard StatusText="@scanStatusText"
+                                 Progress="@scanProgress"
+                                 CanCancel="@CanCancelScan"
+                                 OnCancel="CancelScan" />
+    }
 
     <ScannerInfoMessage Message="@infoMessage" />
 

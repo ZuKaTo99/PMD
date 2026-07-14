@@ -1,10 +1,13 @@
 @page "/projekte/{ProjectId:guid}"
 @namespace PMD.App.Features.Projects.Pages
 @using PMD.App.Features.Projects.Components
+@using PMD.App.Features.Scanner.Components
 
 <PageTitle>PMD - Projekt</PageTitle>
 
-<div class="container-fluid pmd-project-page">
+<div class="container-fluid pmd-project-page"
+     aria-busy="@isScanOperationActive">
+
     @if (CurrentProject is null)
     {
         <div class="alert alert-warning">
@@ -14,12 +17,17 @@
     else
     {
         <div class="mb-4">
-            <div class="text-muted small mb-1">PMD - Projekt</div>
+            <div class="text-muted small mb-1">
+                PMD - Projekt
+            </div>
+
             <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
                 <div>
                     <h1>@CurrentProject.Name</h1>
+
                     <p class="text-muted mb-0">
-                        Projektzentrale mit Status, Verlauf, Projektinhalt, Dateien und Änderungen.
+                        Projektzentrale mit Status, Verlauf, Projektinhalt,
+                        Dateien und Änderungen.
                     </p>
 
                     <div class="project-folder-location mt-3">
@@ -34,8 +42,24 @@
                 </div>
 
                 <div class="d-flex gap-2 flex-wrap align-self-xl-start">
-                    <button class="btn btn-primary" @onclick="ScanCurrentProject">
-                        Projekt erneut prüfen
+                    <button type="button"
+                            class="btn btn-primary"
+                            disabled="@isScanOperationActive"
+                            @onclick="ScanCurrentProjectAsync">
+
+                        @if (isScanOperationActive)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"
+                                  role="status"
+                                  aria-hidden="true">
+                            </span>
+
+                            <span>Prüfung läuft</span>
+                        }
+                        else
+                        {
+                            <span>Projekt erneut prüfen</span>
+                        }
                     </button>
 
                     <button type="button"
@@ -45,20 +69,31 @@
                         Projektordner öffnen
                     </button>
 
-                    <a class="btn btn-outline-primary" href="@($"/projekte/{CurrentProject.Id}/dateien")">
+                    <a class="btn btn-outline-primary"
+                       href="@($"/projekte/{CurrentProject.Id}/dateien")">
                         Dateien ansehen
                     </a>
 
-                    <a class="btn btn-outline-primary" href="@($"/projekte/{CurrentProject.Id}/aenderungen")">
+                    <a class="btn btn-outline-primary"
+                       href="@($"/projekte/{CurrentProject.Id}/aenderungen")">
                         Änderungen ansehen
                     </a>
 
-                    <a class="btn btn-outline-secondary" href="/projektpruefung">
+                    <a class="btn btn-outline-secondary"
+                       href="/projektpruefung">
                         Anderen Projektordner prüfen
                     </a>
                 </div>
             </div>
         </div>
+
+        @if (isScanOperationActive)
+        {
+            <ProjectScanProgressCard StatusText="@scanStatusText"
+                                     Progress="@scanProgress"
+                                     CanCancel="@CanCancelScan"
+                                     OnCancel="CancelScan" />
+        }
 
         @if (!string.IsNullOrWhiteSpace(InfoMessage))
         {
@@ -76,16 +111,13 @@
 
         <LatestProjectCheckSummaryCard ProjectState="@LatestProjectState" />
 
-        <ProjectChangeSummaryCard
-            LatestProjectState="@LatestProjectState"
-            PreviousProjectState="@PreviousProjectState"
-            ChangeSummary="@ChangesSinceLastCheck" />
+        <ProjectChangeSummaryCard LatestProjectState="@LatestProjectState"
+                                  PreviousProjectState="@PreviousProjectState"
+                                  ChangeSummary="@ChangesSinceLastCheck" />
 
         <ProjectAnalysisSummaryCard Overview="@CurrentOverview" />
 
-
         <ProjectStatesOverviewCard ProjectStates="@CurrentProjectStates" />
-
 
         <ProjectInformationCard Project="@CurrentProject" />
     }

@@ -6,6 +6,7 @@
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
             <div>
                 <h2 class="h5 mb-1">Projektordner prüfen</h2>
+
                 <div class="text-muted small">
                     Wähle einen Projektordner aus oder trage den vollständigen Pfad manuell ein.
                 </div>
@@ -19,19 +20,23 @@
         </div>
     </div>
 
-    <div class="card-body">
+    <div class="card-body" aria-busy="@IsScanning">
         <div class="alert alert-light border mb-4">
-            PMD liest den Projektordner ein, nimmt das Projekt in <strong>Meine Projekte</strong> auf
-            und speichert die Prüfung im Projektverlauf.
+            PMD liest den Projektordner ein, nimmt das Projekt in
+            <strong>Meine Projekte</strong> auf und speichert die Prüfung
+            im Projektverlauf.
         </div>
 
         <div class="mb-3">
-            <label class="form-label" for="folder-path">Projektordner</label>
+            <label class="form-label" for="folder-path">
+                Projektordner
+            </label>
 
             <input id="folder-path"
                    class="form-control"
                    placeholder="C:\Pfad\Zum\Projektordner"
                    value="@FolderPath"
+                   disabled="@IsScanning"
                    @oninput="OnFolderPathInputChanged" />
 
             <div class="form-text">
@@ -40,14 +45,30 @@
         </div>
 
         <div class="d-flex flex-column flex-md-row gap-2">
-            <button class="btn btn-outline-secondary"
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    disabled="@IsScanning"
                     @onclick="OnPickFolder">
                 Ordner auswählen
             </button>
 
-            <button class="btn btn-primary"
+            <button type="button"
+                    class="btn btn-primary"
+                    disabled="@IsScanning"
                     @onclick="OnScanProjectFolder">
-                Projekt prüfen
+                @if (IsScanning)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true">
+                    </span>
+
+                    <span>Prüfung läuft</span>
+                }
+                else
+                {
+                    <span>Projekt prüfen</span>
+                }
             </button>
         </div>
 
@@ -79,6 +100,9 @@
     public string? ErrorMessage { get; set; }
 
     [Parameter]
+    public bool IsScanning { get; set; }
+
+    [Parameter]
     public EventCallback OnPickFolder { get; set; }
 
     [Parameter]
@@ -86,6 +110,11 @@
 
     private async Task OnFolderPathInputChanged(ChangeEventArgs e)
     {
+        if (IsScanning)
+        {
+            return;
+        }
+
         FolderPath = e.Value?.ToString() ?? string.Empty;
 
         await FolderPathChanged.InvokeAsync(FolderPath);

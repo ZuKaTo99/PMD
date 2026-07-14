@@ -1,0 +1,99 @@
+@namespace PMD.App.Features.Scanner.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Domain.Scanner
+
+<div class="card border-primary mb-4" aria-live="polite">
+    <div class="card-body">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="spinner-border spinner-border-sm text-primary"
+                          role="status"
+                          aria-hidden="true">
+                    </span>
+
+                    <strong>@StatusText</strong>
+                </div>
+
+                <div class="progress mb-3"
+                     role="progressbar"
+                     aria-label="@StatusText">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated w-100">
+                    </div>
+                </div>
+
+                @if (Progress is not null)
+                {
+                    <div class="row g-3">
+                        <div class="col-6 col-xl-3">
+                            <div class="text-muted small">Gefundene Dateien</div>
+                            <div class="fw-semibold">@Progress.FoundFileCount</div>
+                        </div>
+
+                        <div class="col-6 col-xl-3">
+                            <div class="text-muted small">Verarbeitete Dateien</div>
+                            <div class="fw-semibold">@Progress.ProcessedFileCount</div>
+                        </div>
+
+                        <div class="col-6 col-xl-3">
+                            <div class="text-muted small">Geprüfte Ordner</div>
+                            <div class="fw-semibold">@Progress.ScannedFolderCount</div>
+                        </div>
+
+                        <div class="col-6 col-xl-3">
+                            <div class="text-muted small">Übersprungene Ordner</div>
+                            <div class="fw-semibold">@Progress.IgnoredFolderCount</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Progress.CurrentFolder))
+                    {
+                        <div class="mt-3">
+                            <div class="text-muted small">Aktueller Ordner</div>
+
+                            <code class="d-block text-break">
+                                @Progress.CurrentFolder
+                            </code>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Progress.CurrentFile))
+                    {
+                        <div class="mt-2">
+                            <div class="text-muted small">Aktuelle Datei</div>
+
+                            <code class="d-block text-break">
+                                @Progress.CurrentFile
+                            </code>
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (CanCancel)
+            {
+                <div class="align-self-lg-start">
+                    <button type="button"
+                            class="btn btn-outline-danger"
+                            @onclick="OnCancel">
+                        Prüfung abbrechen
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string StatusText { get; set; } = "Projekt wird geprüft";
+
+    [Parameter]
+    public ProjectFolderScanProgress? Progress { get; set; }
+
+    [Parameter]
+    public bool CanCancel { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+}
