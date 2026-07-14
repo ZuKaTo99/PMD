@@ -87,22 +87,32 @@ public sealed class SqliteProjectStateRepository : IProjectStateRepository
     {
         ArgumentNullException.ThrowIfNull(projectState);
 
-        using var connection = connectionFactory.CreateConnection();
-
-        connection.InsertOrReplace(MapToProjectStateRecord(projectState));
-
-        connection.Execute(
-            "DELETE FROM ProjectStateFiles WHERE ProjectStateId = ?",
-            projectState.Id.ToString());
+        ProjectStateRecord projectStateRecord =
+            MapToProjectStateRecord(projectState);
 
         List<ProjectStateFileRecord> fileRecords = projectState.Files
             .Select(file => MapToFileRecord(projectState, file))
             .ToList();
 
-        if (fileRecords.Count > 0)
+        string projectStateId = projectState.Id.ToString();
+
+        using var connection = connectionFactory.CreateConnection();
+
+        connection.RunInTransaction(() =>
         {
-            connection.InsertAll(fileRecords);
-        }
+            connection.InsertOrReplace(projectStateRecord);
+
+            connection.Execute(
+                "DELETE FROM ProjectStateFiles WHERE ProjectStateId = ?",
+                projectStateId);
+
+            if (fileRecords.Count > 0)
+            {
+                connection.InsertAll(
+                    fileRecords,
+                    false);
+            }
+        });
     }
 
     public void DeleteByProjectId(Guid projectId)
