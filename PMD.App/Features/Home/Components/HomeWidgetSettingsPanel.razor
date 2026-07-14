@@ -1,0 +1,106 @@
+@namespace PMD.App.Features.Home.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.Home
+@using PMD.App.Domain.Home
+
+<section class="home-widget-settings"
+         aria-labelledby="home-widget-settings-title">
+    <div class="home-widget-settings-heading">
+        <div>
+            <div class="home-widget-eyebrow">
+                Startseite anpassen
+            </div>
+
+            <h2 id="home-widget-settings-title"
+                class="h5 mb-1">
+                Sichtbare Widgets
+            </h2>
+
+            <p class="text-muted small mb-0">
+                Deine Auswahl wird auf diesem Gerät dauerhaft gespeichert.
+            </p>
+        </div>
+
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary"
+                @onclick="ResetToDefaults">
+            Standard wiederherstellen
+        </button>
+    </div>
+
+    <div class="home-widget-settings-grid">
+        @foreach (HomeWidgetOption option in WidgetOptions)
+        {
+            <label class="home-widget-setting-option">
+                <span class="home-widget-setting-copy">
+                    <span class="home-widget-setting-title">
+                        @option.Title
+                    </span>
+
+                    <span class="home-widget-setting-description">
+                        @option.Description
+                    </span>
+                </span>
+
+                <span class="form-check form-switch m-0">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           role="switch"
+                           aria-label="@($"Widget {option.Title} anzeigen")"
+                           checked="@WidgetPreferencesService.IsVisible(option.Id)"
+                           @onchange="eventArgs => SetVisibility(option.Id, eventArgs)" />
+                </span>
+            </label>
+        }
+    </div>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<HomeWidgetOption> WidgetOptions =
+    [
+        new(
+            HomeWidgetId.ProjectOverview,
+            "Projektübersicht",
+            "Zeigt Projektanzahl und letzte manuelle Prüfung."),
+        new(
+            HomeWidgetId.QuickActions,
+            "Schnellzugriffe",
+            "Öffnet Prüfung, letztes Projekt, Dashboard und Kanban."),
+        new(
+            HomeWidgetId.RecentProjects,
+            "Zuletzt geprüfte Projekte",
+            "Zeigt die zuletzt manuell geprüften Projekte."),
+        new(
+            HomeWidgetId.RecentChecks,
+            "Letzte manuelle Prüfungen",
+            "Zeigt die neuesten gespeicherten Projektstände.")
+    ];
+
+    [Inject]
+    private IHomeWidgetPreferencesService WidgetPreferencesService
+    {
+        get;
+        set;
+    } = default!;
+
+    private void SetVisibility(
+        HomeWidgetId widgetId,
+        ChangeEventArgs eventArgs)
+    {
+        bool isVisible = eventArgs.Value is bool value && value;
+
+        WidgetPreferencesService.SetVisibility(
+            widgetId,
+            isVisible);
+    }
+
+    private void ResetToDefaults()
+    {
+        WidgetPreferencesService.ResetToDefaults();
+    }
+
+    private sealed record HomeWidgetOption(
+        HomeWidgetId Id,
+        string Title,
+        string Description);
+}

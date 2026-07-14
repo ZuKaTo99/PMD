@@ -1,5 +1,6 @@
 @page "/"
 @namespace PMD.App.Features.Home.Pages
+@using PMD.App.Domain.Home
 @using PMD.App.Features.Home.Components
 
 <PageTitle>PMD - Home</PageTitle>
@@ -18,31 +19,96 @@
             </p>
         </div>
 
-        <a class="btn btn-primary align-self-start"
-           href="projektpruefung">
-            Projekt prüfen
-        </a>
-    </div>
+        <div class="home-page-header-actions">
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    aria-expanded="@WidgetSettingsAriaExpanded"
+                    aria-controls="home-widget-settings"
+                    @onclick="ToggleWidgetSettings">
+                @(AreWidgetSettingsOpen
+                    ? "Anpassung schließen"
+                    : "Widgets anpassen")
+            </button>
 
-    <div class="row g-3 mb-3">
-        <div class="col-12 col-xl-4">
-            <HomeSummaryWidget Overview="@Overview" />
-        </div>
-
-        <div class="col-12 col-xl-8">
-            <HomeQuickActionsWidget MostRecentProject="@Overview.MostRecentProject" />
-        </div>
-    </div>
-
-    <div class="row g-3 mb-3">
-        <div class="col-12 col-xxl-7">
-            <HomeRecentProjectsWidget Projects="@Overview.RecentProjects" />
-        </div>
-
-        <div class="col-12 col-xxl-5">
-            <HomeRecentChecksWidget Checks="@Overview.RecentChecks" />
+            <a class="btn btn-primary"
+               href="projektpruefung">
+                Projekt prüfen
+            </a>
         </div>
     </div>
+
+    @if (AreWidgetSettingsOpen)
+    {
+        <div id="home-widget-settings"
+             class="mb-3">
+            <HomeWidgetSettingsPanel />
+        </div>
+    }
+
+    @if (HasVisibleTopWidgets)
+    {
+        <div class="row g-3 mb-3">
+            @if (IsWidgetVisible(HomeWidgetId.ProjectOverview))
+            {
+                <div class="@GetTopWidgetColumnClass(HomeWidgetId.ProjectOverview)">
+                    <HomeSummaryWidget Overview="@Overview" />
+                </div>
+            }
+
+            @if (IsWidgetVisible(HomeWidgetId.QuickActions))
+            {
+                <div class="@GetTopWidgetColumnClass(HomeWidgetId.QuickActions)">
+                    <HomeQuickActionsWidget MostRecentProject="@Overview.MostRecentProject" />
+                </div>
+            }
+        </div>
+    }
+
+    @if (HasVisibleRecentWidgets)
+    {
+        <div class="row g-3 mb-3">
+            @if (IsWidgetVisible(HomeWidgetId.RecentProjects))
+            {
+                <div class="@GetRecentWidgetColumnClass(HomeWidgetId.RecentProjects)">
+                    <HomeRecentProjectsWidget Projects="@Overview.RecentProjects" />
+                </div>
+            }
+
+            @if (IsWidgetVisible(HomeWidgetId.RecentChecks))
+            {
+                <div class="@GetRecentWidgetColumnClass(HomeWidgetId.RecentChecks)">
+                    <HomeRecentChecksWidget Checks="@Overview.RecentChecks" />
+                </div>
+            }
+        </div>
+    }
+
+    @if (!HasVisibleWidgets)
+    {
+        <section class="home-no-widgets mb-3"
+                 aria-labelledby="home-no-widgets-title">
+            <div>
+                <div class="home-widget-eyebrow">
+                    Home
+                </div>
+
+                <h2 id="home-no-widgets-title"
+                    class="h5 mb-1">
+                    Keine Widgets sichtbar
+                </h2>
+
+                <p class="text-muted small mb-0">
+                    Öffne „Widgets anpassen“, um Inhalte wieder einzublenden.
+                </p>
+            </div>
+
+            <button type="button"
+                    class="btn btn-sm btn-primary"
+                    @onclick="OpenWidgetSettings">
+                Widgets auswählen
+            </button>
+        </section>
+    }
 
     <div class="alert alert-info home-manual-check-note mb-0">
         <strong>Du behältst die Kontrolle:</strong>
