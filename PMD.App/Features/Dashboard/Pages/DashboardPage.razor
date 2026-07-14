@@ -1,61 +1,396 @@
 @page "/dashboard"
+@namespace PMD.App.Features.Dashboard.Pages
+@using PMD.App.Application.Dashboard
 
 <PageTitle>PMD - Dashboard</PageTitle>
 
-<div class="container-fluid pmd-page">
-    <div class="mb-4">
-        <div class="text-muted small mb-1">
-            PMD - Dashboard
+<div class="container-fluid pmd-page dashboard-page">
+    <header class="dashboard-page-header mb-4">
+        <div>
+            <div class="text-muted small mb-1">
+                PMD - Dashboard
+            </div>
+
+            <h1>Projektentwicklung</h1>
+
+            <p class="text-muted mb-0">
+                Echte Aktivität aus deinen gespeicherten, manuell erstellten Projektständen.
+            </p>
         </div>
 
-        <h1>Dashboard</h1>
+        <a class="btn btn-primary"
+           href="projektpruefung">
+            Projekt prüfen
+        </a>
+    </header>
 
-        <p class="text-muted mb-0">
-            Projektübergreifende Auswertungen auf Basis deiner gespeicherten Projekte und Projektstände.
-        </p>
-    </div>
+    @if (!Overview.HasProjects)
+    {
+        <section class="dashboard-empty-state"
+                 aria-labelledby="dashboard-empty-title">
+            <div class="dashboard-empty-mark"
+                 aria-hidden="true">
+                P
+            </div>
 
-    <div class="row g-3">
-        <div class="col-12 col-lg-4">
-            <div class="card pmd-card h-100">
-                <div class="card-body">
-                    <h2 class="h5 card-title">
-                        Projekte
+            <div>
+                <div class="dashboard-eyebrow">
+                    Noch keine Datengrundlage
+                </div>
+
+                <h2 id="dashboard-empty-title"
+                    class="h4 mb-2">
+                    Starte mit deinem ersten Projekt
+                </h2>
+
+                <p class="text-muted mb-3">
+                    Sobald du ein Projekt bewusst geprüft und gespeichert hast,
+                    zeigt PMD hier dessen Entwicklung an.
+                </p>
+
+                <a class="btn btn-primary"
+                   href="projektpruefung">
+                    Erstes Projekt prüfen
+                </a>
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="dashboard-summary-grid mb-4"
+                 aria-label="Dashboard-Zusammenfassung">
+            <article class="dashboard-summary-card">
+                <div class="dashboard-summary-icon"
+                     aria-hidden="true">
+                    P
+                </div>
+
+                <div>
+                    <div class="dashboard-summary-value">
+                        @Overview.ProjectCount
+                    </div>
+
+                    <div class="dashboard-summary-label">
+                        @FormatProjectLabel(Overview.ProjectCount)
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-summary-card">
+                <div class="dashboard-summary-icon dashboard-summary-icon-comparison"
+                     aria-hidden="true">
+                    ⇄
+                </div>
+
+                <div>
+                    <div class="dashboard-summary-value">
+                        @Overview.ComparableProjectCount
+                    </div>
+
+                    <div class="dashboard-summary-label">
+                        @FormatComparisonLabel(Overview.ComparableProjectCount)
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-summary-card dashboard-summary-card-wide">
+                <div class="dashboard-summary-icon dashboard-summary-icon-activity"
+                     aria-hidden="true">
+                    ↗
+                </div>
+
+                <div class="dashboard-summary-content">
+                    <div class="dashboard-summary-value">
+                        @Overview.TotalLatestChangeCount
+                    </div>
+
+                    <div class="dashboard-summary-label">
+                        Änderungen in den jeweils letzten Vergleichen
+                    </div>
+
+                    <div class="dashboard-change-breakdown"
+                         aria-label="Aufteilung der Änderungen">
+                        <span class="dashboard-change-count dashboard-change-count-added">
+                            +@Overview.TotalAddedFileCount neu
+                        </span>
+
+                        <span class="dashboard-change-count dashboard-change-count-modified">
+                            @Overview.TotalModifiedFileCount geändert
+                        </span>
+
+                        <span class="dashboard-change-count dashboard-change-count-removed">
+                            −@Overview.TotalRemovedFileCount entfernt
+                        </span>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="dashboard-activity-panel mb-4"
+                 aria-labelledby="dashboard-activity-title">
+            <div class="dashboard-section-header">
+                <div>
+                    <div class="dashboard-eyebrow">
+                        Aktivitätspuls
+                    </div>
+
+                    <h2 id="dashboard-activity-title"
+                        class="h4 mb-1">
+                        Änderungen seit der jeweils vorherigen Prüfung
                     </h2>
 
-                    <p class="card-text mb-0">
-                        PMD verwendet deine gespeicherten Projekte als Grundlage für gemeinsame Kennzahlen.
+                    <p class="text-muted small mb-0">
+                        Die Balkenhöhe vergleicht die tatsächliche Änderungsmenge der Projekte miteinander.
                     </p>
                 </div>
-            </div>
-        </div>
 
-        <div class="col-12 col-lg-4">
-            <div class="card pmd-card h-100">
-                <div class="card-body">
-                    <h2 class="h5 card-title">
-                        Projektstände
+                <div class="dashboard-legend"
+                     aria-label="Diagrammlegende">
+                    <span>
+                        <i class="dashboard-legend-dot dashboard-legend-added"></i>
+                        Neu
+                    </span>
+
+                    <span>
+                        <i class="dashboard-legend-dot dashboard-legend-modified"></i>
+                        Geändert
+                    </span>
+
+                    <span>
+                        <i class="dashboard-legend-dot dashboard-legend-removed"></i>
+                        Entfernt
+                    </span>
+                </div>
+            </div>
+
+            @if (Overview.HasComparisons)
+            {
+                <div class="dashboard-chart-scroll"
+                     role="region"
+                     aria-label="Projektaktivitätsdiagramm"
+                     tabindex="0">
+                    <div class="dashboard-activity-chart">
+                        @foreach (DashboardProjectActivity activity in ComparableActivities)
+                        {
+                            <article class="dashboard-chart-column dashboard-accent-@activity.AccentColor"
+                                     @key="activity.ProjectId">
+                                <div class="dashboard-chart-value">
+                                    @activity.TotalChangeCount
+                                </div>
+
+                                <div class="dashboard-chart-track"
+                                     role="img"
+                                     aria-label="@GetActivityAriaLabel(activity)">
+                                    <div class="dashboard-chart-bar"
+                                         style="@GetChartHeightStyle(activity)">
+                                        @if (activity.RemovedFileCount > 0)
+                                        {
+                                            <span class="dashboard-chart-segment dashboard-chart-segment-removed"
+                                                  style="@GetSegmentStyle(activity.RemovedFileCount)">
+                                            </span>
+                                        }
+
+                                        @if (activity.ModifiedFileCount > 0)
+                                        {
+                                            <span class="dashboard-chart-segment dashboard-chart-segment-modified"
+                                                  style="@GetSegmentStyle(activity.ModifiedFileCount)">
+                                            </span>
+                                        }
+
+                                        @if (activity.AddedFileCount > 0)
+                                        {
+                                            <span class="dashboard-chart-segment dashboard-chart-segment-added"
+                                                  style="@GetSegmentStyle(activity.AddedFileCount)">
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <a class="dashboard-chart-project"
+                                   href="projekte/@activity.ProjectId"
+                                   title="@activity.ProjectName">
+                                    <span class="dashboard-project-dot"></span>
+                                    <span>@activity.ProjectName</span>
+                                </a>
+                            </article>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="dashboard-comparison-empty">
+                    <div class="dashboard-comparison-empty-icon"
+                         aria-hidden="true">
+                        ⇄
+                    </div>
+
+                    <div>
+                        <strong>Noch kein Projektvergleich verfügbar</strong>
+                        <p class="text-muted small mb-0">
+                            Für eine Entwicklungsanzeige benötigt ein Projekt mindestens zwei bewusst gespeicherte Prüfungen.
+                        </p>
+                    </div>
+                </div>
+            }
+        </section>
+
+        <section aria-labelledby="dashboard-projects-title">
+            <div class="dashboard-section-header mb-3">
+                <div>
+                    <div class="dashboard-eyebrow">
+                        Projektübersicht
+                    </div>
+
+                    <h2 id="dashboard-projects-title"
+                        class="h4 mb-1">
+                        Letzte Entwicklung je Projekt
                     </h2>
 
-                    <p class="card-text mb-0">
-                        Manuell gespeicherte Prüfungen bilden die Grundlage für Verläufe und Vergleiche.
+                    <p class="text-muted small mb-0">
+                        Keine Pfadlisten, sondern die wichtigsten Veränderungen und aktuellen Projektdaten.
                     </p>
                 </div>
-            </div>
-        </div>
 
-        <div class="col-12 col-lg-4">
-            <div class="card pmd-card h-100">
-                <div class="card-body">
-                    <h2 class="h5 card-title">
-                        Änderungen
-                    </h2>
-
-                    <p class="card-text mb-0">
-                        Neue, geänderte und entfernte Dateien können projektübergreifend ausgewertet werden.
-                    </p>
-                </div>
+                @if (Overview.LatestCheckAt is DateTime latestCheckAt)
+                {
+                    <div class="dashboard-latest-check">
+                        Zuletzt geprüft: @FormatDateTime(latestCheckAt)
+                    </div>
+                }
             </div>
+
+            <div class="dashboard-project-grid">
+                @foreach (DashboardProjectActivity activity in Overview.ProjectActivities)
+                {
+                    <article class="dashboard-project-card dashboard-accent-@activity.AccentColor"
+                             @key="activity.ProjectId">
+                        <div class="dashboard-project-card-header">
+                            <div class="dashboard-project-identity">
+                                <span class="dashboard-project-mark"
+                                      aria-hidden="true">
+                                    @GetProjectInitial(activity.ProjectName)
+                                </span>
+
+                                <div class="dashboard-project-title-block">
+                                    <h3 class="h5 mb-1"
+                                        title="@activity.ProjectName">
+                                        @activity.ProjectName
+                                    </h3>
+
+                                    <span class="text-muted small">
+                                        @FormatDateTime(activity.LatestScannedAt)
+                                    </span>
+                                </div>
+                            </div>
+
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="projekte/@activity.ProjectId">
+                                Öffnen
+                            </a>
+                        </div>
+
+                        @if (activity.HasComparison)
+                        {
+                            <div class="dashboard-project-change-total">
+                                <div>
+                                    <strong>@activity.TotalChangeCount</strong>
+                                    <span>Änderungen</span>
+                                </div>
+
+                                <span class="dashboard-file-delta @GetFileDeltaClass(activity.FileCountDifference)">
+                                    @FormatFileDelta(activity.FileCountDifference)
+                                </span>
+                            </div>
+
+                            <div class="dashboard-change-track"
+                                 role="img"
+                                 aria-label="@GetActivityAriaLabel(activity)">
+                                @if (activity.AddedFileCount > 0)
+                                {
+                                    <span class="dashboard-change-segment dashboard-change-segment-added"
+                                          style="@GetSegmentStyle(activity.AddedFileCount)">
+                                    </span>
+                                }
+
+                                @if (activity.ModifiedFileCount > 0)
+                                {
+                                    <span class="dashboard-change-segment dashboard-change-segment-modified"
+                                          style="@GetSegmentStyle(activity.ModifiedFileCount)">
+                                    </span>
+                                }
+
+                                @if (activity.RemovedFileCount > 0)
+                                {
+                                    <span class="dashboard-change-segment dashboard-change-segment-removed"
+                                          style="@GetSegmentStyle(activity.RemovedFileCount)">
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="dashboard-project-counts">
+                                <span class="dashboard-change-count dashboard-change-count-added">
+                                    +@activity.AddedFileCount neu
+                                </span>
+
+                                <span class="dashboard-change-count dashboard-change-count-modified">
+                                    @activity.ModifiedFileCount geändert
+                                </span>
+
+                                <span class="dashboard-change-count dashboard-change-count-removed">
+                                    −@activity.RemovedFileCount entfernt
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="dashboard-project-no-comparison">
+                                <strong>Erster gespeicherter Stand</strong>
+                                <span>
+                                    Nach der nächsten manuellen Prüfung kann PMD die Entwicklung vergleichen.
+                                </span>
+                            </div>
+                        }
+
+                        <dl class="dashboard-project-facts">
+                            <div>
+                                <dt>Dateien</dt>
+                                <dd>@activity.LatestFileCount.ToString("N0")</dd>
+                            </div>
+
+                            <div>
+                                <dt>Größe</dt>
+                                <dd>@FormatBytes(activity.LatestTotalSizeInBytes)</dd>
+                            </div>
+
+                            <div>
+                                <dt>Prüfdauer</dt>
+                                <dd>@FormatDuration(activity.LatestScanDuration)</dd>
+                            </div>
+
+                            <div>
+                                <dt>Hinweise</dt>
+                                <dd>@activity.LatestWarningCount.ToString("N0")</dd>
+                            </div>
+                        </dl>
+
+                        @if (activity.HasComparison)
+                        {
+                            <a class="dashboard-project-detail-link"
+                               href="projekte/@activity.ProjectId/aenderungen">
+                                Änderungen ansehen
+                                <span aria-hidden="true">→</span>
+                            </a>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+
+        <div class="alert alert-info dashboard-manual-check-note mt-4 mb-0">
+            <strong>Direkte Aktualisierung, volle Kontrolle:</strong>
+            Das Dashboard reagiert auf bereits in PMD gespeicherte Daten.
+            Es startet keine automatische Projektprüfung und erzeugt keine Projektstände im Hintergrund.
         </div>
-    </div>
+    }
 </div>

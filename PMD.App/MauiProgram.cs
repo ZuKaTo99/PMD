@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using PMD.App.Application.Appearance;
 using PMD.App.Application.Home;
+using PMD.App.Application.Dashboard;
 using PMD.App.Application.Database;
 using PMD.App.Infrastructure.Appearance;
 using PMD.App.Infrastructure.Home;
@@ -35,6 +36,7 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<IAppThemeService, AppThemeService>();
         builder.Services.AddSingleton<IHomeOverviewService, HomeOverviewService>();
+        builder.Services.AddSingleton<IDashboardOverviewService, DashboardOverviewService>();
         builder.Services.AddSingleton<IHomeWidgetPreferencesService, HomeWidgetPreferencesService>();
         builder.Services.AddSingleton<IProjectMemoryStore, ProjectMemoryStore>();
         builder.Services.AddSingleton<IProjectStateMemoryStore, ProjectStateMemoryStore>();
