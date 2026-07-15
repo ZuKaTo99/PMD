@@ -70,10 +70,7 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
 
         connection.RunInTransaction(() =>
         {
-            foreach (KanbanTaskRecord record in records)
-            {
-                connection.InsertOrReplace(record);
-            }
+            SaveRecords(connection, records);
         });
     }
 
@@ -81,9 +78,45 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
     {
         using var connection = connectionFactory.CreateConnection();
 
+        DeleteRecord(connection, taskId);
+    }
+
+    public void DeleteAndSaveAll(
+        Guid taskId,
+        IReadOnlyList<KanbanTask> tasks)
+    {
+        ArgumentNullException.ThrowIfNull(tasks);
+
+        List<KanbanTaskRecord> records = tasks
+            .Select(MapToRecord)
+            .ToList();
+
+        using var connection = connectionFactory.CreateConnection();
+
+        connection.RunInTransaction(() =>
+        {
+            DeleteRecord(connection, taskId);
+            SaveRecords(connection, records);
+        });
+    }
+
+    private static void DeleteRecord(
+        SQLite.SQLiteConnection connection,
+        Guid taskId)
+    {
         connection.Execute(
             "DELETE FROM KanbanTasks WHERE Id = ?",
             taskId.ToString());
+    }
+
+    private static void SaveRecords(
+        SQLite.SQLiteConnection connection,
+        IReadOnlyList<KanbanTaskRecord> records)
+    {
+        foreach (KanbanTaskRecord record in records)
+        {
+            connection.InsertOrReplace(record);
+        }
     }
 
     private static KanbanTask MapToTask(KanbanTaskRecord record)

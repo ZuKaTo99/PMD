@@ -17,6 +17,16 @@ public interface IKanbanBoardService
         KanbanTaskStatus status,
         KanbanTaskPriority priority);
 
+    KanbanTask UpdateTask(
+        Guid taskId,
+        string title,
+        string description,
+        Guid? projectId,
+        KanbanTaskStatus status,
+        KanbanTaskPriority priority);
+
+    void DeleteTask(Guid taskId);
+
     void MoveTask(
         Guid taskId,
         KanbanTaskStatus targetStatus,

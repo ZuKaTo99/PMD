@@ -142,6 +142,54 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             });
     }
 
+    [Fact]
+    public void DeleteAndSaveAll_RemovesTaskAndPersistsReindexedTasks()
+    {
+        KanbanTask firstTask = CreateTask(
+            "Erste Aufgabe",
+            KanbanTaskStatus.Open,
+            0);
+
+        KanbanTask secondTask = CreateTask(
+            "Zweite Aufgabe",
+            KanbanTaskStatus.Open,
+            1);
+
+        KanbanTask thirdTask = CreateTask(
+            "Dritte Aufgabe",
+            KanbanTaskStatus.Open,
+            2);
+
+        repository.SaveAll([firstTask, secondTask, thirdTask]);
+
+        repository.DeleteAndSaveAll(
+            secondTask.Id,
+            [
+                CopyTask(
+                    thirdTask,
+                    KanbanTaskStatus.Open,
+                    1,
+                    DateTime.Now.AddMinutes(1))
+            ]);
+
+        IReadOnlyList<KanbanTask> tasks = repository.GetAll();
+
+        Assert.Collection(
+            tasks,
+            task =>
+            {
+                Assert.Equal(firstTask.Id, task.Id);
+                Assert.Equal(0, task.SortOrder);
+            },
+            task =>
+            {
+                Assert.Equal(thirdTask.Id, task.Id);
+                Assert.Equal(1, task.SortOrder);
+            });
+
+        Assert.Null(repository.GetById(secondTask.Id));
+    }
+
     public void Dispose()
     {
         try

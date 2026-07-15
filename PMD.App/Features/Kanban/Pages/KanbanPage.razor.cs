@@ -79,6 +79,39 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     protected bool IsCreateButtonDisabled =>
         string.IsNullOrWhiteSpace(NewTaskTitle);
 
+    protected Guid? EditingTaskId { get; private set; }
+
+    protected bool IsEditFormOpen => EditingTaskId.HasValue;
+
+    protected string EditTaskTitle { get; set; } = string.Empty;
+
+    protected string EditTaskDescription { get; set; } = string.Empty;
+
+    protected string EditProjectId { get; set; } = string.Empty;
+
+    protected KanbanTaskStatus EditTaskStatus { get; set; } =
+        KanbanTaskStatus.Open;
+
+    protected KanbanTaskPriority EditTaskPriority { get; set; } =
+        KanbanTaskPriority.Normal;
+
+    protected string EditTaskErrorMessage { get; private set; } =
+        string.Empty;
+
+    protected bool IsEditButtonDisabled =>
+        string.IsNullOrWhiteSpace(EditTaskTitle);
+
+    protected Guid? PendingDeleteTaskId { get; private set; }
+
+    protected KanbanTask? TaskPendingDeletion =>
+        PendingDeleteTaskId.HasValue
+            ? KanbanBoardService.Tasks.FirstOrDefault(
+                task => task.Id == PendingDeleteTaskId.Value)
+            : null;
+
+    protected string DeleteTaskErrorMessage { get; private set; } =
+        string.Empty;
+
     protected override void OnInitialized()
     {
         KanbanBoardService.BoardChanged += OnBoardChanged;
@@ -185,7 +218,15 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     protected void ToggleCreateForm()
     {
-        IsCreateFormOpen = !IsCreateFormOpen;
+        if (IsCreateFormOpen)
+        {
+            CancelCreateTask();
+            return;
+        }
+
+        CancelEditTask();
+        CancelDeleteTask();
+        IsCreateFormOpen = true;
         CreateTaskErrorMessage = string.Empty;
     }
 
@@ -201,16 +242,10 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
         try
         {
-            Guid? projectId = Guid.TryParse(
-                SelectedProjectId,
-                out Guid parsedProjectId)
-                    ? parsedProjectId
-                    : null;
-
             KanbanBoardService.CreateTask(
                 NewTaskTitle,
                 NewTaskDescription,
-                projectId,
+                ParseProjectId(SelectedProjectId),
                 NewTaskStatus,
                 NewTaskPriority);
 
@@ -221,6 +256,100 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         {
             CreateTaskErrorMessage = exception.Message;
         }
+    }
+
+    protected void StartEditingTask(KanbanTask task)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        CancelCreateTask();
+        CancelDeleteTask();
+
+        EditingTaskId = task.Id;
+        EditTaskTitle = task.Title;
+        EditTaskDescription = task.Description;
+        EditProjectId = task.ProjectId?.ToString() ?? string.Empty;
+        EditTaskStatus = task.Status;
+        EditTaskPriority = task.Priority;
+        EditTaskErrorMessage = string.Empty;
+    }
+
+    protected void SaveEditedTask()
+    {
+        if (!EditingTaskId.HasValue)
+        {
+            return;
+        }
+
+        EditTaskErrorMessage = string.Empty;
+
+        try
+        {
+            KanbanBoardService.UpdateTask(
+                EditingTaskId.Value,
+                EditTaskTitle,
+                EditTaskDescription,
+                ParseProjectId(EditProjectId),
+                EditTaskStatus,
+                EditTaskPriority);
+
+            ResetEditForm();
+        }
+        catch (ArgumentException exception)
+        {
+            EditTaskErrorMessage = exception.Message;
+        }
+        catch (KeyNotFoundException exception)
+        {
+            EditTaskErrorMessage = exception.Message;
+        }
+    }
+
+    protected void CancelEditTask()
+    {
+        ResetEditForm();
+    }
+
+    protected void RequestDeleteTask(KanbanTask task)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        CancelCreateTask();
+        CancelEditTask();
+
+        PendingDeleteTaskId = task.Id;
+        DeleteTaskErrorMessage = string.Empty;
+    }
+
+    protected void ConfirmDeleteTask()
+    {
+        if (!PendingDeleteTaskId.HasValue)
+        {
+            return;
+        }
+
+        DeleteTaskErrorMessage = string.Empty;
+
+        try
+        {
+            KanbanBoardService.DeleteTask(PendingDeleteTaskId.Value);
+            ResetDeleteConfirmation();
+        }
+        catch (KeyNotFoundException exception)
+        {
+            DeleteTaskErrorMessage = exception.Message;
+        }
+    }
+
+    protected void CancelDeleteTask()
+    {
+        ResetDeleteConfirmation();
+    }
+
+    protected bool IsTaskBeingManaged(Guid taskId)
+    {
+        return EditingTaskId == taskId ||
+            PendingDeleteTaskId == taskId;
     }
 
     protected static string GetPriorityLabel(
@@ -266,6 +395,13 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             : $"{taskCount} Aufgaben";
     }
 
+    private static Guid? ParseProjectId(string projectIdValue)
+    {
+        return Guid.TryParse(projectIdValue, out Guid parsedProjectId)
+            ? parsedProjectId
+            : null;
+    }
+
     private void ResetCreateForm()
     {
         NewTaskTitle = string.Empty;
@@ -274,6 +410,23 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         NewTaskStatus = KanbanTaskStatus.Open;
         NewTaskPriority = KanbanTaskPriority.Normal;
         CreateTaskErrorMessage = string.Empty;
+    }
+
+    private void ResetEditForm()
+    {
+        EditingTaskId = null;
+        EditTaskTitle = string.Empty;
+        EditTaskDescription = string.Empty;
+        EditProjectId = string.Empty;
+        EditTaskStatus = KanbanTaskStatus.Open;
+        EditTaskPriority = KanbanTaskPriority.Normal;
+        EditTaskErrorMessage = string.Empty;
+    }
+
+    private void ResetDeleteConfirmation()
+    {
+        PendingDeleteTaskId = null;
+        DeleteTaskErrorMessage = string.Empty;
     }
 
     private void OnBoardChanged()

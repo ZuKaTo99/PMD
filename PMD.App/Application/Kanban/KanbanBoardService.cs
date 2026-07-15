@@ -31,36 +31,10 @@ public sealed class KanbanBoardService : IKanbanBoardService
         KanbanTaskStatus status,
         KanbanTaskPriority priority)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(title);
-
-        string normalizedTitle = title.Trim();
-        string normalizedDescription = description?.Trim() ?? string.Empty;
-
-        if (normalizedTitle.Length > MaximumTitleLength)
-        {
-            throw new ArgumentException(
-                $"Der Aufgabentitel darf höchstens {MaximumTitleLength} Zeichen lang sein.",
-                nameof(title));
-        }
-
-        if (normalizedDescription.Length > MaximumDescriptionLength)
-        {
-            throw new ArgumentException(
-                $"Die Beschreibung darf höchstens {MaximumDescriptionLength} Zeichen lang sein.",
-                nameof(description));
-        }
-
-        KanbanTaskStatus normalizedStatus = Enum.IsDefined(
-            typeof(KanbanTaskStatus),
-            status)
-                ? status
-                : KanbanTaskStatus.Open;
-
-        KanbanTaskPriority normalizedPriority = Enum.IsDefined(
-            typeof(KanbanTaskPriority),
-            priority)
-                ? priority
-                : KanbanTaskPriority.Normal;
+        string normalizedTitle = NormalizeTitle(title);
+        string normalizedDescription = NormalizeDescription(description);
+        KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
+        KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
 
         int nextSortOrder = tasks
             .Where(task => task.Status == normalizedStatus)
@@ -91,6 +65,125 @@ public sealed class KanbanBoardService : IKanbanBoardService
         return task;
     }
 
+    public KanbanTask UpdateTask(
+        Guid taskId,
+        string title,
+        string description,
+        Guid? projectId,
+        KanbanTaskStatus status,
+        KanbanTaskPriority priority)
+    {
+        KanbanTask existingTask = GetRequiredTask(taskId);
+        string normalizedTitle = NormalizeTitle(title);
+        string normalizedDescription = NormalizeDescription(description);
+        KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
+        KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
+        DateTime now = DateTime.Now;
+
+        if (existingTask.Status == normalizedStatus)
+        {
+            KanbanTask updatedTask = CopyTask(
+                existingTask,
+                normalizedTitle,
+                normalizedDescription,
+                projectId,
+                normalizedStatus,
+                normalizedPriority,
+                existingTask.SortOrder,
+                now);
+
+            taskRepository.Save(updatedTask);
+            ReplaceTasks([updatedTask]);
+            BoardChanged?.Invoke();
+
+            return updatedTask;
+        }
+
+        List<KanbanTask> sourceColumnTasks = tasks
+            .Where(task =>
+                task.Status == existingTask.Status &&
+                task.Id != existingTask.Id)
+            .OrderBy(task => task.SortOrder)
+            .ThenByDescending(task => task.CreatedAt)
+            .ToList();
+
+        List<KanbanTask> targetColumnTasks = tasks
+            .Where(task => task.Status == normalizedStatus)
+            .OrderBy(task => task.SortOrder)
+            .ThenByDescending(task => task.CreatedAt)
+            .ToList();
+
+        KanbanTask movedAndUpdatedTask = CopyTask(
+            existingTask,
+            normalizedTitle,
+            normalizedDescription,
+            projectId,
+            normalizedStatus,
+            normalizedPriority,
+            targetColumnTasks.Count,
+            now);
+
+        targetColumnTasks.Add(movedAndUpdatedTask);
+
+        var updatedTasksById = new Dictionary<Guid, KanbanTask>
+        {
+            [movedAndUpdatedTask.Id] = movedAndUpdatedTask
+        };
+
+        ReindexColumn(
+            sourceColumnTasks,
+            existingTask.Status,
+            now,
+            updatedTasksById);
+
+        ReindexColumn(
+            targetColumnTasks,
+            normalizedStatus,
+            now,
+            updatedTasksById);
+
+        IReadOnlyList<KanbanTask> updatedTasks = updatedTasksById.Values
+            .ToList();
+
+        taskRepository.SaveAll(updatedTasks);
+        ReplaceTasks(updatedTasks);
+        BoardChanged?.Invoke();
+
+        return tasks.First(task => task.Id == taskId);
+    }
+
+    public void DeleteTask(Guid taskId)
+    {
+        KanbanTask taskToDelete = GetRequiredTask(taskId);
+
+        List<KanbanTask> remainingColumnTasks = tasks
+            .Where(task =>
+                task.Status == taskToDelete.Status &&
+                task.Id != taskToDelete.Id)
+            .OrderBy(task => task.SortOrder)
+            .ThenByDescending(task => task.CreatedAt)
+            .ToList();
+
+        var updatedTasksById = new Dictionary<Guid, KanbanTask>();
+
+        ReindexColumn(
+            remainingColumnTasks,
+            taskToDelete.Status,
+            DateTime.Now,
+            updatedTasksById);
+
+        IReadOnlyList<KanbanTask> updatedTasks = updatedTasksById.Values
+            .ToList();
+
+        taskRepository.DeleteAndSaveAll(
+            taskId,
+            updatedTasks);
+
+        tasks.RemoveAll(task => task.Id == taskId);
+        ReplaceTasks(updatedTasks);
+        BoardChanged?.Invoke();
+    }
+
     public void MoveTask(
         Guid taskId,
         KanbanTaskStatus targetStatus,
@@ -104,9 +197,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
                 "Der Zielstatus ist ungültig.");
         }
 
-        KanbanTask taskToMove = tasks.FirstOrDefault(task => task.Id == taskId)
-            ?? throw new KeyNotFoundException(
-                $"Die Kanban-Aufgabe {taskId} wurde nicht gefunden.");
+        KanbanTask taskToMove = GetRequiredTask(taskId);
 
         List<KanbanTask> sourceColumnTasks = tasks
             .Where(task => task.Status == taskToMove.Status && task.Id != taskId)
@@ -158,19 +249,61 @@ public sealed class KanbanBoardService : IKanbanBoardService
             .ToList();
 
         taskRepository.SaveAll(updatedTasks);
+        ReplaceTasks(updatedTasks);
+        BoardChanged?.Invoke();
+    }
 
-        for (int index = 0; index < tasks.Count; index++)
+    private KanbanTask GetRequiredTask(Guid taskId)
+    {
+        return tasks.FirstOrDefault(task => task.Id == taskId)
+            ?? throw new KeyNotFoundException(
+                $"Die Kanban-Aufgabe {taskId} wurde nicht gefunden.");
+    }
+
+    private static string NormalizeTitle(string title)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+
+        string normalizedTitle = title.Trim();
+
+        if (normalizedTitle.Length > MaximumTitleLength)
         {
-            if (updatedTasksById.TryGetValue(
-                    tasks[index].Id,
-                    out KanbanTask? updatedTask))
-            {
-                tasks[index] = updatedTask;
-            }
+            throw new ArgumentException(
+                $"Der Aufgabentitel darf höchstens {MaximumTitleLength} Zeichen lang sein.",
+                nameof(title));
         }
 
-        SortTasks();
-        BoardChanged?.Invoke();
+        return normalizedTitle;
+    }
+
+    private static string NormalizeDescription(string description)
+    {
+        string normalizedDescription = description?.Trim() ?? string.Empty;
+
+        if (normalizedDescription.Length > MaximumDescriptionLength)
+        {
+            throw new ArgumentException(
+                $"Die Beschreibung darf höchstens {MaximumDescriptionLength} Zeichen lang sein.",
+                nameof(description));
+        }
+
+        return normalizedDescription;
+    }
+
+    private static KanbanTaskStatus NormalizeStatus(
+        KanbanTaskStatus status)
+    {
+        return Enum.IsDefined(typeof(KanbanTaskStatus), status)
+            ? status
+            : KanbanTaskStatus.Open;
+    }
+
+    private static KanbanTaskPriority NormalizePriority(
+        KanbanTaskPriority priority)
+    {
+        return Enum.IsDefined(typeof(KanbanTaskPriority), priority)
+            ? priority
+            : KanbanTaskPriority.Normal;
     }
 
     private static void ReindexColumn(
@@ -190,7 +323,11 @@ public sealed class KanbanBoardService : IKanbanBoardService
 
             updatedTasksById[task.Id] = CopyTask(
                 task,
+                task.Title,
+                task.Description,
+                task.ProjectId,
                 status,
+                task.Priority,
                 index,
                 updatedAt);
         }
@@ -198,22 +335,51 @@ public sealed class KanbanBoardService : IKanbanBoardService
 
     private static KanbanTask CopyTask(
         KanbanTask task,
+        string title,
+        string description,
+        Guid? projectId,
         KanbanTaskStatus status,
+        KanbanTaskPriority priority,
         int sortOrder,
         DateTime updatedAt)
     {
         return new KanbanTask
         {
             Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            ProjectId = task.ProjectId,
+            Title = title,
+            Description = description,
+            ProjectId = projectId,
             Status = status,
-            Priority = task.Priority,
+            Priority = priority,
             SortOrder = sortOrder,
             CreatedAt = task.CreatedAt,
             UpdatedAt = updatedAt
         };
+    }
+
+    private void ReplaceTasks(
+        IReadOnlyList<KanbanTask> updatedTasks)
+    {
+        if (updatedTasks.Count == 0)
+        {
+            SortTasks();
+            return;
+        }
+
+        Dictionary<Guid, KanbanTask> updatedTasksById = updatedTasks
+            .ToDictionary(task => task.Id);
+
+        for (int index = 0; index < tasks.Count; index++)
+        {
+            if (updatedTasksById.TryGetValue(
+                    tasks[index].Id,
+                    out KanbanTask? updatedTask))
+            {
+                tasks[index] = updatedTask;
+            }
+        }
+
+        SortTasks();
     }
 
     private void SortTasks()

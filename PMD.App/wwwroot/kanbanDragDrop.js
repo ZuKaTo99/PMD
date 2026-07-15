@@ -55,7 +55,10 @@ window.pmdKanbanDragDrop = (() => {
             : null;
 
         const handle = eventTarget?.closest(instance.options.handleSelector);
-        if (!handle || !instance.root.contains(handle)) {
+        if (!handle ||
+            !instance.root.contains(handle) ||
+            handle.matches(":disabled") ||
+            handle.getAttribute("aria-disabled") === "true") {
             return;
         }
 

@@ -31,9 +31,9 @@
     @if (IsCreateFormOpen)
     {
         <section id="kanban-create-task"
-                 class="kanban-create-panel mb-4"
+                 class="kanban-task-form-panel mb-4"
                  aria-labelledby="kanban-create-title">
-            <div class="kanban-create-heading">
+            <div class="kanban-task-form-heading">
                 <div>
                     <div class="kanban-eyebrow">
                         Neue Aufgabe
@@ -50,7 +50,7 @@
                 </div>
             </div>
 
-            <div class="kanban-create-grid">
+            <div class="kanban-task-form-grid">
                 <div class="kanban-field kanban-field-title">
                     <label class="form-label"
                            for="kanban-task-title">
@@ -140,7 +140,7 @@
                 </div>
             }
 
-            <div class="kanban-create-actions">
+            <div class="kanban-task-form-actions">
                 <button type="button"
                         class="btn btn-primary"
                         disabled="@IsCreateButtonDisabled"
@@ -151,6 +151,191 @@
                 <button type="button"
                         class="btn btn-outline-secondary"
                         @onclick="CancelCreateTask">
+                    Abbrechen
+                </button>
+            </div>
+        </section>
+    }
+
+    @if (IsEditFormOpen)
+    {
+        <section id="kanban-edit-task"
+                 class="kanban-task-form-panel kanban-edit-panel mb-4"
+                 aria-labelledby="kanban-edit-title">
+            <div class="kanban-task-form-heading">
+                <div>
+                    <div class="kanban-eyebrow">
+                        Aufgabe bearbeiten
+                    </div>
+
+                    <h2 id="kanban-edit-title"
+                        class="h4 mb-1">
+                        Details und Zuordnung aktualisieren
+                    </h2>
+
+                    <p class="text-muted small mb-0">
+                        Ein geänderter Status verschiebt die Aufgabe ans Ende der gewählten Spalte.
+                    </p>
+                </div>
+            </div>
+
+            <div class="kanban-task-form-grid">
+                <div class="kanban-field kanban-field-title">
+                    <label class="form-label"
+                           for="kanban-edit-task-title">
+                        Titel
+                    </label>
+
+                    <input id="kanban-edit-task-title"
+                           class="form-control"
+                           maxlength="160"
+                           @bind="EditTaskTitle"
+                           @bind:event="oninput" />
+                </div>
+
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-edit-task-project">
+                        Projekt
+                    </label>
+
+                    <select id="kanban-edit-task-project"
+                            class="form-select"
+                            @bind="EditProjectId">
+                        <option value="">Keinem Projekt zuordnen</option>
+
+                        @foreach (Project project in Projects)
+                        {
+                            <option value="@project.Id">
+                                @project.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-edit-task-priority">
+                        Priorität
+                    </label>
+
+                    <select id="kanban-edit-task-priority"
+                            class="form-select"
+                            @bind="EditTaskPriority">
+                        <option value="@KanbanTaskPriority.Low">Niedrig</option>
+                        <option value="@KanbanTaskPriority.Normal">Normal</option>
+                        <option value="@KanbanTaskPriority.High">Hoch</option>
+                        <option value="@KanbanTaskPriority.Critical">Kritisch</option>
+                    </select>
+                </div>
+
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-edit-task-status">
+                        Status
+                    </label>
+
+                    <select id="kanban-edit-task-status"
+                            class="form-select"
+                            @bind="EditTaskStatus">
+                        <option value="@KanbanTaskStatus.Open">Offen</option>
+                        <option value="@KanbanTaskStatus.InProgress">In Arbeit</option>
+                        <option value="@KanbanTaskStatus.Blocked">Blockiert</option>
+                        <option value="@KanbanTaskStatus.Done">Erledigt</option>
+                    </select>
+                </div>
+
+                <div class="kanban-field kanban-field-description">
+                    <label class="form-label"
+                           for="kanban-edit-task-description">
+                        Beschreibung <span class="text-muted">(optional)</span>
+                    </label>
+
+                    <textarea id="kanban-edit-task-description"
+                              class="form-control"
+                              rows="3"
+                              maxlength="2000"
+                              @bind="EditTaskDescription"></textarea>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(EditTaskErrorMessage))
+            {
+                <div class="alert alert-danger py-2 mb-3"
+                     role="alert">
+                    @EditTaskErrorMessage
+                </div>
+            }
+
+            <div class="kanban-task-form-actions">
+                <button type="button"
+                        class="btn btn-primary"
+                        disabled="@IsEditButtonDisabled"
+                        @onclick="SaveEditedTask">
+                    Änderungen speichern
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        @onclick="CancelEditTask">
+                    Abbrechen
+                </button>
+            </div>
+        </section>
+    }
+
+    @if (TaskPendingDeletion is KanbanTask taskPendingDeletion)
+    {
+        <section class="kanban-delete-panel mb-4"
+                 aria-labelledby="kanban-delete-title"
+                 role="alert">
+            <div class="kanban-delete-icon"
+                 aria-hidden="true">
+                <svg viewBox="0 0 16 16"
+                     aria-hidden="true"
+                     focusable="false">
+                    <path d="M3 4.5h10M6 2.5h4M5 4.5v8.25h6V4.5M6.75 6.5v4.25M9.25 6.5v4.25"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.35" />
+                </svg>
+            </div>
+
+            <div class="kanban-delete-content">
+                <div class="kanban-eyebrow">
+                    Aufgabe löschen
+                </div>
+
+                <h2 id="kanban-delete-title"
+                    class="h5 mb-2">
+                    „@taskPendingDeletion.Title“ wirklich löschen?
+                </h2>
+
+                <p class="text-muted small mb-0">
+                    Die Aufgabe wird dauerhaft aus PMD entfernt. Projektdateien und der zugeordnete Projektordner bleiben unverändert.
+                </p>
+
+                @if (!string.IsNullOrWhiteSpace(DeleteTaskErrorMessage))
+                {
+                    <div class="alert alert-danger py-2 mt-3 mb-0"
+                         role="alert">
+                        @DeleteTaskErrorMessage
+                    </div>
+                }
+            </div>
+
+            <div class="kanban-delete-actions">
+                <button type="button"
+                        class="btn btn-danger"
+                        @onclick="ConfirmDeleteTask">
+                    Endgültig löschen
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        @onclick="CancelDeleteTask">
                     Abbrechen
                 </button>
             </div>
@@ -206,7 +391,7 @@
                         {
                             Project? project = GetProject(task.ProjectId);
 
-                            <article class="kanban-task-card @GetPriorityClass(task.Priority) @GetProjectAccentClass(project)"
+                            <article class="kanban-task-card @GetPriorityClass(task.Priority) @GetProjectAccentClass(project) @(IsTaskBeingManaged(task.Id) ? "kanban-task-card-is-active" : string.Empty)"
                                      data-kanban-task-id="@task.Id"
                                      data-kanban-task-title="@task.Title"
                                      @key="task.Id">
@@ -220,8 +405,52 @@
                                             @FormatDate(task.CreatedAt)
                                         </span>
 
+                                        <span class="kanban-task-card-actions">
+                                            <button type="button"
+                                                    class="kanban-task-action-button"
+                                                    title="Aufgabe bearbeiten"
+                                                    aria-label="@($"{task.Title} bearbeiten")"
+                                                    @onclick="() => StartEditingTask(task)">
+                                                <svg class="kanban-action-icon"
+                                                     viewBox="0 0 16 16"
+                                                     aria-hidden="true"
+                                                     focusable="false">
+                                                    <path d="M3 11.75 3.55 9.3 10.8 2.05a1.3 1.3 0 0 1 1.85 0l1.3 1.3a1.3 1.3 0 0 1 0 1.85L6.7 12.45 4.25 13 3 11.75Z"
+                                                          fill="none"
+                                                          stroke="currentColor"
+                                                          stroke-linecap="round"
+                                                          stroke-linejoin="round"
+                                                          stroke-width="1.35" />
+                                                    <path d="m9.9 2.95 3.15 3.15M8.6 13H3"
+                                                          fill="none"
+                                                          stroke="currentColor"
+                                                          stroke-linecap="round"
+                                                          stroke-width="1.35" />
+                                                </svg>
+                                            </button>
+
+                                            <button type="button"
+                                                    class="kanban-task-action-button kanban-task-action-delete"
+                                                    title="Aufgabe löschen"
+                                                    aria-label="@($"{task.Title} löschen")"
+                                                    @onclick="() => RequestDeleteTask(task)">
+                                                <svg class="kanban-action-icon"
+                                                     viewBox="0 0 16 16"
+                                                     aria-hidden="true"
+                                                     focusable="false">
+                                                    <path d="M3 4.5h10M6 2.5h4M5 4.5v8.25h6V4.5M6.75 6.5v4.25M9.25 6.5v4.25"
+                                                          fill="none"
+                                                          stroke="currentColor"
+                                                          stroke-linecap="round"
+                                                          stroke-linejoin="round"
+                                                          stroke-width="1.35" />
+                                                </svg>
+                                            </button>
+                                        </span>
+
                                         <button type="button"
                                                 class="kanban-task-drag-handle"
+                                                disabled="@IsTaskBeingManaged(task.Id)"
                                                 title="Aufgabe ziehen und verschieben"
                                                 aria-label="@($"{task.Title} ziehen und verschieben")">
                                             <span aria-hidden="true">⋮⋮</span>
@@ -274,6 +503,6 @@
 
     <div class="alert alert-info kanban-next-step-note mt-4 mb-0">
         <strong>Direkt organisieren:</strong>
-        Ziehe eine Aufgabe am Griff in eine andere Spalte oder an eine neue Position. Status und Reihenfolge werden dauerhaft gespeichert.
+        Ziehe Aufgaben zwischen den Spalten, bearbeite ihre Details oder entferne erledigte Einträge nach einer ausdrücklichen Bestätigung.
     </div>
 </div>
