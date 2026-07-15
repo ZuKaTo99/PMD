@@ -1,3 +1,4 @@
+using PMD.App.Application.Analytics;
 using System;
 using System.Collections.Generic;
 
@@ -12,13 +13,22 @@ public sealed class HomeOverview
     public IReadOnlyList<HomeProjectSummary> RecentProjects { get; init; } =
         Array.Empty<HomeProjectSummary>();
 
-    public IReadOnlyList<HomeProjectCheckSummary> RecentChecks { get; init; } =
-        Array.Empty<HomeProjectCheckSummary>();
+    public IReadOnlyList<HomeProjectActivitySummary> ProjectActivities
+    {
+        get;
+        init;
+    } = Array.Empty<HomeProjectActivitySummary>();
+
+    public IReadOnlyList<ProjectLanguageUsage> LanguageUsage { get; init; } =
+        Array.Empty<ProjectLanguageUsage>();
 
     public HomeProjectSummary? MostRecentProject =>
         RecentProjects.Count > 0
             ? RecentProjects[0]
             : null;
+
+    public bool HasLanguageUsage =>
+        LanguageUsage.Count > 0;
 }
 
 public sealed class HomeProjectSummary
@@ -32,7 +42,7 @@ public sealed class HomeProjectSummary
     public DateTime LastScannedAt { get; init; }
 }
 
-public sealed class HomeProjectCheckSummary
+public sealed class HomeProjectActivitySummary
 {
     public Guid ProjectId { get; init; }
 
@@ -40,11 +50,16 @@ public sealed class HomeProjectCheckSummary
 
     public string AccentColor { get; init; } = string.Empty;
 
-    public DateTime ScannedAt { get; init; }
+    public DateTime LatestScannedAt { get; init; }
 
-    public TimeSpan ScanDuration { get; init; }
+    public int LatestFileCount { get; init; }
 
-    public int FileCount { get; init; }
+    public int ProjectStateCount { get; init; }
 
-    public int WarningCount { get; init; }
+    public IReadOnlyList<int> FileCountHistory { get; init; } =
+        Array.Empty<int>();
+
+    public IReadOnlyList<ProjectLanguageUsage> LanguageUsage { get; init; } =
+        Array.Empty<ProjectLanguageUsage>();
+
 }

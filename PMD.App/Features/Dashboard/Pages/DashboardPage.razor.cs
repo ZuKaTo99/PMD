@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using PMD.App.Application.Analytics;
 using PMD.App.Application.Dashboard;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,9 @@ namespace PMD.App.Features.Dashboard.Pages;
 
 public partial class DashboardPage : IDisposable
 {
+    private const int MaximumDashboardLanguageCount = 6;
+    private const int MaximumProjectLanguageCount = 4;
+
     [Inject]
     private IDashboardOverviewService DashboardOverviewService { get; set; } =
         default!;
@@ -21,6 +25,11 @@ public partial class DashboardPage : IDisposable
             .OrderByDescending(activity => activity.TotalChangeCount)
             .ThenBy(activity => activity.ProjectName, StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+    protected IReadOnlyList<ProjectLanguageUsage> DisplayedLanguages =>
+        CreateDisplayedLanguages(
+            Overview.LanguageUsage,
+            MaximumDashboardLanguageCount);
 
     protected override void OnInitialized()
     {
@@ -54,6 +63,49 @@ public partial class DashboardPage : IDisposable
     protected static string GetSegmentStyle(int count)
     {
         return $"flex-grow: {Math.Max(0, count)};";
+    }
+
+    protected static string GetLanguageSegmentStyle(
+        ProjectLanguageUsage language)
+    {
+        string percentage = language.Percentage.ToString(
+            "0.####",
+            CultureInfo.InvariantCulture);
+
+        return $"--dashboard-language-color: {language.Color}; " +
+            $"width: {percentage}%;";
+    }
+
+    protected static string GetLanguageColorStyle(string color)
+    {
+        return $"--dashboard-language-color: {color};";
+    }
+
+    protected static IReadOnlyList<ProjectLanguageUsage>
+        GetDisplayedProjectLanguages(DashboardProjectActivity activity)
+    {
+        return CreateDisplayedLanguages(
+            activity.LanguageUsage,
+            MaximumProjectLanguageCount);
+    }
+
+    protected static string GetLanguageDistributionAriaLabel(
+        IReadOnlyList<ProjectLanguageUsage> languages)
+    {
+        if (languages.Count == 0)
+        {
+            return "Keine unterstützte Programmiersprache erkannt.";
+        }
+
+        return "Sprachverteilung: " + string.Join(
+            ", ",
+            languages.Select(language =>
+                $"{language.Name} {FormatPercentage(language.Percentage)}"));
+    }
+
+    protected static string GetLanguageTitle(ProjectLanguageUsage language)
+    {
+        return $"{language.Name}: {FormatPercentage(language.Percentage)}";
     }
 
     protected static string GetActivityAriaLabel(
@@ -120,6 +172,16 @@ public partial class DashboardPage : IDisposable
         return $"{value.ToString(format, CultureInfo.CurrentCulture)} {units[unitIndex]}";
     }
 
+    protected static string FormatPercentage(double percentage)
+    {
+        if (percentage > 0d && percentage < 0.1d)
+        {
+            return "<0,1 %";
+        }
+
+        return $"{percentage:0.0} %";
+    }
+
     protected static char GetProjectInitial(string projectName)
     {
         string trimmedName = projectName?.Trim() ?? string.Empty;
@@ -147,6 +209,36 @@ public partial class DashboardPage : IDisposable
             < 0 => "dashboard-file-delta-negative",
             _ => "dashboard-file-delta-neutral"
         };
+    }
+
+    private static IReadOnlyList<ProjectLanguageUsage> CreateDisplayedLanguages(
+        IReadOnlyList<ProjectLanguageUsage> languages,
+        int maximumVisibleCount)
+    {
+        if (languages.Count <= maximumVisibleCount)
+        {
+            return languages;
+        }
+
+        int namedLanguageCount = Math.Max(1, maximumVisibleCount - 1);
+        List<ProjectLanguageUsage> displayedLanguages = languages
+            .Take(namedLanguageCount)
+            .ToList();
+
+        IReadOnlyList<ProjectLanguageUsage> remainingLanguages = languages
+            .Skip(namedLanguageCount)
+            .ToList();
+
+        displayedLanguages.Add(new ProjectLanguageUsage
+        {
+            Name = "Weitere",
+            Color = "#8b949e",
+            SizeInBytes = remainingLanguages.Sum(language => language.SizeInBytes),
+            FileCount = remainingLanguages.Sum(language => language.FileCount),
+            Percentage = remainingLanguages.Sum(language => language.Percentage)
+        });
+
+        return displayedLanguages;
     }
 
     private void OnOverviewChanged()

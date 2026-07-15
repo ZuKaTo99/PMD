@@ -1,3 +1,4 @@
+using PMD.App.Application.Analytics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,9 @@ public sealed class DashboardOverview
 
     public IReadOnlyList<DashboardProjectActivity> ProjectActivities { get; init; } =
         Array.Empty<DashboardProjectActivity>();
+
+    public IReadOnlyList<ProjectLanguageUsage> LanguageUsage { get; init; } =
+        Array.Empty<ProjectLanguageUsage>();
 
     public int ComparableProjectCount =>
         ProjectActivities.Count(activity => activity.HasComparison);
@@ -38,6 +42,8 @@ public sealed class DashboardOverview
     public bool HasProjects => ProjectCount > 0;
 
     public bool HasComparisons => ComparableProjectCount > 0;
+
+    public bool HasLanguageUsage => LanguageUsage.Count > 0;
 }
 
 public sealed class DashboardProjectActivity
@@ -71,6 +77,10 @@ public sealed class DashboardProjectActivity
     public int ModifiedFileCount { get; init; }
 
     public int RemovedFileCount { get; init; }
+
+    public IReadOnlyList<ProjectLanguageUsage> LanguageUsage { get; init; } =
+        Array.Empty<ProjectLanguageUsage>();
+
 
     public int TotalChangeCount =>
         AddedFileCount + ModifiedFileCount + RemovedFileCount;

@@ -1,3 +1,4 @@
+using PMD.App.Application.Analytics;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
 using PMD.App.Domain.ProjectStates;
@@ -11,7 +12,7 @@ namespace PMD.App.Application.Home;
 public sealed class HomeOverviewService : IHomeOverviewService
 {
     private const int RecentProjectLimit = 4;
-    private const int RecentCheckLimit = 5;
+    private const int ActivityHistoryLimit = 7;
 
     private readonly IProjectMemoryStore projectMemoryStore;
     private readonly IProjectStateMemoryStore projectStateMemoryStore;
@@ -35,33 +36,80 @@ public sealed class HomeOverviewService : IHomeOverviewService
             .OrderByDescending(project => project.LastScannedAt)
             .ToList();
 
-        Dictionary<Guid, Project> projectsById = projects
-            .ToDictionary(project => project.Id);
-
         List<HomeProjectSummary> recentProjects = projects
             .Take(RecentProjectLimit)
             .Select(CreateProjectSummary)
             .ToList();
 
-        List<HomeProjectCheckSummary> recentChecks =
-            projectStateMemoryStore.ProjectStates
-                .Where(projectState =>
-                    projectsById.ContainsKey(projectState.ProjectId))
-                .OrderByDescending(projectState => projectState.ScannedAt)
-                .Take(RecentCheckLimit)
-                .Select(projectState => CreateCheckSummary(
-                    projectState,
-                    projectsById[projectState.ProjectId]))
+        List<HomeProjectActivitySummary> allProjectActivities = projects
+            .Select(CreateProjectActivitySummary)
+            .ToList();
+
+        List<HomeProjectActivitySummary> recentProjectActivities =
+            allProjectActivities
+                .Take(RecentProjectLimit)
                 .ToList();
+
+        DateTime? latestCheckAt = allProjectActivities
+            .Select(activity => (DateTime?)activity.LatestScannedAt)
+            .FirstOrDefault();
 
         return new HomeOverview
         {
             ProjectCount = projects.Count,
-            LatestCheckAt = recentChecks.Count > 0
-                ? recentChecks[0].ScannedAt
-                : null,
+            LatestCheckAt = latestCheckAt,
             RecentProjects = recentProjects,
-            RecentChecks = recentChecks
+            ProjectActivities = recentProjectActivities,
+            LanguageUsage = ProjectLanguageUsageAnalyzer.Combine(
+                allProjectActivities.Select(
+                    activity => activity.LanguageUsage))
+        };
+    }
+
+    private HomeProjectActivitySummary CreateProjectActivitySummary(
+        Project project)
+    {
+        IReadOnlyList<ProjectState> projectStates =
+            projectStateMemoryStore.GetByProjectId(
+                project.Id,
+                ActivityHistoryLimit);
+
+        List<ProjectState> orderedProjectStates = projectStates
+            .OrderBy(projectState => projectState.ScannedAt)
+            .ToList();
+
+        ProjectState? latestProjectState = orderedProjectStates
+            .LastOrDefault();
+
+        if (latestProjectState is null)
+        {
+            return new HomeProjectActivitySummary
+            {
+                ProjectId = project.Id,
+                ProjectName = project.Name,
+                AccentColor = ProjectAccentColors.Normalize(
+                    project.AccentColor),
+                LatestScannedAt = project.LastScannedAt
+            };
+        }
+
+        ProjectState latestProjectStateWithFiles =
+            projectStateMemoryStore.LoadFiles(latestProjectState);
+
+        return new HomeProjectActivitySummary
+        {
+            ProjectId = project.Id,
+            ProjectName = project.Name,
+            AccentColor = ProjectAccentColors.Normalize(
+                project.AccentColor),
+            LatestScannedAt = latestProjectState.ScannedAt,
+            LatestFileCount = latestProjectState.FileCount,
+            ProjectStateCount = orderedProjectStates.Count,
+            FileCountHistory = orderedProjectStates
+                .Select(projectState => projectState.FileCount)
+                .ToList(),
+            LanguageUsage = ProjectLanguageUsageAnalyzer.Analyze(
+                latestProjectStateWithFiles.Files)
         };
     }
 
@@ -80,23 +128,6 @@ public sealed class HomeOverviewService : IHomeOverviewService
             AccentColor = ProjectAccentColors.Normalize(
                 project.AccentColor),
             LastScannedAt = project.LastScannedAt
-        };
-    }
-
-    private static HomeProjectCheckSummary CreateCheckSummary(
-        ProjectState projectState,
-        Project project)
-    {
-        return new HomeProjectCheckSummary
-        {
-            ProjectId = project.Id,
-            ProjectName = project.Name,
-            AccentColor = ProjectAccentColors.Normalize(
-                project.AccentColor),
-            ScannedAt = projectState.ScannedAt,
-            ScanDuration = projectState.ScanDuration,
-            FileCount = projectState.FileCount,
-            WarningCount = projectState.WarningCount
         };
     }
 }

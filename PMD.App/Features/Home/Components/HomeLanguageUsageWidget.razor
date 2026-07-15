@@ -1,0 +1,158 @@
+@namespace PMD.App.Features.Home.Components
+@using Microsoft.AspNetCore.Components
+@using PMD.App.Application.Analytics
+@using System.Globalization
+@using System.Linq
+
+<section class="card pmd-card home-widget home-language-widget h-100"
+         aria-labelledby="home-language-usage-title">
+    <div class="card-body">
+        <div class="home-widget-heading">
+            <div>
+                <div class="home-widget-eyebrow">
+                    Technologieprofil
+                </div>
+
+                <h2 id="home-language-usage-title"
+                    class="h5 mb-0">
+                    Meistgenutzte Sprachen
+                </h2>
+            </div>
+
+            @if (Languages.Count > 0)
+            {
+                <span class="home-primary-language"
+                      style="@GetLanguageColorStyle(Languages[0].Color)">
+                    <i class="home-language-dot"></i>
+                    @Languages[0].Name
+                </span>
+            }
+        </div>
+
+        @if (Languages.Count == 0)
+        {
+            <div class="home-empty-state">
+                <strong>Noch keine unterstützte Sprache erkannt.</strong>
+                <span>
+                    PMD wertet die Dateien der neuesten gespeicherten Projektstände aus.
+                </span>
+            </div>
+        }
+        else
+        {
+            <div class="home-language-bar"
+                 role="img"
+                 aria-label="@GetLanguageDistributionAriaLabel()">
+                @foreach (ProjectLanguageUsage language in DisplayedLanguages)
+                {
+                    <span class="home-language-segment"
+                          style="@GetLanguageSegmentStyle(language)"
+                          title="@GetLanguageTitle(language)">
+                    </span>
+                }
+            </div>
+
+            <div class="home-language-legend">
+                @foreach (ProjectLanguageUsage language in DisplayedLanguages)
+                {
+                    <div class="home-language-legend-entry"
+                         style="@GetLanguageColorStyle(language.Color)">
+                        <span class="home-language-name">
+                            <i class="home-language-dot"></i>
+                            <span title="@language.Name">
+                                @language.Name
+                            </span>
+                        </span>
+
+                        <span class="home-language-percentage">
+                            @FormatPercentage(language.Percentage)
+                        </span>
+                    </div>
+                }
+            </div>
+
+            <p class="home-language-note mb-0">
+                Berechnet nach Dateigröße; Bibliotheken und typische generierte Dateien werden nicht mitgezählt.
+            </p>
+        }
+    </div>
+</section>
+
+@code {
+    private const int MaximumVisibleLanguageCount = 6;
+
+    [Parameter]
+    public IReadOnlyList<ProjectLanguageUsage> Languages { get; set; } =
+        Array.Empty<ProjectLanguageUsage>();
+
+    private IReadOnlyList<ProjectLanguageUsage> DisplayedLanguages =>
+        CreateDisplayedLanguages(Languages, MaximumVisibleLanguageCount);
+
+    private static IReadOnlyList<ProjectLanguageUsage> CreateDisplayedLanguages(
+        IReadOnlyList<ProjectLanguageUsage> languages,
+        int maximumVisibleCount)
+    {
+        if (languages.Count <= maximumVisibleCount)
+        {
+            return languages;
+        }
+
+        int namedLanguageCount = Math.Max(1, maximumVisibleCount - 1);
+        List<ProjectLanguageUsage> displayedLanguages = languages
+            .Take(namedLanguageCount)
+            .ToList();
+
+        IReadOnlyList<ProjectLanguageUsage> remainingLanguages = languages
+            .Skip(namedLanguageCount)
+            .ToList();
+
+        displayedLanguages.Add(new ProjectLanguageUsage
+        {
+            Name = "Weitere",
+            Color = "#8b949e",
+            SizeInBytes = remainingLanguages.Sum(language => language.SizeInBytes),
+            FileCount = remainingLanguages.Sum(language => language.FileCount),
+            Percentage = remainingLanguages.Sum(language => language.Percentage)
+        });
+
+        return displayedLanguages;
+    }
+
+    private string GetLanguageDistributionAriaLabel()
+    {
+        return "Sprachverteilung: " + string.Join(
+            ", ",
+            DisplayedLanguages.Select(language =>
+                $"{language.Name} {FormatPercentage(language.Percentage)}"));
+    }
+
+    private static string GetLanguageSegmentStyle(
+        ProjectLanguageUsage language)
+    {
+        string percentage = language.Percentage.ToString(
+            "0.####",
+            CultureInfo.InvariantCulture);
+
+        return $"--home-language-color: {language.Color}; width: {percentage}%;";
+    }
+
+    private static string GetLanguageColorStyle(string color)
+    {
+        return $"--home-language-color: {color};";
+    }
+
+    private static string GetLanguageTitle(ProjectLanguageUsage language)
+    {
+        return $"{language.Name}: {FormatPercentage(language.Percentage)}";
+    }
+
+    private static string FormatPercentage(double percentage)
+    {
+        if (percentage > 0d && percentage < 0.1d)
+        {
+            return "<0,1 %";
+        }
+
+        return $"{percentage:0.0} %";
+    }
+}

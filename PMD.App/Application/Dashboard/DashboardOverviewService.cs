@@ -1,3 +1,4 @@
+using PMD.App.Application.Analytics;
 using PMD.App.Application.ProjectChanges;
 using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
@@ -54,7 +55,9 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
         {
             ProjectCount = projects.Count,
             LatestCheckAt = latestCheckAt,
-            ProjectActivities = activities
+            ProjectActivities = activities,
+            LanguageUsage = ProjectLanguageUsageAnalyzer.Combine(
+                activities.Select(activity => activity.LanguageUsage))
         };
     }
 
@@ -81,6 +84,13 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
             };
         }
 
+        ProjectState latestProjectStateWithFiles =
+            projectStateMemoryStore.LoadFiles(latestProjectState);
+
+        IReadOnlyList<ProjectLanguageUsage> languageUsage =
+            ProjectLanguageUsageAnalyzer.Analyze(
+                latestProjectStateWithFiles.Files);
+
         ProjectState? previousProjectState = projectStates
             .Where(projectState => projectState.Id != latestProjectState.Id)
             .OrderByDescending(projectState => projectState.ScannedAt)
@@ -90,11 +100,9 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
         {
             return CreateActivityWithoutComparison(
                 project,
-                latestProjectState);
+                latestProjectState,
+                languageUsage);
         }
-
-        ProjectState latestProjectStateWithFiles =
-            projectStateMemoryStore.LoadFiles(latestProjectState);
 
         ProjectState previousProjectStateWithFiles =
             projectStateMemoryStore.LoadFiles(previousProjectState);
@@ -120,13 +128,15 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
             LatestWarningCount = latestProjectState.WarningCount,
             AddedFileCount = comparison.AddedFileCount,
             ModifiedFileCount = comparison.ModifiedFileCount,
-            RemovedFileCount = comparison.RemovedFileCount
+            RemovedFileCount = comparison.RemovedFileCount,
+            LanguageUsage = languageUsage
         };
     }
 
     private static DashboardProjectActivity CreateActivityWithoutComparison(
         Project project,
-        ProjectState latestProjectState)
+        ProjectState latestProjectState,
+        IReadOnlyList<ProjectLanguageUsage> languageUsage)
     {
         return new DashboardProjectActivity
         {
@@ -139,7 +149,8 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
             LatestScanDuration = latestProjectState.ScanDuration,
             LatestFileCount = latestProjectState.FileCount,
             LatestTotalSizeInBytes = latestProjectState.TotalSizeInBytes,
-            LatestWarningCount = latestProjectState.WarningCount
+            LatestWarningCount = latestProjectState.WarningCount,
+            LanguageUsage = languageUsage
         };
     }
 

@@ -163,7 +163,8 @@ public partial class HomePage : IDisposable, IAsyncDisposable
             HomeWidgetId.ProjectOverview => "Projektübersicht",
             HomeWidgetId.QuickActions => "Schnellzugriffe",
             HomeWidgetId.RecentProjects => "Zuletzt geprüfte Projekte",
-            HomeWidgetId.RecentChecks => "Letzte manuelle Prüfungen",
+            HomeWidgetId.RecentChecks => "Projektentwicklung",
+            HomeWidgetId.LanguageUsage => "Sprachen",
             _ => "Widget"
         };
     }

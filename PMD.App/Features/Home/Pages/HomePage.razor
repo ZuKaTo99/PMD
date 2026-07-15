@@ -15,7 +15,7 @@
             <h1>Willkommen bei PMD</h1>
 
             <p class="text-muted mb-0">
-                Deine wichtigsten Projekte, letzten Prüfungen und nächsten Wege auf einen Blick.
+                Deine wichtigsten Projekte, Entwicklungen und Technologien auf einen Blick.
             </p>
         </div>
 
@@ -98,7 +98,11 @@
                             break;
 
                         case HomeWidgetId.RecentChecks:
-                            <HomeRecentChecksWidget Checks="@Overview.RecentChecks" />
+                            <HomeRecentChecksWidget Activities="@Overview.ProjectActivities" />
+                            break;
+
+                        case HomeWidgetId.LanguageUsage:
+                            <HomeLanguageUsageWidget Languages="@Overview.LanguageUsage" />
                             break;
                     }
                 </div>

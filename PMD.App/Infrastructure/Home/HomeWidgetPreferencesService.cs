@@ -24,7 +24,8 @@ public sealed class HomeWidgetPreferencesService
         HomeWidgetId.ProjectOverview,
         HomeWidgetId.QuickActions,
         HomeWidgetId.RecentProjects,
-        HomeWidgetId.RecentChecks
+        HomeWidgetId.RecentChecks,
+        HomeWidgetId.LanguageUsage
     ];
 
     private static readonly IReadOnlyDictionary<HomeWidgetId, HomeWidgetSize>
@@ -34,7 +35,8 @@ public sealed class HomeWidgetPreferencesService
                 [HomeWidgetId.ProjectOverview] = HomeWidgetSize.Compact,
                 [HomeWidgetId.QuickActions] = HomeWidgetSize.Wide,
                 [HomeWidgetId.RecentProjects] = HomeWidgetSize.Wide,
-                [HomeWidgetId.RecentChecks] = HomeWidgetSize.Compact
+                [HomeWidgetId.RecentChecks] = HomeWidgetSize.Compact,
+                [HomeWidgetId.LanguageUsage] = HomeWidgetSize.Full
             };
 
     private readonly HashSet<HomeWidgetId> hiddenWidgets;

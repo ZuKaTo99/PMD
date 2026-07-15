@@ -1,5 +1,6 @@
 @page "/dashboard"
 @namespace PMD.App.Features.Dashboard.Pages
+@using PMD.App.Application.Analytics
 @using PMD.App.Application.Dashboard
 
 <PageTitle>PMD - Dashboard</PageTitle>
@@ -235,6 +236,87 @@
             }
         </section>
 
+        <section class="dashboard-language-panel mb-4"
+                 aria-labelledby="dashboard-language-title">
+            <div class="dashboard-section-header">
+                <div>
+                    <div class="dashboard-eyebrow">
+                        Technologieprofil
+                    </div>
+
+                    <h2 id="dashboard-language-title"
+                        class="h4 mb-1">
+                        Sprachen in deinen Projekten
+                    </h2>
+
+                    <p class="text-muted small mb-0">
+                        Aus den jeweils neuesten gespeicherten Projektständen – gewichtet nach Dateigröße.
+                    </p>
+                </div>
+
+                @if (Overview.HasLanguageUsage)
+                {
+                    <span class="dashboard-primary-language"
+                          style="@GetLanguageColorStyle(DisplayedLanguages[0].Color)">
+                        <i class="dashboard-language-dot"></i>
+                        Am häufigsten: @DisplayedLanguages[0].Name
+                    </span>
+                }
+            </div>
+
+            @if (Overview.HasLanguageUsage)
+            {
+                <div class="dashboard-language-bar"
+                     role="img"
+                     aria-label="@GetLanguageDistributionAriaLabel(DisplayedLanguages)">
+                    @foreach (ProjectLanguageUsage language in DisplayedLanguages)
+                    {
+                        <span class="dashboard-language-segment"
+                              style="@GetLanguageSegmentStyle(language)"
+                              title="@GetLanguageTitle(language)">
+                        </span>
+                    }
+                </div>
+
+                <div class="dashboard-language-legend">
+                    @foreach (ProjectLanguageUsage language in DisplayedLanguages)
+                    {
+                        <div class="dashboard-language-legend-entry"
+                             style="@GetLanguageColorStyle(language.Color)">
+                            <span class="dashboard-language-name">
+                                <i class="dashboard-language-dot"></i>
+                                <span title="@language.Name">@language.Name</span>
+                            </span>
+
+                            <span class="dashboard-language-percentage">
+                                @FormatPercentage(language.Percentage)
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <p class="dashboard-language-note mb-0">
+                    Bibliotheken, minifizierte Dateien und typische generierte Dateien werden nicht mitgezählt.
+                </p>
+            }
+            else
+            {
+                <div class="dashboard-comparison-empty">
+                    <div class="dashboard-comparison-empty-icon"
+                         aria-hidden="true">
+                        &lt;/&gt;
+                    </div>
+
+                    <div>
+                        <strong>Noch keine unterstützte Sprache erkannt</strong>
+                        <p class="text-muted small mb-0">
+                            Sobald ein gespeicherter Projektstand unterstützte Code- oder Webdateien enthält, erscheint hier die Verteilung.
+                        </p>
+                    </div>
+                </div>
+            }
+        </section>
+
         <section aria-labelledby="dashboard-projects-title">
             <div class="dashboard-section-header mb-3">
                 <div>
@@ -349,6 +431,36 @@
                                 <span>
                                     Nach der nächsten manuellen Prüfung kann PMD die Entwicklung vergleichen.
                                 </span>
+                            </div>
+                        }
+
+                        @if (activity.LanguageUsage.Count > 0)
+                        {
+                            IReadOnlyList<ProjectLanguageUsage> projectLanguages =
+                                GetDisplayedProjectLanguages(activity);
+
+                            <div class="dashboard-project-language">
+                                <div class="dashboard-project-language-header">
+                                    <span>Hauptsprache</span>
+
+                                    <strong style="@GetLanguageColorStyle(activity.LanguageUsage[0].Color)">
+                                        <i class="dashboard-language-dot"></i>
+                                        @activity.LanguageUsage[0].Name
+                                        <span>@FormatPercentage(activity.LanguageUsage[0].Percentage)</span>
+                                    </strong>
+                                </div>
+
+                                <div class="dashboard-project-language-bar"
+                                     role="img"
+                                     aria-label="@GetLanguageDistributionAriaLabel(projectLanguages)">
+                                    @foreach (ProjectLanguageUsage language in projectLanguages)
+                                    {
+                                        <span class="dashboard-language-segment"
+                                              style="@GetLanguageSegmentStyle(language)"
+                                              title="@GetLanguageTitle(language)">
+                                        </span>
+                                    }
+                                </div>
                             </div>
                         }
 

@@ -1,72 +1,89 @@
 @namespace PMD.App.Features.Home.Components
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Application.Home
+@using System.Globalization
+@using System.Linq
 
 <section class="card pmd-card home-widget h-100"
-         aria-labelledby="home-recent-checks-title">
+         aria-labelledby="home-project-activity-title">
     <div class="card-body">
         <div class="home-widget-heading">
             <div>
                 <div class="home-widget-eyebrow">
-                    Projektverlauf
+                    Aktivität
                 </div>
 
-                <h2 id="home-recent-checks-title"
+                <h2 id="home-project-activity-title"
                     class="h5 mb-0">
-                    Letzte manuelle Prüfungen
+                    Projektentwicklung
                 </h2>
             </div>
 
             <span class="home-widget-count">
-                @Checks.Count
+                @Activities.Count
             </span>
         </div>
 
-        @if (Checks.Count == 0)
+        @if (Activities.Count == 0)
         {
             <div class="home-empty-state">
-                <strong>Noch keine Prüfung vorhanden.</strong>
+                <strong>Noch keine Entwicklung sichtbar.</strong>
                 <span>
-                    Manuell gespeicherte Projektstände erscheinen hier in zeitlicher Reihenfolge.
+                    Nach gespeicherten Projektständen erscheint hier der Dateiverlauf deiner Projekte.
                 </span>
             </div>
         }
         else
         {
-            <div class="home-check-list">
-                @foreach (HomeProjectCheckSummary check in Checks)
+            <div class="home-activity-list">
+                @foreach (HomeProjectActivitySummary activity in Activities)
                 {
-                    <a class="home-check-entry home-accent-@check.AccentColor"
-                       href="@($"/projekte/{check.ProjectId}")">
-                        <span class="home-check-accent"
-                              aria-hidden="true">
+                    <a class="home-activity-entry home-accent-@activity.AccentColor"
+                       href="@($"/projekte/{activity.ProjectId}")"
+                       @key="activity.ProjectId">
+                        <span class="home-activity-content">
+                            <span class="home-activity-project"
+                                  title="@activity.ProjectName">
+                                @activity.ProjectName
+                            </span>
+
+                            <span class="home-activity-meta">
+                                @if (activity.LanguageUsage.Count > 0)
+                                {
+                                    <span class="home-language-inline">
+                                        <i class="home-language-dot"
+                                           style="@GetLanguageColorStyle(activity.LanguageUsage[0].Color)">
+                                        </i>
+                                        @activity.LanguageUsage[0].Name
+                                    </span>
+
+                                    <span aria-hidden="true">·</span>
+                                }
+
+                                <span>
+                                    @HomeDisplayFormatter.FormatFileCount(
+                                        activity.LatestFileCount)
+                                </span>
+                            </span>
+
+                            <span class="home-activity-date">
+                                Zuletzt geprüft:
+                                @HomeDisplayFormatter.FormatDateTime(
+                                    activity.LatestScannedAt)
+                            </span>
                         </span>
 
-                        <span class="home-check-content">
-                            <span class="home-check-project" title="@check.ProjectName">
-                                @check.ProjectName
-                            </span>
-
-                            <span class="home-check-meta">
-                                @HomeDisplayFormatter.FormatDateTime(
-                                    check.ScannedAt)
-                                ·
-                                @HomeDisplayFormatter.FormatFileCount(
-                                    check.FileCount)
-                                ·
-                                @HomeDisplayFormatter.FormatDuration(
-                                    check.ScanDuration)
-                            </span>
-
-                            @if (check.WarningCount > 0)
-                            {
-                                <span class="home-check-warning">
-                                    @check.WarningCount
-                                    @(check.WarningCount == 1
-                                        ? "Hinweis"
-                                        : "Hinweise")
-                                </span>
-                            }
+                        <span class="home-activity-sparkline"
+                              role="img"
+                              aria-label="@GetSparklineAriaLabel(activity)">
+                            <svg viewBox="0 0 120 36"
+                                 preserveAspectRatio="none"
+                                 aria-hidden="true"
+                                 focusable="false">
+                                <polyline points="@GetSparklinePoints(activity.FileCountHistory)"
+                                          vector-effect="non-scaling-stroke">
+                                </polyline>
+                            </svg>
                         </span>
                     </a>
                 }
@@ -77,6 +94,81 @@
 
 @code {
     [Parameter]
-    public IReadOnlyList<HomeProjectCheckSummary> Checks { get; set; } =
-        Array.Empty<HomeProjectCheckSummary>();
+    public IReadOnlyList<HomeProjectActivitySummary> Activities { get; set; } =
+        Array.Empty<HomeProjectActivitySummary>();
+
+    private static string GetSparklinePoints(
+        IReadOnlyList<int> values)
+    {
+        const double width = 120d;
+        const double height = 36d;
+        const double padding = 3d;
+
+        if (values.Count == 0)
+        {
+            return $"{padding.ToString(CultureInfo.InvariantCulture)}," +
+                $"{(height / 2d).ToString(CultureInfo.InvariantCulture)} " +
+                $"{(width - padding).ToString(CultureInfo.InvariantCulture)}," +
+                $"{(height / 2d).ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        IReadOnlyList<int> normalizedValues = values.Count == 1
+            ? new[] { values[0], values[0] }
+            : values;
+
+        int minimum = normalizedValues.Min();
+        int maximum = normalizedValues.Max();
+        double range = Math.Max(1d, maximum - minimum);
+        double xStep = (width - (padding * 2d)) /
+            Math.Max(1, normalizedValues.Count - 1);
+
+        return string.Join(
+            " ",
+            normalizedValues.Select((value, index) =>
+            {
+                double x = padding + (index * xStep);
+                double relativeValue = (value - minimum) / range;
+                double y = height - padding -
+                    (relativeValue * (height - (padding * 2d)));
+
+                if (minimum == maximum)
+                {
+                    y = height / 2d;
+                }
+
+                return $"{x.ToString("0.##", CultureInfo.InvariantCulture)}," +
+                    $"{y.ToString("0.##", CultureInfo.InvariantCulture)}";
+            }));
+    }
+
+    private static string GetSparklineAriaLabel(
+        HomeProjectActivitySummary activity)
+    {
+        if (activity.ProjectStateCount <= 1)
+        {
+            return $"{activity.ProjectName}: erster gespeicherter Projektstand mit " +
+                $"{activity.LatestFileCount:N0} Dateien.";
+        }
+
+        int firstFileCount = activity.FileCountHistory.Count > 0
+            ? activity.FileCountHistory[0]
+            : activity.LatestFileCount;
+
+        int difference = activity.LatestFileCount - firstFileCount;
+        string development = difference switch
+        {
+            > 0 => $"um {difference:N0} Dateien gewachsen",
+            < 0 => $"um {Math.Abs(difference):N0} Dateien kleiner geworden",
+            _ => "bei der Dateianzahl stabil geblieben"
+        };
+
+        return $"{activity.ProjectName}: in den letzten " +
+            $"{activity.ProjectStateCount:N0} gespeicherten Projektständen " +
+            $"{development}.";
+    }
+
+    private static string GetLanguageColorStyle(string color)
+    {
+        return $"--home-language-color: {color};";
+    }
 }

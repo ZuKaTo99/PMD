@@ -5,5 +5,6 @@ public enum HomeWidgetId
     ProjectOverview,
     QuickActions,
     RecentProjects,
-    RecentChecks
+    RecentChecks,
+    LanguageUsage
 }
