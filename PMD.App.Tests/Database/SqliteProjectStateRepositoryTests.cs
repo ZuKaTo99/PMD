@@ -1,4 +1,4 @@
-﻿using PMD.App.Application.Database;
+using PMD.App.Application.Database;
 using PMD.App.Domain.ProjectStates;
 using PMD.App.Infrastructure.Database;
 using PMD.App.Infrastructure.ProjectStates;
@@ -58,7 +58,7 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
                 WHERE type = 'index'
                 """);
 
-        Assert.Equal(2, schemaVersion);
+        Assert.Equal(3, schemaVersion);
 
         Assert.Contains(
             indexes,
@@ -83,6 +83,19 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
             index =>
                 index.Name ==
                 "IX_ProjectStateFiles_ProjectStateId_RelativePath");
+
+
+        Assert.Contains(
+            indexes,
+            index =>
+                index.Name ==
+                "IX_KanbanTasks_Status_SortOrder");
+
+        Assert.Contains(
+            indexes,
+            index =>
+                index.Name ==
+                "IX_KanbanTasks_ProjectId");
     }
 
     [Fact]

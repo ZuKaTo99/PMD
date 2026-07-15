@@ -1,4 +1,4 @@
-﻿using PMD.App.Application.Database;
+using PMD.App.Application.Database;
 using PMD.App.Infrastructure.Database.Entities;
 using SQLite;
 using System;
@@ -8,7 +8,7 @@ namespace PMD.App.Infrastructure.Database;
 
 public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
 {
-    private const int CurrentSchemaVersion = 2;
+    private const int CurrentSchemaVersion = 3;
 
     private readonly IPmdDatabaseConnectionFactory connectionFactory;
 
@@ -67,6 +67,10 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
                 ApplyVersion2Migration(connection);
                 break;
 
+            case 3:
+                ApplyVersion3Migration(connection);
+                break;
+
             default:
                 throw new InvalidOperationException(
                     $"Für Schema-Version {targetVersion} " +
@@ -110,6 +114,24 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
             """
             CREATE INDEX IF NOT EXISTS IX_ProjectStateFiles_ProjectStateId_RelativePath
             ON ProjectStateFiles (ProjectStateId, RelativePath)
+            """);
+    }
+
+    private static void ApplyVersion3Migration(
+        SQLiteConnection connection)
+    {
+        connection.CreateTable<KanbanTaskRecord>();
+
+        connection.Execute(
+            """
+            CREATE INDEX IF NOT EXISTS IX_KanbanTasks_Status_SortOrder
+            ON KanbanTasks (Status, SortOrder)
+            """);
+
+        connection.Execute(
+            """
+            CREATE INDEX IF NOT EXISTS IX_KanbanTasks_ProjectId
+            ON KanbanTasks (ProjectId)
             """);
     }
 

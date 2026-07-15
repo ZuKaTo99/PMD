@@ -1,75 +1,265 @@
 @page "/kanban"
+@namespace PMD.App.Features.Kanban.Pages
+@using PMD.App.Domain.Kanban
+@using PMD.App.Domain.Projects
 
 <PageTitle>PMD - Kanban</PageTitle>
 
-<div class="container-fluid pmd-page">
-    <div class="mb-4">
-        <div class="text-muted small mb-1">
-            PMD - Kanban
+<div class="container-fluid pmd-page kanban-page">
+    <header class="kanban-page-header mb-4">
+        <div>
+            <div class="text-muted small mb-1">
+                PMD - Kanban
+            </div>
+
+            <h1>Kanban</h1>
+
+            <p class="text-muted mb-0">
+                Organisiere konkrete Aufgaben und ordne sie direkt deinen Projekten zu.
+            </p>
         </div>
 
-        <h1>Kanban</h1>
+        <button type="button"
+                class="btn btn-primary"
+                aria-expanded="@IsCreateFormOpen"
+                aria-controls="kanban-create-task"
+                @onclick="ToggleCreateForm">
+            @(IsCreateFormOpen ? "Formular schließen" : "Aufgabe erstellen")
+        </button>
+    </header>
 
-        <p class="text-muted mb-0">
-            Der zentrale Aufgabenbereich für projektbezogene Arbeit und Organisation.
-        </p>
-    </div>
+    @if (IsCreateFormOpen)
+    {
+        <section id="kanban-create-task"
+                 class="kanban-create-panel mb-4"
+                 aria-labelledby="kanban-create-title">
+            <div class="kanban-create-heading">
+                <div>
+                    <div class="kanban-eyebrow">
+                        Neue Aufgabe
+                    </div>
 
-    <div class="row g-3">
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card pmd-card h-100">
-                <div class="card-header fw-semibold">
-                    Offen
-                </div>
+                    <h2 id="kanban-create-title"
+                        class="h4 mb-1">
+                        Was möchtest du als Nächstes erledigen?
+                    </h2>
 
-                <div class="card-body">
-                    <p class="text-muted mb-0">
-                        Keine Aufgaben in diesem Status.
+                    <p class="text-muted small mb-0">
+                        Die Aufgabe wird dauerhaft in PMD gespeichert.
                     </p>
                 </div>
             </div>
-        </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card pmd-card h-100">
-                <div class="card-header fw-semibold">
-                    In Arbeit
+            <div class="kanban-create-grid">
+                <div class="kanban-field kanban-field-title">
+                    <label class="form-label"
+                           for="kanban-task-title">
+                        Titel
+                    </label>
+
+                    <input id="kanban-task-title"
+                           class="form-control"
+                           maxlength="160"
+                           placeholder="Zum Beispiel: Dashboard-Filter ergänzen"
+                           @bind="NewTaskTitle"
+                           @bind:event="oninput" />
                 </div>
 
-                <div class="card-body">
-                    <p class="text-muted mb-0">
-                        Keine Aufgaben in diesem Status.
-                    </p>
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-task-project">
+                        Projekt
+                    </label>
+
+                    <select id="kanban-task-project"
+                            class="form-select"
+                            @bind="SelectedProjectId">
+                        <option value="">Keinem Projekt zuordnen</option>
+
+                        @foreach (Project project in Projects)
+                        {
+                            <option value="@project.Id">
+                                @project.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-task-priority">
+                        Priorität
+                    </label>
+
+                    <select id="kanban-task-priority"
+                            class="form-select"
+                            @bind="NewTaskPriority">
+                        <option value="@KanbanTaskPriority.Low">Niedrig</option>
+                        <option value="@KanbanTaskPriority.Normal">Normal</option>
+                        <option value="@KanbanTaskPriority.High">Hoch</option>
+                        <option value="@KanbanTaskPriority.Critical">Kritisch</option>
+                    </select>
+                </div>
+
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-task-status">
+                        Startstatus
+                    </label>
+
+                    <select id="kanban-task-status"
+                            class="form-select"
+                            @bind="NewTaskStatus">
+                        <option value="@KanbanTaskStatus.Open">Offen</option>
+                        <option value="@KanbanTaskStatus.InProgress">In Arbeit</option>
+                        <option value="@KanbanTaskStatus.Blocked">Blockiert</option>
+                        <option value="@KanbanTaskStatus.Done">Erledigt</option>
+                    </select>
+                </div>
+
+                <div class="kanban-field kanban-field-description">
+                    <label class="form-label"
+                           for="kanban-task-description">
+                        Beschreibung <span class="text-muted">(optional)</span>
+                    </label>
+
+                    <textarea id="kanban-task-description"
+                              class="form-control"
+                              rows="3"
+                              maxlength="2000"
+                              placeholder="Kurze Notiz, Ziel oder nächster konkreter Schritt"
+                              @bind="NewTaskDescription"></textarea>
                 </div>
             </div>
-        </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card pmd-card h-100">
-                <div class="card-header fw-semibold">
-                    Blockiert
+            @if (!string.IsNullOrWhiteSpace(CreateTaskErrorMessage))
+            {
+                <div class="alert alert-danger py-2 mb-3"
+                     role="alert">
+                    @CreateTaskErrorMessage
                 </div>
+            }
 
-                <div class="card-body">
-                    <p class="text-muted mb-0">
-                        Keine Aufgaben in diesem Status.
-                    </p>
-                </div>
+            <div class="kanban-create-actions">
+                <button type="button"
+                        class="btn btn-primary"
+                        disabled="@IsCreateButtonDisabled"
+                        @onclick="CreateTask">
+                    Aufgabe speichern
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        @onclick="CancelCreateTask">
+                    Abbrechen
+                </button>
             </div>
-        </div>
+        </section>
+    }
 
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="card pmd-card h-100">
-                <div class="card-header fw-semibold">
-                    Erledigt
-                </div>
+    <section class="kanban-board"
+             aria-label="Kanban-Aufgaben">
+        @foreach (KanbanColumnDefinition column in Columns)
+        {
+            IReadOnlyList<KanbanTask> columnTasks = GetTasksByStatus(column.Status);
 
-                <div class="card-body">
-                    <p class="text-muted mb-0">
-                        Keine Aufgaben in diesem Status.
-                    </p>
+            <article class="kanban-column kanban-column-@column.CssName">
+                <header class="kanban-column-header">
+                    <div>
+                        <div class="kanban-column-title-row">
+                            <span class="kanban-column-dot"
+                                  aria-hidden="true">
+                            </span>
+
+                            <h2 class="h5 mb-0">
+                                @column.Title
+                            </h2>
+                        </div>
+
+                        <p class="text-muted small mb-0">
+                            @column.Description
+                        </p>
+                    </div>
+
+                    <span class="kanban-column-count"
+                          aria-label="@FormatTaskCount(columnTasks.Count)">
+                        @columnTasks.Count
+                    </span>
+                </header>
+
+                <div class="kanban-task-list">
+                    @if (columnTasks.Count == 0)
+                    {
+                        <div class="kanban-column-empty">
+                            <strong>Keine Aufgaben</strong>
+                            <span>
+                                Neue Aufgaben können direkt diesem Status zugeordnet werden.
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (KanbanTask task in columnTasks)
+                        {
+                            Project? project = GetProject(task.ProjectId);
+
+                            <article class="kanban-task-card @GetPriorityClass(task.Priority) @GetProjectAccentClass(project)"
+                                     @key="task.Id">
+                                <div class="kanban-task-card-header">
+                                    <span class="kanban-priority-badge">
+                                        @GetPriorityLabel(task.Priority)
+                                    </span>
+
+                                    <span class="kanban-task-date">
+                                        @FormatDate(task.CreatedAt)
+                                    </span>
+                                </div>
+
+                                <h3 class="kanban-task-title"
+                                    title="@task.Title">
+                                    @task.Title
+                                </h3>
+
+                                @if (!string.IsNullOrWhiteSpace(task.Description))
+                                {
+                                    <p class="kanban-task-description">
+                                        @task.Description
+                                    </p>
+                                }
+
+                                <div class="kanban-task-footer">
+                                    @if (project is not null)
+                                    {
+                                        <a class="kanban-project-link"
+                                           href="projekte/@project.Id"
+                                           title="@project.Name">
+                                            <span class="kanban-project-dot"></span>
+                                            <span>@project.Name</span>
+                                        </a>
+                                    }
+                                    else if (task.ProjectId.HasValue)
+                                    {
+                                        <span class="kanban-project-missing">
+                                            Projekt nicht mehr vorhanden
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="kanban-project-unassigned">
+                                            Ohne Projekt
+                                        </span>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    }
                 </div>
-            </div>
-        </div>
+            </article>
+        }
+    </section>
+
+    <div class="alert alert-info kanban-next-step-note mt-4 mb-0">
+        <strong>Erste funktionsfähige Kanban-Grundlage:</strong>
+        Aufgaben werden bereits dauerhaft gespeichert. Bearbeiten, Löschen und Drag-and-drop folgen kontrolliert in den nächsten Schritten.
     </div>
 </div>

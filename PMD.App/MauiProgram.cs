@@ -19,6 +19,8 @@ using PMD.App.Application.ProjectFiles;
 using PMD.App.Infrastructure.ProjectFiles;
 using PMD.App.Application.ProjectChanges;
 using PMD.App.Application.ProjectCodeDiff;
+using PMD.App.Application.Kanban;
+using PMD.App.Infrastructure.Kanban;
 
 namespace PMD.App;
 
@@ -52,6 +54,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IProjectFileContentReader, ProjectFileContentReader>();
         builder.Services.AddSingleton<IProjectChangesService, ProjectChangesService>();
         builder.Services.AddSingleton<IProjectCodeDiffService, ProjectCodeDiffService>();
+        builder.Services.AddSingleton<IKanbanTaskRepository, SqliteKanbanTaskRepository>();
+        builder.Services.AddSingleton<IKanbanBoardService, KanbanBoardService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
