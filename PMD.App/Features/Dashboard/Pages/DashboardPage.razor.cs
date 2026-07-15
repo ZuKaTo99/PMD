@@ -10,8 +10,8 @@ namespace PMD.App.Features.Dashboard.Pages;
 
 public partial class DashboardPage : IDisposable
 {
-    private const int MaximumDashboardLanguageCount = 6;
-    private const int MaximumProjectLanguageCount = 4;
+    private const int MaximumDashboardLanguageCount = 8;
+    private const int MaximumProjectLanguageCount = 5;
 
     [Inject]
     private IDashboardOverviewService DashboardOverviewService { get; set; } =
@@ -79,6 +79,83 @@ public partial class DashboardPage : IDisposable
     protected static string GetLanguageColorStyle(string color)
     {
         return $"--dashboard-language-color: {color};";
+    }
+
+
+    protected static string GetSparklinePoints(
+        IReadOnlyList<int> values)
+    {
+        const double width = 120d;
+        const double height = 36d;
+        const double padding = 3d;
+
+        if (values.Count == 0)
+        {
+            return $"{padding.ToString(CultureInfo.InvariantCulture)}," +
+                $"{(height / 2d).ToString(CultureInfo.InvariantCulture)} " +
+                $"{(width - padding).ToString(CultureInfo.InvariantCulture)}," +
+                $"{(height / 2d).ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        IReadOnlyList<int> normalizedValues = values.Count == 1
+            ? new[] { values[0], values[0] }
+            : values;
+
+        int minimum = normalizedValues.Min();
+        int maximum = normalizedValues.Max();
+        double range = Math.Max(1d, maximum - minimum);
+        double xStep = (width - (padding * 2d)) /
+            Math.Max(1, normalizedValues.Count - 1);
+
+        return string.Join(
+            " ",
+            normalizedValues.Select((value, index) =>
+            {
+                double x = padding + (index * xStep);
+                double relativeValue = (value - minimum) / range;
+                double y = height - padding -
+                    (relativeValue * (height - (padding * 2d)));
+
+                if (minimum == maximum)
+                {
+                    y = height / 2d;
+                }
+
+                return $"{x.ToString("0.##", CultureInfo.InvariantCulture)}," +
+                    $"{y.ToString("0.##", CultureInfo.InvariantCulture)}";
+            }));
+    }
+
+    protected static string GetProjectTrendAriaLabel(
+        DashboardProjectActivity activity)
+    {
+        if (activity.ProjectStateCount <= 1)
+        {
+            return $"{activity.ProjectName}: erster gespeicherter Projektstand mit " +
+                $"{activity.LatestFileCount:N0} Dateien.";
+        }
+
+        int firstFileCount = activity.FileCountHistory.Count > 0
+            ? activity.FileCountHistory[0]
+            : activity.LatestFileCount;
+
+        int difference = activity.LatestFileCount - firstFileCount;
+        string development = difference switch
+        {
+            > 0 => $"um {difference:N0} Dateien gewachsen",
+            < 0 => $"um {Math.Abs(difference):N0} Dateien kleiner geworden",
+            _ => "bei der Dateianzahl stabil geblieben"
+        };
+
+        return $"{activity.ProjectName}: in den letzten " +
+            $"{activity.ProjectStateCount:N0} gespeicherten Projektständen " +
+            $"{development}.";
+    }
+
+    protected static string FormatLanguageDetails(
+        ProjectLanguageUsage language)
+    {
+        return $"{language.FileCount:N0} Dateien · {FormatBytes(language.SizeInBytes)}";
     }
 
     protected static IReadOnlyList<ProjectLanguageUsage>

@@ -283,13 +283,19 @@
                     {
                         <div class="dashboard-language-legend-entry"
                              style="@GetLanguageColorStyle(language.Color)">
-                            <span class="dashboard-language-name">
-                                <i class="dashboard-language-dot"></i>
-                                <span title="@language.Name">@language.Name</span>
-                            </span>
+                            <div class="dashboard-language-legend-main">
+                                <span class="dashboard-language-name">
+                                    <i class="dashboard-language-dot"></i>
+                                    <span title="@language.Name">@language.Name</span>
+                                </span>
 
-                            <span class="dashboard-language-percentage">
-                                @FormatPercentage(language.Percentage)
+                                <span class="dashboard-language-percentage">
+                                    @FormatPercentage(language.Percentage)
+                                </span>
+                            </div>
+
+                            <span class="dashboard-language-meta">
+                                @FormatLanguageDetails(language)
                             </span>
                         </div>
                     }
@@ -372,6 +378,72 @@
                             </a>
                         </div>
 
+                        <div class="dashboard-project-trend">
+                            <div class="dashboard-project-trend-copy">
+                                <span class="dashboard-project-trend-label">
+                                    Dateiverlauf
+                                </span>
+
+                                <strong>
+                                    @activity.LatestFileCount.ToString("N0") Dateien
+                                </strong>
+
+                                <span>
+                                    @if (activity.ProjectStateCount > 1)
+                                    {
+                                        @:Letzte @activity.ProjectStateCount gespeicherten Stände
+                                    }
+                                    else
+                                    {
+                                        @:Bisher ein gespeicherter Stand
+                                    }
+                                </span>
+                            </div>
+
+                            <span class="dashboard-project-sparkline"
+                                  role="img"
+                                  aria-label="@GetProjectTrendAriaLabel(activity)">
+                                <svg viewBox="0 0 120 36"
+                                     preserveAspectRatio="none"
+                                     aria-hidden="true"
+                                     focusable="false">
+                                    <polyline points="@GetSparklinePoints(activity.FileCountHistory)"
+                                              vector-effect="non-scaling-stroke">
+                                    </polyline>
+                                </svg>
+                            </span>
+                        </div>
+
+                        @if (activity.LanguageUsage.Count > 0)
+                        {
+                            IReadOnlyList<ProjectLanguageUsage> projectLanguages =
+                                GetDisplayedProjectLanguages(activity);
+
+                            <div class="dashboard-project-language">
+                                <div class="dashboard-project-language-header">
+                                    <span>Hauptsprache</span>
+
+                                    <strong style="@GetLanguageColorStyle(activity.LanguageUsage[0].Color)">
+                                        <i class="dashboard-language-dot"></i>
+                                        @activity.LanguageUsage[0].Name
+                                        <span>@FormatPercentage(activity.LanguageUsage[0].Percentage)</span>
+                                    </strong>
+                                </div>
+
+                                <div class="dashboard-project-language-bar"
+                                     role="img"
+                                     aria-label="@GetLanguageDistributionAriaLabel(projectLanguages)">
+                                    @foreach (ProjectLanguageUsage language in projectLanguages)
+                                    {
+                                        <span class="dashboard-language-segment"
+                                              style="@GetLanguageSegmentStyle(language)"
+                                              title="@GetLanguageTitle(language)">
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+
                         @if (activity.HasComparison)
                         {
                             <div class="dashboard-project-change-total">
@@ -431,36 +503,6 @@
                                 <span>
                                     Nach der nächsten manuellen Prüfung kann PMD die Entwicklung vergleichen.
                                 </span>
-                            </div>
-                        }
-
-                        @if (activity.LanguageUsage.Count > 0)
-                        {
-                            IReadOnlyList<ProjectLanguageUsage> projectLanguages =
-                                GetDisplayedProjectLanguages(activity);
-
-                            <div class="dashboard-project-language">
-                                <div class="dashboard-project-language-header">
-                                    <span>Hauptsprache</span>
-
-                                    <strong style="@GetLanguageColorStyle(activity.LanguageUsage[0].Color)">
-                                        <i class="dashboard-language-dot"></i>
-                                        @activity.LanguageUsage[0].Name
-                                        <span>@FormatPercentage(activity.LanguageUsage[0].Percentage)</span>
-                                    </strong>
-                                </div>
-
-                                <div class="dashboard-project-language-bar"
-                                     role="img"
-                                     aria-label="@GetLanguageDistributionAriaLabel(projectLanguages)">
-                                    @foreach (ProjectLanguageUsage language in projectLanguages)
-                                    {
-                                        <span class="dashboard-language-segment"
-                                              style="@GetLanguageSegmentStyle(language)"
-                                              title="@GetLanguageTitle(language)">
-                                        </span>
-                                    }
-                                </div>
                             </div>
                         }
 

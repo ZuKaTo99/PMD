@@ -13,7 +13,7 @@ namespace PMD.App.Application.Dashboard;
 
 public sealed class DashboardOverviewService : IDashboardOverviewService
 {
-    private const int ProjectStatesRequiredForComparison = 2;
+    private const int ActivityHistoryLimit = 7;
 
     private readonly IProjectMemoryStore projectMemoryStore;
     private readonly IProjectStateMemoryStore projectStateMemoryStore;
@@ -66,11 +66,14 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
         IReadOnlyList<ProjectState> projectStates =
             projectStateMemoryStore.GetByProjectId(
                 project.Id,
-                ProjectStatesRequiredForComparison);
+                ActivityHistoryLimit);
 
-        ProjectState? latestProjectState = projectStates
-            .OrderByDescending(projectState => projectState.ScannedAt)
-            .FirstOrDefault();
+        List<ProjectState> orderedProjectStates = projectStates
+            .OrderBy(projectState => projectState.ScannedAt)
+            .ToList();
+
+        ProjectState? latestProjectState = orderedProjectStates
+            .LastOrDefault();
 
         if (latestProjectState is null)
         {
@@ -91,17 +94,17 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
             ProjectLanguageUsageAnalyzer.Analyze(
                 latestProjectStateWithFiles.Files);
 
-        ProjectState? previousProjectState = projectStates
-            .Where(projectState => projectState.Id != latestProjectState.Id)
-            .OrderByDescending(projectState => projectState.ScannedAt)
-            .FirstOrDefault();
+        ProjectState? previousProjectState = orderedProjectStates.Count > 1
+            ? orderedProjectStates[^2]
+            : null;
 
         if (previousProjectState is null)
         {
             return CreateActivityWithoutComparison(
                 project,
                 latestProjectState,
-                languageUsage);
+                languageUsage,
+                orderedProjectStates);
         }
 
         ProjectState previousProjectStateWithFiles =
@@ -124,6 +127,10 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
             LatestScanDuration = latestProjectState.ScanDuration,
             LatestFileCount = latestProjectState.FileCount,
             PreviousFileCount = previousProjectState.FileCount,
+            ProjectStateCount = orderedProjectStates.Count,
+            FileCountHistory = orderedProjectStates
+                .Select(projectState => projectState.FileCount)
+                .ToList(),
             LatestTotalSizeInBytes = latestProjectState.TotalSizeInBytes,
             LatestWarningCount = latestProjectState.WarningCount,
             AddedFileCount = comparison.AddedFileCount,
@@ -136,7 +143,8 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
     private static DashboardProjectActivity CreateActivityWithoutComparison(
         Project project,
         ProjectState latestProjectState,
-        IReadOnlyList<ProjectLanguageUsage> languageUsage)
+        IReadOnlyList<ProjectLanguageUsage> languageUsage,
+        IReadOnlyList<ProjectState> orderedProjectStates)
     {
         return new DashboardProjectActivity
         {
@@ -148,6 +156,10 @@ public sealed class DashboardOverviewService : IDashboardOverviewService
             LatestScannedAt = latestProjectState.ScannedAt,
             LatestScanDuration = latestProjectState.ScanDuration,
             LatestFileCount = latestProjectState.FileCount,
+            ProjectStateCount = orderedProjectStates.Count,
+            FileCountHistory = orderedProjectStates
+                .Select(projectState => projectState.FileCount)
+                .ToList(),
             LatestTotalSizeInBytes = latestProjectState.TotalSizeInBytes,
             LatestWarningCount = latestProjectState.WarningCount,
             LanguageUsage = languageUsage

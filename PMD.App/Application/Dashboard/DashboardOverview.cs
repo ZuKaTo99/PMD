@@ -68,6 +68,11 @@ public sealed class DashboardProjectActivity
 
     public int PreviousFileCount { get; init; }
 
+    public int ProjectStateCount { get; init; }
+
+    public IReadOnlyList<int> FileCountHistory { get; init; } =
+        Array.Empty<int>();
+
     public long LatestTotalSizeInBytes { get; init; }
 
     public int LatestWarningCount { get; init; }
