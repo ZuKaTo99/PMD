@@ -58,7 +58,7 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
                 WHERE type = 'index'
                 """);
 
-        Assert.Equal(3, schemaVersion);
+        Assert.Equal(4, schemaVersion);
 
         Assert.Contains(
             indexes,
@@ -96,6 +96,20 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
             index =>
                 index.Name ==
                 "IX_KanbanTasks_ProjectId");
+
+        Assert.Contains(
+            indexes,
+            index =>
+                index.Name ==
+                "IX_KanbanTasks_DueDate");
+
+        List<DatabaseColumnName> kanbanColumns = connection
+            .Query<DatabaseColumnName>(
+                "PRAGMA table_info(KanbanTasks)");
+
+        Assert.Contains(
+            kanbanColumns,
+            column => column.Name == "DueDate");
     }
 
     [Fact]
@@ -347,6 +361,12 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
     }
 
     private sealed class DatabaseObjectName
+    {
+        [Column("name")]
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class DatabaseColumnName
     {
         [Column("name")]
         public string Name { get; set; } = string.Empty;

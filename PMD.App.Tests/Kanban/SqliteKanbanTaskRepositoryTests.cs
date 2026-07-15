@@ -36,7 +36,7 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void Save_PersistsKanbanTaskWithProjectAndPriority()
+    public void Save_PersistsKanbanTaskWithProjectPriorityAndDueDate()
     {
         Guid projectId = Guid.NewGuid();
         var task = new KanbanTask
@@ -48,6 +48,7 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             Status = KanbanTaskStatus.InProgress,
             Priority = KanbanTaskPriority.High,
             SortOrder = 3,
+            DueDate = new DateTime(2026, 7, 20),
             CreatedAt = new DateTime(2026, 7, 15, 1, 30, 0),
             UpdatedAt = new DateTime(2026, 7, 15, 1, 30, 0)
         };
@@ -63,6 +64,7 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
         Assert.Equal(KanbanTaskStatus.InProgress, loadedTask.Status);
         Assert.Equal(KanbanTaskPriority.High, loadedTask.Priority);
         Assert.Equal(3, loadedTask.SortOrder);
+        Assert.Equal(new DateTime(2026, 7, 20), loadedTask.DueDate);
     }
 
     [Fact]
@@ -241,6 +243,7 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             Status = status,
             Priority = task.Priority,
             SortOrder = sortOrder,
+            DueDate = task.DueDate,
             CreatedAt = task.CreatedAt,
             UpdatedAt = updatedAt
         };

@@ -13,6 +13,8 @@ namespace PMD.App.Features.Kanban.Pages;
 
 public partial class KanbanPage : IDisposable, IAsyncDisposable
 {
+    protected const string UnassignedProjectFilterValue = "__unassigned__";
+
     private static readonly IReadOnlyList<KanbanColumnDefinition>
         ColumnDefinitions =
         [
@@ -54,6 +56,15 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     protected IReadOnlyList<KanbanColumnDefinition> Columns =>
         ColumnDefinitions;
 
+    protected IReadOnlyList<KanbanColumnDefinition> VisibleColumns =>
+        TryParseEnumFilter(
+            SelectedStatusFilter,
+            out KanbanTaskStatus selectedStatus)
+                ? ColumnDefinitions
+                    .Where(column => column.Status == selectedStatus)
+                    .ToList()
+                : ColumnDefinitions;
+
     protected IReadOnlyList<Project> Projects =>
         ProjectMemoryStore.Projects
             .OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase)
@@ -72,6 +83,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     protected KanbanTaskPriority NewTaskPriority { get; set; } =
         KanbanTaskPriority.Normal;
+
+    protected DateTime? NewTaskDueDate { get; set; }
 
     protected string CreateTaskErrorMessage { get; private set; } =
         string.Empty;
@@ -95,6 +108,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     protected KanbanTaskPriority EditTaskPriority { get; set; } =
         KanbanTaskPriority.Normal;
 
+    protected DateTime? EditTaskDueDate { get; set; }
+
     protected string EditTaskErrorMessage { get; private set; } =
         string.Empty;
 
@@ -111,6 +126,40 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     protected string DeleteTaskErrorMessage { get; private set; } =
         string.Empty;
+
+    protected string TaskSearchText { get; set; } = string.Empty;
+
+    protected string SelectedProjectFilter { get; set; } = string.Empty;
+
+    protected string SelectedPriorityFilter { get; set; } = string.Empty;
+
+    protected string SelectedStatusFilter { get; set; } = string.Empty;
+
+    protected bool AreFiltersActive => CurrentFilterCriteria.IsActive;
+
+    protected bool IsStatusFilterActive =>
+        TryParseEnumFilter(
+            SelectedStatusFilter,
+            out KanbanTaskStatus _);
+
+    protected int TotalTaskCount => KanbanBoardService.Tasks.Count;
+
+    protected int VisibleTaskCount => FilteredTasks.Count;
+
+    private IReadOnlyList<KanbanTask> FilteredTasks =>
+        KanbanTaskFilter.Apply(
+            KanbanBoardService.Tasks,
+            CurrentFilterCriteria);
+
+    private KanbanTaskFilterCriteria CurrentFilterCriteria => new(
+        TaskSearchText,
+        ParseProjectFilter(),
+        string.Equals(
+            SelectedProjectFilter,
+            UnassignedProjectFilterValue,
+            StringComparison.Ordinal),
+        ParsePriorityFilter(),
+        ParseStatusFilter());
 
     protected override void OnInitialized()
     {
@@ -183,6 +232,11 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         int targetStatusValue,
         int targetIndex)
     {
+        if (AreFiltersActive)
+        {
+            return Task.CompletedTask;
+        }
+
         if (!Guid.TryParse(taskIdValue, out Guid taskId) ||
             !Enum.IsDefined(
                 typeof(KanbanTaskStatus),
@@ -202,7 +256,7 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     protected IReadOnlyList<KanbanTask> GetTasksByStatus(
         KanbanTaskStatus status)
     {
-        return KanbanBoardService.Tasks
+        return FilteredTasks
             .Where(task => task.Status == status)
             .OrderBy(task => task.SortOrder)
             .ThenByDescending(task => task.CreatedAt)
@@ -247,7 +301,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 NewTaskDescription,
                 ParseProjectId(SelectedProjectId),
                 NewTaskStatus,
-                NewTaskPriority);
+                NewTaskPriority,
+                NewTaskDueDate?.Date);
 
             ResetCreateForm();
             IsCreateFormOpen = false;
@@ -271,6 +326,7 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         EditProjectId = task.ProjectId?.ToString() ?? string.Empty;
         EditTaskStatus = task.Status;
         EditTaskPriority = task.Priority;
+        EditTaskDueDate = task.DueDate?.Date;
         EditTaskErrorMessage = string.Empty;
     }
 
@@ -291,7 +347,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 EditTaskDescription,
                 ParseProjectId(EditProjectId),
                 EditTaskStatus,
-                EditTaskPriority);
+                EditTaskPriority,
+                EditTaskDueDate?.Date);
 
             ResetEditForm();
         }
@@ -352,6 +409,47 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             PendingDeleteTaskId == taskId;
     }
 
+    protected bool CanDragTask(Guid taskId)
+    {
+        return !AreFiltersActive && !IsTaskBeingManaged(taskId);
+    }
+
+    protected string GetDragHandleTitle(Guid taskId)
+    {
+        if (AreFiltersActive)
+        {
+            return "Zum Verschieben zuerst die Filter zurücksetzen";
+        }
+
+        return IsTaskBeingManaged(taskId)
+            ? "Aufgabe wird gerade bearbeitet"
+            : "Aufgabe ziehen und verschieben";
+    }
+
+    protected void ResetFilters()
+    {
+        TaskSearchText = string.Empty;
+        SelectedProjectFilter = string.Empty;
+        SelectedPriorityFilter = string.Empty;
+        SelectedStatusFilter = string.Empty;
+    }
+
+    protected static string FormatVisibleTaskCount(
+        int visibleTaskCount,
+        int totalTaskCount)
+    {
+        if (visibleTaskCount == totalTaskCount)
+        {
+            return totalTaskCount == 1
+                ? "1 Aufgabe wird angezeigt."
+                : $"{totalTaskCount} Aufgaben werden angezeigt.";
+        }
+
+        return visibleTaskCount == 1
+            ? $"1 von {totalTaskCount} Aufgaben wird angezeigt."
+            : $"{visibleTaskCount} von {totalTaskCount} Aufgaben werden angezeigt.";
+    }
+
     protected static string GetPriorityLabel(
         KanbanTaskPriority priority)
     {
@@ -383,6 +481,72 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             : $"kanban-accent-{ProjectAccentColors.Normalize(project.AccentColor)}";
     }
 
+    protected static string GetDueDateLabel(KanbanTask task)
+    {
+        if (!task.DueDate.HasValue)
+        {
+            return string.Empty;
+        }
+
+        DateTime dueDate = task.DueDate.Value.Date;
+        DateTime today = DateTime.Today;
+
+        if (dueDate == today)
+        {
+            return "Heute fällig";
+        }
+
+        if (dueDate == today.AddDays(1))
+        {
+            return "Morgen fällig";
+        }
+
+        if (dueDate < today && task.Status != KanbanTaskStatus.Done)
+        {
+            return $"Überfällig seit {dueDate:dd.MM.yyyy}";
+        }
+
+        return $"Fällig am {dueDate:dd.MM.yyyy}";
+    }
+
+    protected static string GetDueDateClass(KanbanTask task)
+    {
+        if (!task.DueDate.HasValue)
+        {
+            return string.Empty;
+        }
+
+        DateTime dueDate = task.DueDate.Value.Date;
+        DateTime today = DateTime.Today;
+
+        if (dueDate < today && task.Status != KanbanTaskStatus.Done)
+        {
+            return "kanban-due-overdue";
+        }
+
+        if (dueDate == today && task.Status != KanbanTaskStatus.Done)
+        {
+            return "kanban-due-today";
+        }
+
+        if (dueDate == today.AddDays(1) &&
+            task.Status != KanbanTaskStatus.Done)
+        {
+            return "kanban-due-tomorrow";
+        }
+
+        return "kanban-due-upcoming";
+    }
+
+    protected static string GetDueDateCardClass(KanbanTask task)
+    {
+        return task.DueDate.HasValue &&
+            task.DueDate.Value.Date < DateTime.Today &&
+            task.Status != KanbanTaskStatus.Done
+                ? "kanban-task-card-overdue"
+                : string.Empty;
+    }
+
     protected static string FormatDate(DateTime dateTime)
     {
         return dateTime.ToString("dd.MM.yyyy");
@@ -402,6 +566,53 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             : null;
     }
 
+    private Guid? ParseProjectFilter()
+    {
+        return string.Equals(
+                SelectedProjectFilter,
+                UnassignedProjectFilterValue,
+                StringComparison.Ordinal)
+            ? null
+            : ParseProjectId(SelectedProjectFilter);
+    }
+
+    private KanbanTaskPriority? ParsePriorityFilter()
+    {
+        return TryParseEnumFilter(
+            SelectedPriorityFilter,
+            out KanbanTaskPriority priority)
+                ? priority
+                : null;
+    }
+
+    private KanbanTaskStatus? ParseStatusFilter()
+    {
+        return TryParseEnumFilter(
+            SelectedStatusFilter,
+            out KanbanTaskStatus status)
+                ? status
+                : null;
+    }
+
+    private static bool TryParseEnumFilter<TEnum>(
+        string value,
+        out TEnum parsedValue)
+        where TEnum : struct, Enum
+    {
+        if (int.TryParse(value, out int numericValue) &&
+            Enum.IsDefined(typeof(TEnum), numericValue))
+        {
+            parsedValue = (TEnum)Enum.ToObject(
+                typeof(TEnum),
+                numericValue);
+
+            return true;
+        }
+
+        parsedValue = default;
+        return false;
+    }
+
     private void ResetCreateForm()
     {
         NewTaskTitle = string.Empty;
@@ -409,6 +620,7 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         SelectedProjectId = string.Empty;
         NewTaskStatus = KanbanTaskStatus.Open;
         NewTaskPriority = KanbanTaskPriority.Normal;
+        NewTaskDueDate = null;
         CreateTaskErrorMessage = string.Empty;
     }
 
@@ -420,6 +632,7 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         EditProjectId = string.Empty;
         EditTaskStatus = KanbanTaskStatus.Open;
         EditTaskPriority = KanbanTaskPriority.Normal;
+        EditTaskDueDate = null;
         EditTaskErrorMessage = string.Empty;
     }
 

@@ -29,12 +29,14 @@ public sealed class KanbanBoardService : IKanbanBoardService
         string description,
         Guid? projectId,
         KanbanTaskStatus status,
-        KanbanTaskPriority priority)
+        KanbanTaskPriority priority,
+        DateTime? dueDate = null)
     {
         string normalizedTitle = NormalizeTitle(title);
         string normalizedDescription = NormalizeDescription(description);
         KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
         KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
+        DateTime? normalizedDueDate = NormalizeDueDate(dueDate);
 
         int nextSortOrder = tasks
             .Where(task => task.Status == normalizedStatus)
@@ -53,6 +55,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
             Status = normalizedStatus,
             Priority = normalizedPriority,
             SortOrder = nextSortOrder,
+            DueDate = normalizedDueDate,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -71,13 +74,15 @@ public sealed class KanbanBoardService : IKanbanBoardService
         string description,
         Guid? projectId,
         KanbanTaskStatus status,
-        KanbanTaskPriority priority)
+        KanbanTaskPriority priority,
+        DateTime? dueDate = null)
     {
         KanbanTask existingTask = GetRequiredTask(taskId);
         string normalizedTitle = NormalizeTitle(title);
         string normalizedDescription = NormalizeDescription(description);
         KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
         KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
+        DateTime? normalizedDueDate = NormalizeDueDate(dueDate);
         DateTime now = DateTime.Now;
 
         if (existingTask.Status == normalizedStatus)
@@ -89,6 +94,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
                 projectId,
                 normalizedStatus,
                 normalizedPriority,
+                normalizedDueDate,
                 existingTask.SortOrder,
                 now);
 
@@ -120,6 +126,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
             projectId,
             normalizedStatus,
             normalizedPriority,
+            normalizedDueDate,
             targetColumnTasks.Count,
             now);
 
@@ -306,6 +313,11 @@ public sealed class KanbanBoardService : IKanbanBoardService
             : KanbanTaskPriority.Normal;
     }
 
+    private static DateTime? NormalizeDueDate(DateTime? dueDate)
+    {
+        return dueDate?.Date;
+    }
+
     private static void ReindexColumn(
         IReadOnlyList<KanbanTask> columnTasks,
         KanbanTaskStatus status,
@@ -328,6 +340,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
                 task.ProjectId,
                 status,
                 task.Priority,
+                task.DueDate,
                 index,
                 updatedAt);
         }
@@ -340,6 +353,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
+        DateTime? dueDate,
         int sortOrder,
         DateTime updatedAt)
     {
@@ -352,6 +366,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
             Status = status,
             Priority = priority,
             SortOrder = sortOrder,
+            DueDate = dueDate,
             CreatedAt = task.CreatedAt,
             UpdatedAt = updatedAt
         };

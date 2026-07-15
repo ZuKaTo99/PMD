@@ -117,6 +117,18 @@
                     </select>
                 </div>
 
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-task-due-date">
+                        Fällig am <span class="text-muted">(optional)</span>
+                    </label>
+
+                    <input id="kanban-task-due-date"
+                           class="form-control"
+                           type="date"
+                           @bind="NewTaskDueDate" />
+                </div>
+
                 <div class="kanban-field kanban-field-description">
                     <label class="form-label"
                            for="kanban-task-description">
@@ -245,6 +257,18 @@
                     </select>
                 </div>
 
+                <div class="kanban-field">
+                    <label class="form-label"
+                           for="kanban-edit-task-due-date">
+                        Fällig am <span class="text-muted">(optional)</span>
+                    </label>
+
+                    <input id="kanban-edit-task-due-date"
+                           class="form-control"
+                           type="date"
+                           @bind="EditTaskDueDate" />
+                </div>
+
                 <div class="kanban-field kanban-field-description">
                     <label class="form-label"
                            for="kanban-edit-task-description">
@@ -342,10 +366,115 @@
         </section>
     }
 
-    <section class="kanban-board"
+    <section class="kanban-filter-panel mb-4"
+             aria-labelledby="kanban-filter-title">
+        <div class="kanban-filter-heading">
+            <div>
+                <div class="kanban-eyebrow">
+                    Aufgaben eingrenzen
+                </div>
+
+                <h2 id="kanban-filter-title"
+                    class="h5 mb-1">
+                    Suche und Filter
+                </h2>
+
+                <p class="text-muted small mb-0">
+                    @FormatVisibleTaskCount(VisibleTaskCount, TotalTaskCount)
+                </p>
+            </div>
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    disabled="@(!AreFiltersActive)"
+                    @onclick="ResetFilters">
+                Filter zurücksetzen
+            </button>
+        </div>
+
+        <div class="kanban-filter-grid">
+            <div class="kanban-field kanban-filter-search">
+                <label class="form-label"
+                       for="kanban-filter-search">
+                    Suche
+                </label>
+
+                <input id="kanban-filter-search"
+                       class="form-control"
+                       type="search"
+                       placeholder="Titel oder Beschreibung durchsuchen"
+                       @bind="TaskSearchText"
+                       @bind:event="oninput" />
+            </div>
+
+            <div class="kanban-field">
+                <label class="form-label"
+                       for="kanban-filter-project">
+                    Projekt
+                </label>
+
+                <select id="kanban-filter-project"
+                        class="form-select"
+                        @bind="SelectedProjectFilter">
+                    <option value="">Alle Projekte</option>
+                    <option value="@UnassignedProjectFilterValue">Ohne Projekt</option>
+
+                    @foreach (Project project in Projects)
+                    {
+                        <option value="@project.Id">
+                            @project.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="kanban-field">
+                <label class="form-label"
+                       for="kanban-filter-priority">
+                    Priorität
+                </label>
+
+                <select id="kanban-filter-priority"
+                        class="form-select"
+                        @bind="SelectedPriorityFilter">
+                    <option value="">Alle Prioritäten</option>
+                    <option value="@((int)KanbanTaskPriority.Low)">Niedrig</option>
+                    <option value="@((int)KanbanTaskPriority.Normal)">Normal</option>
+                    <option value="@((int)KanbanTaskPriority.High)">Hoch</option>
+                    <option value="@((int)KanbanTaskPriority.Critical)">Kritisch</option>
+                </select>
+            </div>
+
+            <div class="kanban-field">
+                <label class="form-label"
+                       for="kanban-filter-status">
+                    Status
+                </label>
+
+                <select id="kanban-filter-status"
+                        class="form-select"
+                        @bind="SelectedStatusFilter">
+                    <option value="">Alle Status</option>
+                    <option value="@((int)KanbanTaskStatus.Open)">Offen</option>
+                    <option value="@((int)KanbanTaskStatus.InProgress)">In Arbeit</option>
+                    <option value="@((int)KanbanTaskStatus.Blocked)">Blockiert</option>
+                    <option value="@((int)KanbanTaskStatus.Done)">Erledigt</option>
+                </select>
+            </div>
+        </div>
+
+        @if (AreFiltersActive)
+        {
+            <div class="kanban-filter-note mt-3">
+                Zum sicheren Sortieren und Verschieben bitte zuerst die Filter zurücksetzen.
+            </div>
+        }
+    </section>
+
+    <section class="kanban-board @(IsStatusFilterActive ? "kanban-board-is-status-filtered" : string.Empty)"
              aria-label="Kanban-Aufgaben"
              @ref="kanbanBoardElement">
-        @foreach (KanbanColumnDefinition column in Columns)
+        @foreach (KanbanColumnDefinition column in VisibleColumns)
         {
             IReadOnlyList<KanbanTask> columnTasks = GetTasksByStatus(column.Status);
 
@@ -381,7 +510,9 @@
                         <div class="kanban-column-empty">
                             <strong>Keine Aufgaben</strong>
                             <span>
-                                Neue Aufgaben können direkt diesem Status zugeordnet werden.
+                                @(AreFiltersActive
+                                    ? "Keine Aufgabe entspricht den aktuellen Filtern."
+                                    : "Neue Aufgaben können direkt diesem Status zugeordnet werden.")
                             </span>
                         </div>
                     }
@@ -391,7 +522,7 @@
                         {
                             Project? project = GetProject(task.ProjectId);
 
-                            <article class="kanban-task-card @GetPriorityClass(task.Priority) @GetProjectAccentClass(project) @(IsTaskBeingManaged(task.Id) ? "kanban-task-card-is-active" : string.Empty)"
+                            <article class="kanban-task-card @GetPriorityClass(task.Priority) @GetProjectAccentClass(project) @GetDueDateCardClass(task) @(IsTaskBeingManaged(task.Id) ? "kanban-task-card-is-active" : string.Empty)"
                                      data-kanban-task-id="@task.Id"
                                      data-kanban-task-title="@task.Title"
                                      @key="task.Id">
@@ -401,7 +532,8 @@
                                     </span>
 
                                     <span class="kanban-task-card-tools">
-                                        <span class="kanban-task-date">
+                                        <span class="kanban-task-date"
+                                              title="@($"Erstellt am {FormatDate(task.CreatedAt)}")">
                                             @FormatDate(task.CreatedAt)
                                         </span>
 
@@ -450,8 +582,8 @@
 
                                         <button type="button"
                                                 class="kanban-task-drag-handle"
-                                                disabled="@IsTaskBeingManaged(task.Id)"
-                                                title="Aufgabe ziehen und verschieben"
+                                                disabled="@(!CanDragTask(task.Id))"
+                                                title="@GetDragHandleTitle(task.Id)"
                                                 aria-label="@($"{task.Title} ziehen und verschieben")">
                                             <span aria-hidden="true">⋮⋮</span>
                                         </button>
@@ -462,6 +594,23 @@
                                     title="@task.Title">
                                     @task.Title
                                 </h3>
+
+                                @if (task.DueDate.HasValue)
+                                {
+                                    <div class="kanban-task-due-date @GetDueDateClass(task)">
+                                        <svg viewBox="0 0 16 16"
+                                             aria-hidden="true"
+                                             focusable="false">
+                                            <path d="M4.25 2.25v2M11.75 2.25v2M2.75 6h10.5M3.25 3.5h9.5v9.25h-9.5z"
+                                                  fill="none"
+                                                  stroke="currentColor"
+                                                  stroke-linecap="round"
+                                                  stroke-linejoin="round"
+                                                  stroke-width="1.25" />
+                                        </svg>
+                                        <span>@GetDueDateLabel(task)</span>
+                                    </div>
+                                }
 
                                 @if (!string.IsNullOrWhiteSpace(task.Description))
                                 {
@@ -503,6 +652,6 @@
 
     <div class="alert alert-info kanban-next-step-note mt-4 mb-0">
         <strong>Direkt organisieren:</strong>
-        Ziehe Aufgaben zwischen den Spalten, bearbeite ihre Details oder entferne erledigte Einträge nach einer ausdrücklichen Bestätigung.
+        Fälligkeiten werden rein visuell hervorgehoben. Statusänderungen erfolgen weiterhin ausschließlich durch dich.
     </div>
 </div>

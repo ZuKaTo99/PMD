@@ -146,6 +146,7 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
             Status = status,
             Priority = priority,
             SortOrder = record.SortOrder,
+            DueDate = record.DueDate?.Date,
             CreatedAt = record.CreatedAt,
             UpdatedAt = record.UpdatedAt
         };
@@ -162,6 +163,7 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
             Status = (int)task.Status,
             Priority = (int)task.Priority,
             SortOrder = task.SortOrder,
+            DueDate = task.DueDate?.Date,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt
         };

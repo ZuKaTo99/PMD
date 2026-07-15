@@ -21,6 +21,8 @@ public sealed class KanbanTaskRecord
 
     public int SortOrder { get; set; }
 
+    public DateTime? DueDate { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

@@ -24,12 +24,14 @@ public sealed class KanbanBoardServiceTests
             "  Beschreibung  ",
             projectId,
             KanbanTaskStatus.Open,
-            KanbanTaskPriority.High);
+            KanbanTaskPriority.High,
+            new DateTime(2026, 7, 20, 18, 30, 0));
 
         Assert.Equal("Neue Aufgabe", createdTask.Title);
         Assert.Equal("Beschreibung", createdTask.Description);
         Assert.Equal(projectId, createdTask.ProjectId);
         Assert.Equal(KanbanTaskPriority.High, createdTask.Priority);
+        Assert.Equal(new DateTime(2026, 7, 20), createdTask.DueDate);
         Assert.Equal(5, createdTask.SortOrder);
         Assert.Same(createdTask, repository.SavedTask);
     }
@@ -67,12 +69,14 @@ public sealed class KanbanBoardServiceTests
             "  Neue Beschreibung  ",
             projectId,
             KanbanTaskStatus.Open,
-            KanbanTaskPriority.Critical);
+            KanbanTaskPriority.Critical,
+            new DateTime(2026, 7, 22, 9, 15, 0));
 
         Assert.Equal("Neuer Titel", updatedTask.Title);
         Assert.Equal("Neue Beschreibung", updatedTask.Description);
         Assert.Equal(projectId, updatedTask.ProjectId);
         Assert.Equal(KanbanTaskPriority.Critical, updatedTask.Priority);
+        Assert.Equal(new DateTime(2026, 7, 22), updatedTask.DueDate);
         Assert.Equal(KanbanTaskStatus.Open, updatedTask.Status);
         Assert.Equal(0, updatedTask.SortOrder);
         Assert.Equal(updatedTask.Id, repository.SavedTask?.Id);

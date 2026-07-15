@@ -15,7 +15,8 @@ public interface IKanbanBoardService
         string description,
         Guid? projectId,
         KanbanTaskStatus status,
-        KanbanTaskPriority priority);
+        KanbanTaskPriority priority,
+        DateTime? dueDate = null);
 
     KanbanTask UpdateTask(
         Guid taskId,
@@ -23,7 +24,8 @@ public interface IKanbanBoardService
         string description,
         Guid? projectId,
         KanbanTaskStatus status,
-        KanbanTaskPriority priority);
+        KanbanTaskPriority priority,
+        DateTime? dueDate = null);
 
     void DeleteTask(Guid taskId);
 
