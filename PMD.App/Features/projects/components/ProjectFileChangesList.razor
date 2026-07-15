@@ -163,11 +163,11 @@
 
             return SelectedChangeKind switch
             {
-                ProjectFileChangeKind.Added => "Zwischen den letzten beiden Prüfungen wurden keine neuen Dateien erkannt.",
-                ProjectFileChangeKind.Modified => "Zwischen den letzten beiden Prüfungen wurden keine geänderten Dateien erkannt.",
-                ProjectFileChangeKind.Removed => "Zwischen den letzten beiden Prüfungen wurden keine entfernten Dateien erkannt.",
+                ProjectFileChangeKind.Added => "Zwischen den verglichenen Prüfungen wurden keine neuen Dateien erkannt.",
+                ProjectFileChangeKind.Modified => "Zwischen den verglichenen Prüfungen wurden keine geänderten Dateien erkannt.",
+                ProjectFileChangeKind.Removed => "Zwischen den verglichenen Prüfungen wurden keine entfernten Dateien erkannt.",
                 ProjectFileChangeKind.Unchanged => "Es wurden keine unveränderten Dateien gefunden.",
-                _ => "Zwischen den letzten beiden Prüfungen wurden keine auffälligen Dateiänderungen erkannt."
+                _ => "Zwischen den verglichenen Prüfungen wurden keine auffälligen Dateiänderungen erkannt."
             };
         }
     }

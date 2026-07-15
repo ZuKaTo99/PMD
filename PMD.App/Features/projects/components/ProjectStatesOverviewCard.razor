@@ -37,7 +37,7 @@
                     ProjectState projectState = VisibleProjectStates[index];
                     int projectStateNumber = ProjectStates.Count - index;
 
-                    <div class="border rounded p-3">
+                    <div class="border rounded p-3 position-relative pmd-list-card">
                         <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
                             <div>
                                 <div class="fw-semibold">Prüfung @projectStateNumber</div>
@@ -46,13 +46,18 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex gap-2 flex-wrap">
+                            <div class="d-flex gap-2 flex-wrap align-items-start">
                                 <span class="badge bg-light text-dark border">
                                     @projectState.FileCount Dateien
                                 </span>
                                 <span class="badge bg-light text-dark border">
                                     @ProjectOverviewFormatter.FormatFileSize(projectState.TotalSizeInBytes)
                                 </span>
+                                <a class="btn btn-sm btn-outline-primary stretched-link"
+                                   href="@($"/projekte/{projectState.ProjectId}/verlauf/{projectState.Id}")"
+                                   aria-label="Prüfung @projectStateNumber ansehen">
+                                    Stand ansehen
+                                </a>
                             </div>
                         </div>
 

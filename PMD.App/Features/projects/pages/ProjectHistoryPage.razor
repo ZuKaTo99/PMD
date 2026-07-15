@@ -1,0 +1,260 @@
+@page "/projekte/{ProjectId:guid}/verlauf/{ProjectStateId:guid}"
+@namespace PMD.App.Features.Projects.Pages
+@using PMD.App.Domain.ProjectChanges
+@using PMD.App.Domain.ProjectStates
+@using PMD.App.Features.Projects.Components
+
+<PageTitle>PMD - Historischer Projektstand</PageTitle>
+
+<div class="container-fluid pmd-page pmd-project-page">
+    @if (HistoryDetails is null)
+    {
+        <div class="alert alert-warning">
+            Der ausgewählte Projektstand wurde nicht gefunden oder gehört nicht zu diesem Projekt.
+        </div>
+
+        <a class="btn btn-outline-secondary"
+           href="@($"/projekte/{ProjectId}")">
+            Zurück zum Projekt
+        </a>
+    }
+    else
+    {
+        ProjectState projectState = HistoryDetails.SelectedProjectState;
+
+        <div class="mb-4">
+            <div class="text-muted small mb-1">
+                PMD - Projektverlauf
+            </div>
+
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div class="pmd-text-break">
+                    <h1>Prüfung @HistoryDetails.ProjectStateNumber</h1>
+
+                    <p class="text-muted mb-0">
+                        Historischer Projektstand von @HistoryDetails.Project.Name,
+                        gespeichert am @ProjectOverviewFormatter.FormatDateTime(projectState.ScannedAt).
+                    </p>
+                </div>
+
+                <div class="pmd-responsive-actions align-self-xl-start">
+                    <a class="btn btn-outline-secondary"
+                       href="@($"/projekte/{ProjectId}")">
+                        Zurück zum Projekt
+                    </a>
+
+                    <a class="btn btn-outline-primary"
+                       href="@($"/projekte/{ProjectId}/dateien")">
+                        Aktuelle Dateien
+                    </a>
+
+                    <a class="btn btn-outline-primary"
+                       href="@($"/projekte/{ProjectId}/aenderungen")">
+                        Aktuelle Änderungen
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mb-4">
+            Diese Ansicht verwendet ausschließlich den damals in PMD gespeicherten Projektstand.
+            Sie startet keine neue Prüfung und liest keine aktuellen Dateien aus dem Projektordner ein.
+        </div>
+
+        <div class="card pmd-card mb-4">
+            <div class="card-header">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                    <div>
+                        <h2 class="h5 mb-1">Gespeicherter Stand</h2>
+                        <div class="text-muted small">
+                            Prüfung @HistoryDetails.ProjectStateNumber von @HistoryDetails.TotalProjectStateCount
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 align-self-lg-center">
+                        @if (HistoryDetails.NewerProjectState is not null)
+                        {
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="@BuildProjectStateLink(HistoryDetails.NewerProjectState)">
+                                Neueren Stand ansehen
+                            </a>
+                        }
+
+                        @if (HistoryDetails.OlderProjectState is not null)
+                        {
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="@BuildProjectStateLink(HistoryDetails.OlderProjectState)">
+                                Älteren Stand ansehen
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="border rounded p-3 h-100 pmd-card">
+                            <div class="text-muted small">Geprüft am</div>
+                            <div class="fw-semibold">
+                                @ProjectOverviewFormatter.FormatDateTime(projectState.ScannedAt)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="border rounded p-3 h-100 pmd-card">
+                            <div class="text-muted small">Dateien</div>
+                            <div class="fw-semibold">@projectState.FileCount</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="border rounded p-3 h-100 pmd-card">
+                            <div class="text-muted small">Projektgröße</div>
+                            <div class="fw-semibold">
+                                @ProjectOverviewFormatter.FormatFileSize(projectState.TotalSizeInBytes)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="border rounded p-3 h-100 pmd-card">
+                            <div class="text-muted small">Prüfdauer</div>
+                            <div class="fw-semibold">
+                                @ProjectOverviewFormatter.FormatDuration(projectState.ScanDuration)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="border rounded p-3 h-100 pmd-card">
+                            <div class="text-muted small">Geprüfte Ordner</div>
+                            <div class="fw-semibold">@projectState.ScannedFolderCount</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="border rounded p-3 h-100 pmd-card">
+                            <div class="text-muted small">Übersprungene Ordner</div>
+                            <div class="fw-semibold">@projectState.IgnoredFolderCount</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="border rounded p-3 h-100 pmd-card">
+                            <div class="text-muted small">Hinweise</div>
+                            <div class="fw-semibold">@projectState.WarningCount</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <div class="text-muted small">Projektordner zum Zeitpunkt der Prüfung</div>
+                    <code class="d-block pmd-path" title="@projectState.RootPath">
+                        @projectState.RootPath
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        @if (HistoryDetails.ChangesFromPreviousState is null)
+        {
+            <div class="card pmd-card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Änderungen zu einem früheren Stand</h2>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-info mb-0">
+                        Dies ist der älteste gespeicherte Projektstand. Es gibt keinen vorherigen Stand,
+                        mit dem PMD diese Prüfung vergleichen kann.
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <h2 class="h4 mb-1">Änderungen dieser Prüfung</h2>
+                <p class="text-muted mb-0">
+                    Vergleich mit Prüfung @(HistoryDetails.ProjectStateNumber - 1)
+                    vom @PreviousProjectStateDate.
+                </p>
+            </div>
+
+            <ProjectChangesSummaryCard ChangesResult="@HistoryDetails.ChangesFromPreviousState" />
+
+            <ProjectChangeTypeFilterBar ChangesResult="@HistoryDetails.ChangesFromPreviousState"
+                                        SelectedChangeKind="@SelectedChangeKind"
+                                        SelectedChangeKindChanged="OnSelectedChangeKindChanged" />
+
+            <ProjectChangeSearchBar SearchText="@ChangeSearchText"
+                                    SearchTextChanged="OnChangeSearchTextChanged" />
+
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-xl-5">
+                    <ProjectFileChangesList ChangesResult="@HistoryDetails.ChangesFromPreviousState"
+                                            SelectedChangeKind="@SelectedChangeKind"
+                                            SearchText="@ChangeSearchText"
+                                            SelectedChange="@SelectedChange"
+                                            OnSelectChange="SelectChange" />
+                </div>
+
+                <div class="col-12 col-xl-7">
+                    <ProjectFileChangeDetailCard ProjectId="@ProjectId"
+                                                 SelectedChange="@SelectedChange"
+                                                 ShowFileOpenAction="false" />
+                </div>
+            </div>
+        }
+
+        <div class="card pmd-card mb-4">
+            <div class="card-header">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                    <div>
+                        <h2 class="h5 mb-1">Dateien dieses Projektstands</h2>
+                        <div class="text-muted small">
+                            Metadaten und gespeicherte Textauszüge aus Prüfung @HistoryDetails.ProjectStateNumber.
+                        </div>
+                    </div>
+
+                    <span class="badge bg-secondary align-self-start align-self-lg-center">
+                        @Files.Count Dateien
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <ProjectFileSearchBar SearchText="@SearchText"
+                                      SelectedExtension="@SelectedExtension"
+                                      SelectedSortMode="@SelectedSortMode"
+                                      AvailableExtensions="@AvailableExtensions"
+                                      HasActiveFilters="@HasActiveFileFilters"
+                                      OnSearchTextChanged="OnSearchTextChanged"
+                                      OnSelectedExtensionChanged="OnSelectedExtensionChanged"
+                                      OnSelectedSortModeChanged="OnSelectedSortModeChanged"
+                                      OnClearFilters="ClearFileFilters" />
+
+                <div class="row g-4">
+                    <div class="col-12 col-xl-5">
+                        <ProjectFileList TotalFileCount="@Files.Count"
+                                         FilteredFiles="@FilteredFiles"
+                                         VisibleFilesSource="@VisibleFiles"
+                                         SelectedFile="@SelectedFile"
+                                         SelectedSortLabel="@SelectedSortLabel"
+                                         ResetKey="@FileListResetKey"
+                                         EmptyProjectText="In diesem Projektstand wurden keine Dateien gespeichert."
+                                         OnSelectFile="SelectFile" />
+                    </div>
+
+                    <div class="col-12 col-xl-7">
+                        <ProjectFileDetailCard SelectedFile="@SelectedFile"
+                                               SelectedFileContentResult="@SelectedFileContentResult"
+                                               OnLoadPreview="LoadHistoricalFilePreview" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

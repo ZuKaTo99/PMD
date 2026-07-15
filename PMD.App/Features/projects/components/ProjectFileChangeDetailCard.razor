@@ -132,24 +132,27 @@
                     </div>
                 }
 
-                @if (CanOpenLatestFile)
+                @if (ShowFileOpenAction)
                 {
-                    <div class="pmd-responsive-actions">
-                        <a class="btn btn-outline-primary"
-                           href="@LatestFileDetailsLink">
-                            Datei mit Vorschau öffnen
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    <div class="pmd-responsive-actions">
-                        <button class="btn btn-outline-secondary"
-                                type="button"
-                                disabled>
-                            Datei nicht mehr vorhanden
-                        </button>
-                    </div>
+                    @if (CanOpenLatestFile)
+                    {
+                        <div class="pmd-responsive-actions">
+                            <a class="btn btn-outline-primary"
+                               href="@LatestFileDetailsLink">
+                                Datei mit Vorschau öffnen
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pmd-responsive-actions">
+                            <button class="btn btn-outline-secondary"
+                                    type="button"
+                                    disabled>
+                                Datei nicht mehr vorhanden
+                            </button>
+                        </div>
+                    }
                 }
             </div>
         }
@@ -162,6 +165,9 @@
 
     [Parameter]
     public ProjectFileChange? SelectedChange { get; set; }
+
+    [Parameter]
+    public bool ShowFileOpenAction { get; set; } = true;
 
     private bool CanOpenLatestFile =>
         SelectedChange?.LatestFile is not null;

@@ -16,6 +16,7 @@ using PMD.App.Infrastructure.ProjectStates;
 using PMD.App.Infrastructure.Projects;
 using PMD.App.Infrastructure.Scanner;
 using PMD.App.Application.ProjectFiles;
+using PMD.App.Application.ProjectHistory;
 using PMD.App.Infrastructure.ProjectFiles;
 using PMD.App.Application.ProjectChanges;
 using PMD.App.Application.ProjectCodeDiff;
@@ -43,6 +44,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IProjectMemoryStore, ProjectMemoryStore>();
         builder.Services.AddSingleton<IProjectStateMemoryStore, ProjectStateMemoryStore>();
         builder.Services.AddSingleton<IProjectOverviewService, ProjectOverviewService>();
+        builder.Services.AddSingleton<IProjectHistoryService, ProjectHistoryService>();
         builder.Services.AddSingleton<IProjectFolderLauncher, ProjectFolderLauncher>();
         builder.Services.AddSingleton<IProjectFolderScanner, ProjectFolderScanner>();
         builder.Services.AddSingleton<IFolderPicker>(FolderPicker.Default);

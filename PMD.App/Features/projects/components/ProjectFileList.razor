@@ -6,7 +6,7 @@
 @if (TotalFileCount == 0)
 {
     <p class="text-muted mb-0">
-        In der letzten Prüfung wurden keine Dateien gespeichert.
+        @EmptyProjectText
     </p>
 }
 else if (FilteredFiles.Count == 0)
@@ -76,6 +76,10 @@ else
 
     private int visibleFileCount = InitialVisibleFileCount;
     private string lastResetKey = string.Empty;
+
+    [Parameter]
+    public string EmptyProjectText { get; set; } =
+        "In der letzten Prüfung wurden keine Dateien gespeichert.";
 
     [Parameter]
     public int TotalFileCount { get; set; }
