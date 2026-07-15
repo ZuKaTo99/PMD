@@ -36,9 +36,11 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
     {
         using var connection = connectionFactory.CreateConnection();
 
+        string taskIdValue = taskId.ToString();
+
         KanbanTaskRecord? record = connection
             .Table<KanbanTaskRecord>()
-            .FirstOrDefault(task => task.Id == taskId.ToString());
+            .FirstOrDefault(task => task.Id == taskIdValue);
 
         return record is null
             ? null
