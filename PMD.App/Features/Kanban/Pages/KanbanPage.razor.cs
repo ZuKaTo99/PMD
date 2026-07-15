@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using PMD.App.Application.Kanban;
 using PMD.App.Application.Projects;
 using PMD.App.Domain.Kanban;
@@ -6,10 +7,11 @@ using PMD.App.Domain.Projects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace PMD.App.Features.Kanban.Pages;
 
-public partial class KanbanPage : IDisposable
+public partial class KanbanPage : IDisposable, IAsyncDisposable
 {
     private static readonly IReadOnlyList<KanbanColumnDefinition>
         ColumnDefinitions =
@@ -36,11 +38,18 @@ public partial class KanbanPage : IDisposable
                 "done")
         ];
 
+    private ElementReference kanbanBoardElement;
+    private DotNetObjectReference<KanbanPage>? dragDropReference;
+    private bool isDisposed;
+
     [Inject]
     private IKanbanBoardService KanbanBoardService { get; set; } = default!;
 
     [Inject]
     private IProjectMemoryStore ProjectMemoryStore { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JavaScriptRuntime { get; set; } = default!;
 
     protected IReadOnlyList<KanbanColumnDefinition> Columns =>
         ColumnDefinitions;
@@ -76,10 +85,85 @@ public partial class KanbanPage : IDisposable
         ProjectMemoryStore.ProjectsChanged += OnProjectsChanged;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        dragDropReference ??= DotNetObjectReference.Create(this);
+
+        await JavaScriptRuntime.InvokeVoidAsync(
+            "pmdKanbanDragDrop.initialize",
+            kanbanBoardElement,
+            dragDropReference,
+            new
+            {
+                columnSelector = ".kanban-column",
+                listSelector = ".kanban-task-list",
+                itemSelector = ".kanban-task-card",
+                handleSelector = ".kanban-task-drag-handle",
+                draggingClass = "kanban-task-is-dragging",
+                targetColumnClass = "kanban-column-is-drop-target"
+            });
+    }
+
     public void Dispose()
     {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        isDisposed = true;
         KanbanBoardService.BoardChanged -= OnBoardChanged;
         ProjectMemoryStore.ProjectsChanged -= OnProjectsChanged;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Dispose();
+
+        try
+        {
+            await JavaScriptRuntime.InvokeVoidAsync(
+                "pmdKanbanDragDrop.dispose",
+                kanbanBoardElement);
+        }
+        catch (JSException)
+        {
+            // The WebView can already be unavailable while the page is disposed.
+        }
+        catch (InvalidOperationException)
+        {
+            // JavaScript interop is not available during every disposal phase.
+        }
+
+        dragDropReference?.Dispose();
+        dragDropReference = null;
+    }
+
+    [JSInvokable]
+    public Task MoveTaskFromJavaScript(
+        string taskIdValue,
+        int targetStatusValue,
+        int targetIndex)
+    {
+        if (!Guid.TryParse(taskIdValue, out Guid taskId) ||
+            !Enum.IsDefined(
+                typeof(KanbanTaskStatus),
+                targetStatusValue))
+        {
+            return Task.CompletedTask;
+        }
+
+        KanbanBoardService.MoveTask(
+            taskId,
+            (KanbanTaskStatus)targetStatusValue,
+            targetIndex);
+
+        return Task.CompletedTask;
     }
 
     protected IReadOnlyList<KanbanTask> GetTasksByStatus(
@@ -162,7 +246,6 @@ public partial class KanbanPage : IDisposable
             _ => "kanban-priority-normal"
         };
     }
-
 
     protected static string GetProjectAccentClass(Project? project)
     {

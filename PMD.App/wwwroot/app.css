@@ -441,3 +441,57 @@ body.pmd-home-widget-drag-active * {
     line-height: 0.8;
     transform: rotate(90deg);
 }
+
+/* Pointer-based Kanban card drag-and-drop */
+body.pmd-kanban-drag-active,
+body.pmd-kanban-drag-active * {
+    cursor: grabbing !important;
+}
+
+.pmd-kanban-drag-ghost {
+    position: fixed;
+    z-index: 2147483000;
+    display: grid;
+    max-width: min(22rem, calc(100vw - 1rem));
+    gap: 0.18rem;
+    padding: 0.72rem 0.9rem;
+    overflow: hidden;
+    color: var(--bs-emphasis-color);
+    pointer-events: none;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.58);
+    border-left: 0.24rem solid var(--bs-primary);
+    border-radius: 0.85rem;
+    background: var(--pmd-surface);
+    box-shadow:
+        0 0 0 4px rgba(var(--bs-primary-rgb), 0.12),
+        0 18px 42px rgba(7, 23, 34, 0.26);
+    opacity: 0.97;
+}
+
+.pmd-kanban-drag-ghost strong {
+    overflow: hidden;
+    font-size: 0.82rem;
+    font-weight: 790;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pmd-kanban-drag-ghost span {
+    color: var(--bs-secondary-color);
+    font-size: 0.68rem;
+}
+
+.kanban-drop-placeholder {
+    min-height: 4.5rem;
+    border: 2px dashed rgba(var(--bs-primary-rgb), 0.58);
+    border-radius: 0.95rem;
+    background:
+        repeating-linear-gradient(
+            -45deg,
+            rgba(var(--bs-primary-rgb), 0.08),
+            rgba(var(--bs-primary-rgb), 0.08) 0.5rem,
+            rgba(var(--bs-primary-rgb), 0.03) 0.5rem,
+            rgba(var(--bs-primary-rgb), 0.03) 1rem
+        );
+    box-shadow: inset 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.06);
+}

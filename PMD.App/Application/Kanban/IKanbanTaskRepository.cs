@@ -12,5 +12,7 @@ public interface IKanbanTaskRepository
 
     void Save(KanbanTask task);
 
+    void SaveAll(IReadOnlyList<KanbanTask> tasks);
+
     void Delete(Guid taskId);
 }

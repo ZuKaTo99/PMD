@@ -16,4 +16,9 @@ public interface IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority);
+
+    void MoveTask(
+        Guid taskId,
+        KanbanTaskStatus targetStatus,
+        int targetIndex);
 }

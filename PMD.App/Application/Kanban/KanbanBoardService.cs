@@ -91,6 +91,131 @@ public sealed class KanbanBoardService : IKanbanBoardService
         return task;
     }
 
+    public void MoveTask(
+        Guid taskId,
+        KanbanTaskStatus targetStatus,
+        int targetIndex)
+    {
+        if (!Enum.IsDefined(typeof(KanbanTaskStatus), targetStatus))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(targetStatus),
+                targetStatus,
+                "Der Zielstatus ist ungültig.");
+        }
+
+        KanbanTask taskToMove = tasks.FirstOrDefault(task => task.Id == taskId)
+            ?? throw new KeyNotFoundException(
+                $"Die Kanban-Aufgabe {taskId} wurde nicht gefunden.");
+
+        List<KanbanTask> sourceColumnTasks = tasks
+            .Where(task => task.Status == taskToMove.Status && task.Id != taskId)
+            .OrderBy(task => task.SortOrder)
+            .ThenByDescending(task => task.CreatedAt)
+            .ToList();
+
+        List<KanbanTask> targetColumnTasks = taskToMove.Status == targetStatus
+            ? sourceColumnTasks
+            : tasks
+                .Where(task => task.Status == targetStatus)
+                .OrderBy(task => task.SortOrder)
+                .ThenByDescending(task => task.CreatedAt)
+                .ToList();
+
+        int normalizedTargetIndex = Math.Clamp(
+            targetIndex,
+            0,
+            targetColumnTasks.Count);
+
+        targetColumnTasks.Insert(
+            normalizedTargetIndex,
+            taskToMove);
+
+        DateTime now = DateTime.Now;
+        var updatedTasksById = new Dictionary<Guid, KanbanTask>();
+
+        ReindexColumn(
+            targetColumnTasks,
+            targetStatus,
+            now,
+            updatedTasksById);
+
+        if (taskToMove.Status != targetStatus)
+        {
+            ReindexColumn(
+                sourceColumnTasks,
+                taskToMove.Status,
+                now,
+                updatedTasksById);
+        }
+
+        if (updatedTasksById.Count == 0)
+        {
+            return;
+        }
+
+        IReadOnlyList<KanbanTask> updatedTasks = updatedTasksById.Values
+            .ToList();
+
+        taskRepository.SaveAll(updatedTasks);
+
+        for (int index = 0; index < tasks.Count; index++)
+        {
+            if (updatedTasksById.TryGetValue(
+                    tasks[index].Id,
+                    out KanbanTask? updatedTask))
+            {
+                tasks[index] = updatedTask;
+            }
+        }
+
+        SortTasks();
+        BoardChanged?.Invoke();
+    }
+
+    private static void ReindexColumn(
+        IReadOnlyList<KanbanTask> columnTasks,
+        KanbanTaskStatus status,
+        DateTime updatedAt,
+        IDictionary<Guid, KanbanTask> updatedTasksById)
+    {
+        for (int index = 0; index < columnTasks.Count; index++)
+        {
+            KanbanTask task = columnTasks[index];
+
+            if (task.Status == status && task.SortOrder == index)
+            {
+                continue;
+            }
+
+            updatedTasksById[task.Id] = CopyTask(
+                task,
+                status,
+                index,
+                updatedAt);
+        }
+    }
+
+    private static KanbanTask CopyTask(
+        KanbanTask task,
+        KanbanTaskStatus status,
+        int sortOrder,
+        DateTime updatedAt)
+    {
+        return new KanbanTask
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            ProjectId = task.ProjectId,
+            Status = status,
+            Priority = task.Priority,
+            SortOrder = sortOrder,
+            CreatedAt = task.CreatedAt,
+            UpdatedAt = updatedAt
+        };
+    }
+
     private void SortTasks()
     {
         tasks.Sort((first, second) =>

@@ -376,3 +376,76 @@
         flex-direction: column;
     }
 }
+
+.kanban-task-card-tools {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.45rem;
+}
+
+.kanban-task-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    padding: 0;
+    color: var(--bs-secondary-color);
+    border: 1px solid transparent;
+    border-radius: 0.62rem;
+    background: transparent;
+    cursor: grab;
+    touch-action: none;
+    transition:
+        color 0.16s ease,
+        border-color 0.16s ease,
+        background-color 0.16s ease,
+        transform 0.16s ease;
+}
+
+.kanban-task-drag-handle span {
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.22rem;
+    line-height: 0.8;
+    transform: rotate(90deg);
+}
+
+.kanban-task-drag-handle:hover,
+.kanban-task-drag-handle:focus-visible {
+    color: var(--kanban-column-accent);
+    border-color: color-mix(in srgb, var(--kanban-column-accent) 38%, var(--pmd-border));
+    background: color-mix(in srgb, var(--kanban-column-accent) 9%, var(--pmd-surface));
+    outline: none;
+}
+
+.kanban-task-drag-handle:focus-visible {
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--kanban-column-accent) 18%, transparent);
+}
+
+.kanban-task-drag-handle:active {
+    cursor: grabbing;
+    transform: scale(0.96);
+}
+
+.kanban-task-is-dragging {
+    display: none;
+}
+
+.kanban-column-is-drop-target {
+    border-color: var(--kanban-column-accent);
+    box-shadow:
+        0 0 0 0.24rem color-mix(in srgb, var(--kanban-column-accent) 13%, transparent),
+        0 16px 36px rgba(24, 48, 64, 0.1);
+}
+
+.kanban-column-is-drop-target .kanban-column-empty {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kanban-task-drag-handle {
+        transition: none;
+    }
+}

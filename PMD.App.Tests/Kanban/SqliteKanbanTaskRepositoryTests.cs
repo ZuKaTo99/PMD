@@ -92,6 +92,56 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             task => Assert.Equal("Aufgabe in Arbeit", task.Title));
     }
 
+    [Fact]
+    public void SaveAll_PersistsMovedTaskStatusAndSortOrder()
+    {
+        KanbanTask openTask = CreateTask(
+            "Offene Aufgabe",
+            KanbanTaskStatus.Open,
+            0);
+
+        KanbanTask inProgressTask = CreateTask(
+            "Aufgabe in Arbeit",
+            KanbanTaskStatus.InProgress,
+            0);
+
+        repository.Save(openTask);
+        repository.Save(inProgressTask);
+
+        DateTime updatedAt = DateTime.Now.AddMinutes(1);
+
+        repository.SaveAll(
+        [
+            CopyTask(
+                openTask,
+                KanbanTaskStatus.InProgress,
+                0,
+                updatedAt),
+            CopyTask(
+                inProgressTask,
+                KanbanTaskStatus.InProgress,
+                1,
+                updatedAt)
+        ]);
+
+        IReadOnlyList<KanbanTask> tasks = repository.GetAll();
+
+        Assert.Collection(
+            tasks,
+            task =>
+            {
+                Assert.Equal(openTask.Id, task.Id);
+                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
+                Assert.Equal(0, task.SortOrder);
+            },
+            task =>
+            {
+                Assert.Equal(inProgressTask.Id, task.Id);
+                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
+                Assert.Equal(1, task.SortOrder);
+            });
+    }
+
     public void Dispose()
     {
         try
@@ -125,6 +175,26 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             SortOrder = sortOrder,
             CreatedAt = now,
             UpdatedAt = now
+        };
+    }
+
+    private static KanbanTask CopyTask(
+        KanbanTask task,
+        KanbanTaskStatus status,
+        int sortOrder,
+        DateTime updatedAt)
+    {
+        return new KanbanTask
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            ProjectId = task.ProjectId,
+            Status = status,
+            Priority = task.Priority,
+            SortOrder = sortOrder,
+            CreatedAt = task.CreatedAt,
+            UpdatedAt = updatedAt
         };
     }
 

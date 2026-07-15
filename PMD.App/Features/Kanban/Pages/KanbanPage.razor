@@ -158,12 +158,14 @@
     }
 
     <section class="kanban-board"
-             aria-label="Kanban-Aufgaben">
+             aria-label="Kanban-Aufgaben"
+             @ref="kanbanBoardElement">
         @foreach (KanbanColumnDefinition column in Columns)
         {
             IReadOnlyList<KanbanTask> columnTasks = GetTasksByStatus(column.Status);
 
-            <article class="kanban-column kanban-column-@column.CssName">
+            <article class="kanban-column kanban-column-@column.CssName"
+                     data-kanban-status="@((int)column.Status)">
                 <header class="kanban-column-header">
                     <div>
                         <div class="kanban-column-title-row">
@@ -187,7 +189,8 @@
                     </span>
                 </header>
 
-                <div class="kanban-task-list">
+                <div class="kanban-task-list"
+                     data-kanban-status="@((int)column.Status)">
                     @if (columnTasks.Count == 0)
                     {
                         <div class="kanban-column-empty">
@@ -204,14 +207,25 @@
                             Project? project = GetProject(task.ProjectId);
 
                             <article class="kanban-task-card @GetPriorityClass(task.Priority) @GetProjectAccentClass(project)"
+                                     data-kanban-task-id="@task.Id"
+                                     data-kanban-task-title="@task.Title"
                                      @key="task.Id">
                                 <div class="kanban-task-card-header">
                                     <span class="kanban-priority-badge">
                                         @GetPriorityLabel(task.Priority)
                                     </span>
 
-                                    <span class="kanban-task-date">
-                                        @FormatDate(task.CreatedAt)
+                                    <span class="kanban-task-card-tools">
+                                        <span class="kanban-task-date">
+                                            @FormatDate(task.CreatedAt)
+                                        </span>
+
+                                        <button type="button"
+                                                class="kanban-task-drag-handle"
+                                                title="Aufgabe ziehen und verschieben"
+                                                aria-label="@($"{task.Title} ziehen und verschieben")">
+                                            <span aria-hidden="true">⋮⋮</span>
+                                        </button>
                                     </span>
                                 </div>
 
@@ -259,7 +273,7 @@
     </section>
 
     <div class="alert alert-info kanban-next-step-note mt-4 mb-0">
-        <strong>Erste funktionsfähige Kanban-Grundlage:</strong>
-        Aufgaben werden bereits dauerhaft gespeichert. Bearbeiten, Löschen und Drag-and-drop folgen kontrolliert in den nächsten Schritten.
+        <strong>Direkt organisieren:</strong>
+        Ziehe eine Aufgabe am Griff in eine andere Spalte oder an eine neue Position. Status und Reihenfolge werden dauerhaft gespeichert.
     </div>
 </div>

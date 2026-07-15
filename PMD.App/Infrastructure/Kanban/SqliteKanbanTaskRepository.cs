@@ -50,9 +50,31 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
     public void Save(KanbanTask task)
     {
         ArgumentNullException.ThrowIfNull(task);
+        SaveAll([task]);
+    }
+
+    public void SaveAll(IReadOnlyList<KanbanTask> tasks)
+    {
+        ArgumentNullException.ThrowIfNull(tasks);
+
+        if (tasks.Count == 0)
+        {
+            return;
+        }
+
+        List<KanbanTaskRecord> records = tasks
+            .Select(MapToRecord)
+            .ToList();
 
         using var connection = connectionFactory.CreateConnection();
-        connection.InsertOrReplace(MapToRecord(task));
+
+        connection.RunInTransaction(() =>
+        {
+            foreach (KanbanTaskRecord record in records)
+            {
+                connection.InsertOrReplace(record);
+            }
+        });
     }
 
     public void Delete(Guid taskId)
