@@ -52,6 +52,14 @@
                        href="@($"/projekte/{ProjectId}/aenderungen")">
                         Aktuelle Änderungen
                     </a>
+
+                    @if (HistoryDetails.TotalProjectStateCount >= 2)
+                    {
+                        <a class="btn btn-outline-primary"
+                           href="@($"/projekte/{ProjectId}/verlauf/vergleichen")">
+                            Stände vergleichen
+                        </a>
+                    }
                 </div>
             </div>
         </div>

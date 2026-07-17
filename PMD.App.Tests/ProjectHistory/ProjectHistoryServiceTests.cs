@@ -117,6 +117,129 @@ public sealed class ProjectHistoryServiceTests
         Assert.Null(result.ChangesFromPreviousState);
     }
 
+    [Fact]
+    public void GetProjectStates_ReturnsAllStatesInNewestFirstOrder()
+    {
+        Guid projectId = Guid.NewGuid();
+        Project project = CreateProject(projectId);
+
+        ProjectState oldestState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 13, 10, 0, 0),
+            1);
+
+        ProjectState newestState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 15, 10, 0, 0),
+            3);
+
+        ProjectState middleState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 14, 10, 0, 0),
+            2);
+
+        var service = new ProjectHistoryService(
+            new FakeProjectMemoryStore(project),
+            new FakeProjectStateMemoryStore(
+                oldestState,
+                newestState,
+                middleState),
+            new ProjectChangesService());
+
+        IReadOnlyList<ProjectState> result =
+            service.GetProjectStates(projectId);
+
+        Assert.Equal(3, result.Count);
+        Assert.Equal(newestState.Id, result[0].Id);
+        Assert.Equal(middleState.Id, result[1].Id);
+        Assert.Equal(oldestState.Id, result[2].Id);
+    }
+
+    [Fact]
+    public void GetComparisonDetails_ComparesAnyOlderStateWithNewerState()
+    {
+        Guid projectId = Guid.NewGuid();
+        Project project = CreateProject(projectId);
+
+        ProjectState oldestState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 13, 10, 0, 0),
+            1);
+
+        ProjectState middleState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 14, 10, 0, 0),
+            2);
+
+        ProjectState newestState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 15, 10, 0, 0),
+            3);
+
+        var service = new ProjectHistoryService(
+            new FakeProjectMemoryStore(project),
+            new FakeProjectStateMemoryStore(
+                newestState,
+                middleState,
+                oldestState),
+            new ProjectChangesService());
+
+        ProjectHistoryComparisonDetails? result =
+            service.GetComparisonDetails(
+                projectId,
+                oldestState.Id,
+                newestState.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal(1, result.OlderProjectStateNumber);
+        Assert.Equal(3, result.NewerProjectStateNumber);
+        Assert.Equal(oldestState.Id, result.OlderProjectState.Id);
+        Assert.Equal(newestState.Id, result.NewerProjectState.Id);
+        Assert.Equal(2, result.FileCountDifference);
+        Assert.Equal(1, result.ChangesResult.ModifiedFileCount);
+        Assert.Equal(2, result.ChangesResult.AddedFileCount);
+    }
+
+    [Fact]
+    public void GetComparisonDetails_ReturnsNullForInvalidDirectionOrSameState()
+    {
+        Guid projectId = Guid.NewGuid();
+        Project project = CreateProject(projectId);
+
+        ProjectState olderState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 14, 10, 0, 0),
+            1);
+
+        ProjectState newerState = CreateState(
+            Guid.NewGuid(),
+            projectId,
+            new DateTime(2026, 7, 15, 10, 0, 0),
+            2);
+
+        var service = new ProjectHistoryService(
+            new FakeProjectMemoryStore(project),
+            new FakeProjectStateMemoryStore(newerState, olderState),
+            new ProjectChangesService());
+
+        Assert.Null(service.GetComparisonDetails(
+            projectId,
+            newerState.Id,
+            olderState.Id));
+
+        Assert.Null(service.GetComparisonDetails(
+            projectId,
+            olderState.Id,
+            olderState.Id));
+    }
+
     private static Project CreateProject(Guid projectId)
     {
         return new Project

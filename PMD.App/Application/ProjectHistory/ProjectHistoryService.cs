@@ -26,6 +26,16 @@ public sealed class ProjectHistoryService : IProjectHistoryService
         this.projectChangesService = projectChangesService;
     }
 
+    public IReadOnlyList<ProjectState> GetProjectStates(Guid projectId)
+    {
+        if (projectStore.GetProjectById(projectId) is null)
+        {
+            return Array.Empty<ProjectState>();
+        }
+
+        return LoadOrderedProjectStates(projectId);
+    }
+
     public ProjectHistoryDetails? GetDetails(
         Guid projectId,
         Guid projectStateId)
@@ -37,13 +47,8 @@ public sealed class ProjectHistoryService : IProjectHistoryService
             return null;
         }
 
-        List<ProjectState> projectStates = projectStateStore
-            .GetByProjectId(projectId, int.MaxValue)
-            .GroupBy(projectState => projectState.Id)
-            .Select(group => group.First())
-            .OrderByDescending(projectState => projectState.ScannedAt)
-            .ThenByDescending(projectState => projectState.CreatedAt)
-            .ToList();
+        List<ProjectState> projectStates =
+            LoadOrderedProjectStates(projectId);
 
         int selectedIndex = projectStates.FindIndex(
             projectState => projectState.Id == projectStateId);
@@ -82,5 +87,70 @@ public sealed class ProjectHistoryService : IProjectHistoryService
             ChangesFromPreviousState = changesFromPreviousState,
             ProjectStateNumber = projectStates.Count - selectedIndex
         };
+    }
+
+    public ProjectHistoryComparisonDetails? GetComparisonDetails(
+        Guid projectId,
+        Guid olderProjectStateId,
+        Guid newerProjectStateId)
+    {
+        if (olderProjectStateId == newerProjectStateId)
+        {
+            return null;
+        }
+
+        Project? project = projectStore.GetProjectById(projectId);
+
+        if (project is null)
+        {
+            return null;
+        }
+
+        List<ProjectState> projectStates =
+            LoadOrderedProjectStates(projectId);
+
+        int olderIndex = projectStates.FindIndex(
+            projectState => projectState.Id == olderProjectStateId);
+
+        int newerIndex = projectStates.FindIndex(
+            projectState => projectState.Id == newerProjectStateId);
+
+        if (olderIndex < 0 || newerIndex < 0 || olderIndex <= newerIndex)
+        {
+            return null;
+        }
+
+        ProjectState olderProjectState =
+            projectStateStore.LoadFiles(projectStates[olderIndex]);
+
+        ProjectState newerProjectState =
+            projectStateStore.LoadFiles(projectStates[newerIndex]);
+
+        ProjectChangesResult changesResult =
+            projectChangesService.Compare(
+                olderProjectState,
+                newerProjectState);
+
+        return new ProjectHistoryComparisonDetails
+        {
+            Project = project,
+            ProjectStates = projectStates,
+            OlderProjectState = olderProjectState,
+            NewerProjectState = newerProjectState,
+            ChangesResult = changesResult,
+            OlderProjectStateNumber = projectStates.Count - olderIndex,
+            NewerProjectStateNumber = projectStates.Count - newerIndex
+        };
+    }
+
+    private List<ProjectState> LoadOrderedProjectStates(Guid projectId)
+    {
+        return projectStateStore
+            .GetByProjectId(projectId, int.MaxValue)
+            .GroupBy(projectState => projectState.Id)
+            .Select(group => group.First())
+            .OrderByDescending(projectState => projectState.ScannedAt)
+            .ThenByDescending(projectState => projectState.CreatedAt)
+            .ToList();
     }
 }

@@ -1,0 +1,226 @@
+@page "/projekte/{ProjectId:guid}/verlauf/vergleichen"
+@namespace PMD.App.Features.Projects.Pages
+@using PMD.App.Domain.ProjectChanges
+@using PMD.App.Domain.ProjectStates
+@using PMD.App.Features.Projects.Components
+
+<PageTitle>PMD - Projektstände vergleichen</PageTitle>
+
+<div class="container-fluid pmd-page pmd-project-page">
+    <div class="mb-4">
+        <div class="text-muted small mb-1">
+            PMD - Projektverlauf
+        </div>
+
+        <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+            <div class="pmd-text-break">
+                <h1>Projektstände vergleichen</h1>
+
+                @if (ProjectStates.Count > 0)
+                {
+                    <p class="text-muted mb-0">
+                        Zwei gespeicherte Prüfungen gezielt miteinander vergleichen.
+                    </p>
+                }
+            </div>
+
+            <div class="pmd-responsive-actions align-self-xl-start">
+                <a class="btn btn-outline-secondary"
+                   href="@($"/projekte/{ProjectId}")">
+                    Zurück zum Projekt
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (ProjectStates.Count < 2)
+    {
+        <div class="alert alert-info">
+            Für einen Vergleich werden mindestens zwei gespeicherte Projektstände benötigt.
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mb-4">
+            PMD vergleicht ausschließlich bereits gespeicherte Prüfungen. Es wird keine neue
+            Projektprüfung gestartet und der aktuelle Projektordner wird nicht eingelesen.
+        </div>
+
+        <div class="card pmd-card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-1">Vergleich auswählen</h2>
+                <div class="text-muted small">
+                    Der Ausgangsstand ist älter als der Zielstand. So bleiben neue, geänderte und
+                    entfernte Dateien eindeutig nachvollziehbar.
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-xl-5">
+                        <label class="form-label" for="older-project-state">
+                            Älterer Ausgangsstand
+                        </label>
+
+                        <select id="older-project-state"
+                                class="form-select"
+                                value="@(SelectedOlderProjectStateId?.ToString())"
+                                @onchange="OnOlderProjectStateChanged">
+                            @foreach (ProjectState projectState in OlderProjectStateOptions)
+                            {
+                                <option value="@projectState.Id">
+                                    @FormatProjectStateOption(projectState)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-xl-5">
+                        <label class="form-label" for="newer-project-state">
+                            Neuerer Zielstand
+                        </label>
+
+                        <select id="newer-project-state"
+                                class="form-select"
+                                value="@(SelectedNewerProjectStateId?.ToString())"
+                                @onchange="OnNewerProjectStateChanged">
+                            @foreach (ProjectState projectState in NewerProjectStateOptions)
+                            {
+                                <option value="@projectState.Id">
+                                    @FormatProjectStateOption(projectState)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-xl-2 d-grid">
+                        <button type="button"
+                                class="btn btn-primary"
+                                disabled="@(!CanCompareSelectedStates)"
+                                @onclick="CompareSelectedStates">
+                            Vergleichen
+                        </button>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ValidationMessage))
+                {
+                    <div class="alert alert-warning mt-3 mb-0">
+                        @ValidationMessage
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (ComparisonDetails is not null)
+        {
+            <div class="card pmd-card mb-4">
+                <div class="card-header">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                        <div>
+                            <h2 class="h5 mb-1">
+                                Prüfung @ComparisonDetails.OlderProjectStateNumber
+                                → Prüfung @ComparisonDetails.NewerProjectStateNumber
+                            </h2>
+                            <div class="text-muted small">
+                                Vergleich der gespeicherten Projektstände von
+                                @ProjectOverviewFormatter.FormatDateTime(ComparisonDetails.OlderProjectState.ScannedAt)
+                                bis
+                                @ProjectOverviewFormatter.FormatDateTime(ComparisonDetails.NewerProjectState.ScannedAt).
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 align-self-lg-center">
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="@BuildProjectStateLink(ComparisonDetails.OlderProjectState)">
+                                Ausgangsstand ansehen
+                            </a>
+
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="@BuildProjectStateLink(ComparisonDetails.NewerProjectState)">
+                                Zielstand ansehen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded p-3 h-100 pmd-card">
+                                <div class="text-muted small">Ausgangsstand</div>
+                                <div class="fw-semibold">
+                                    Prüfung @ComparisonDetails.OlderProjectStateNumber
+                                </div>
+                                <div class="text-muted small">
+                                    @ComparisonDetails.OlderProjectState.FileCount Dateien
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded p-3 h-100 pmd-card">
+                                <div class="text-muted small">Zielstand</div>
+                                <div class="fw-semibold">
+                                    Prüfung @ComparisonDetails.NewerProjectStateNumber
+                                </div>
+                                <div class="text-muted small">
+                                    @ComparisonDetails.NewerProjectState.FileCount Dateien
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded p-3 h-100 pmd-card">
+                                <div class="text-muted small">Dateientwicklung</div>
+                                <div class="fw-semibold">
+                                    @FormatSignedFileCount(ComparisonDetails.FileCountDifference)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded p-3 h-100 pmd-card">
+                                <div class="text-muted small">Größenentwicklung</div>
+                                <div class="fw-semibold">
+                                    @FormatSignedFileSize(ComparisonDetails.ProjectSizeDifferenceInBytes)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <ProjectChangesSummaryCard ChangesResult="@ComparisonDetails.ChangesResult" />
+
+            <ProjectChangeTypeFilterBar ChangesResult="@ComparisonDetails.ChangesResult"
+                                        SelectedChangeKind="@SelectedChangeKind"
+                                        SelectedChangeKindChanged="OnSelectedChangeKindChanged" />
+
+            <ProjectChangeSearchBar SearchText="@ChangeSearchText"
+                                    SearchTextChanged="OnChangeSearchTextChanged" />
+
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-xl-5">
+                    <ProjectFileChangesList ChangesResult="@ComparisonDetails.ChangesResult"
+                                            SelectedChangeKind="@SelectedChangeKind"
+                                            SearchText="@ChangeSearchText"
+                                            SelectedChange="@SelectedChange"
+                                            OnSelectChange="SelectChange" />
+                </div>
+
+                <div class="col-12 col-xl-7">
+                    <ProjectFileChangeDetailCard ProjectId="@ProjectId"
+                                                 SelectedChange="@SelectedChange"
+                                                 ShowFileOpenAction="false" />
+                </div>
+            </div>
+
+            <div class="alert alert-secondary">
+                Code-Diffs basieren auf den Textauszügen, die beim jeweiligen Projektstand
+                gespeichert wurden. Bei großen, binären oder nicht unterstützten Dateien stehen
+                weiterhin Metadaten und Hash-Werte zur Verfügung.
+            </div>
+        }
+    }
+</div>

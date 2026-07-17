@@ -15,9 +15,19 @@
 
             @if (ProjectStates.Count > 0)
             {
-                <span class="badge bg-secondary align-self-start align-self-lg-center">
-                    @ProjectStates.Count Prüfungen
-                </span>
+                <div class="d-flex flex-wrap gap-2 align-items-center align-self-start align-self-lg-center">
+                    @if (ProjectStates.Count >= 2)
+                    {
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="@($"/projekte/{ProjectStates[0].ProjectId}/verlauf/vergleichen")">
+                            Stände vergleichen
+                        </a>
+                    }
+
+                    <span class="badge bg-secondary">
+                        @ProjectStates.Count Prüfungen
+                    </span>
+                </div>
             }
         </div>
     </div>
