@@ -38,7 +38,8 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
         databaseInitializer.Initialize();
 
         repository =
-            new SqliteProjectStateRepository(connectionFactory);
+            new SqliteProjectStateRepository(
+                connectionFactory);
     }
 
     [Fact]
@@ -47,8 +48,9 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
         using SQLiteConnection connection =
             connectionFactory.CreateConnection();
 
-        int schemaVersion = connection.ExecuteScalar<int>(
-            "PRAGMA user_version");
+        int schemaVersion =
+            connection.ExecuteScalar<int>(
+                "PRAGMA user_version");
 
         List<DatabaseObjectName> indexes = connection
             .Query<DatabaseObjectName>(
@@ -58,7 +60,7 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
                 WHERE type = 'index'
                 """);
 
-        Assert.Equal(4, schemaVersion);
+        Assert.Equal(5, schemaVersion);
 
         Assert.Contains(
             indexes,
@@ -84,7 +86,6 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
                 index.Name ==
                 "IX_ProjectStateFiles_ProjectStateId_RelativePath");
 
-
         Assert.Contains(
             indexes,
             index =>
@@ -103,13 +104,20 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
                 index.Name ==
                 "IX_KanbanTasks_DueDate");
 
-        List<DatabaseColumnName> kanbanColumns = connection
-            .Query<DatabaseColumnName>(
+        List<DatabaseColumnName> kanbanColumns =
+            connection.Query<DatabaseColumnName>(
                 "PRAGMA table_info(KanbanTasks)");
 
         Assert.Contains(
             kanbanColumns,
-            column => column.Name == "DueDate");
+            column =>
+                column.Name == "DueDate");
+
+        Assert.Contains(
+            kanbanColumns,
+            column =>
+                column.Name ==
+                "LinkedFileRelativePath");
     }
 
     [Fact]
@@ -128,7 +136,8 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
         repository.Save(projectState);
 
         ProjectState? loadedProjectState =
-            repository.GetLatestByProjectId(projectId);
+            repository.GetLatestByProjectId(
+                projectId);
 
         IReadOnlyList<ProjectStateFile> loadedFiles =
             repository.GetFilesByProjectStateId(
@@ -220,8 +229,13 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
                 """,
                 projectState.Id.ToString());
 
-        Assert.Equal(0, storedProjectStateCount);
-        Assert.Equal(0, storedFileCount);
+        Assert.Equal(
+            0,
+            storedProjectStateCount);
+
+        Assert.Equal(
+            0,
+            storedFileCount);
     }
 
     [Fact]
@@ -247,7 +261,8 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
         repository.Save(secondProjectState);
 
         // Act
-        repository.DeleteByProjectId(firstProjectId);
+        repository.DeleteByProjectId(
+            firstProjectId);
 
         // Assert
         Assert.Empty(
@@ -299,25 +314,29 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
             fileName);
 
         string className =
-            Path.GetFileNameWithoutExtension(fileName);
+            Path.GetFileNameWithoutExtension(
+                fileName);
 
         string snapshotContent =
             $$"""
-    public sealed class {{className}}
-    {
-    }
-    """;
+            public sealed class {{className}}
+            {
+            }
+            """;
 
         var file = new ProjectStateFile
         {
             ProjectStateId = projectStateId,
             RelativePath = relativePath,
             FileName = fileName,
-            Extension = Path.GetExtension(fileName),
-            SizeInBytes = snapshotContent.Length,
+            Extension =
+                Path.GetExtension(fileName),
+            SizeInBytes =
+                snapshotContent.Length,
             LastChangedAt = DateTime.UtcNow,
             ContentHashSha256 = contentHash,
-            TextSnapshotContent = snapshotContent,
+            TextSnapshotContent =
+                snapshotContent,
             TextSnapshotLineCount = 3,
             TextSnapshotWasTruncated = false
         };
@@ -330,12 +349,14 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
             RootPath = Path.GetTempPath(),
             CreatedAt = DateTime.UtcNow,
             ScannedAt = DateTime.UtcNow,
-            ScanDuration = TimeSpan.FromMilliseconds(125),
+            ScanDuration =
+                TimeSpan.FromMilliseconds(125),
             FileCount = 1,
             ScannedFolderCount = 2,
             IgnoredFolderCount = 1,
             WarningCount = 0,
-            TotalSizeInBytes = file.SizeInBytes,
+            TotalSizeInBytes =
+                file.SizeInBytes,
             Files = new List<ProjectStateFile>
             {
                 file
@@ -351,7 +372,8 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
         public TestDatabasePathProvider(
             string databasePath)
         {
-            this.databasePath = databasePath;
+            this.databasePath =
+                databasePath;
         }
 
         public string GetDatabasePath()
@@ -363,12 +385,14 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
     private sealed class DatabaseObjectName
     {
         [Column("name")]
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } =
+            string.Empty;
     }
 
     private sealed class DatabaseColumnName
     {
         [Column("name")]
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } =
+            string.Empty;
     }
 }

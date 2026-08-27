@@ -12,6 +12,8 @@ public sealed class KanbanTask
 
     public Guid? ProjectId { get; init; }
 
+    public string LinkedFileRelativePath { get; init; } = string.Empty;
+
     public KanbanTaskStatus Status { get; init; }
 
     public KanbanTaskPriority Priority { get; init; }

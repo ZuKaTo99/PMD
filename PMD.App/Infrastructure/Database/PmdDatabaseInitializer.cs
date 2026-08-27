@@ -8,7 +8,7 @@ namespace PMD.App.Infrastructure.Database;
 
 public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
 {
-    private const int CurrentSchemaVersion = 4;
+    private const int CurrentSchemaVersion = 5;
 
     private readonly IPmdDatabaseConnectionFactory connectionFactory;
 
@@ -73,6 +73,10 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
 
             case 4:
                 ApplyVersion4Migration(connection);
+                break;
+
+            case 5:
+                ApplyVersion5Migration(connection);
                 break;
 
             default:
@@ -159,6 +163,22 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
             CREATE INDEX IF NOT EXISTS IX_KanbanTasks_DueDate
             ON KanbanTasks (DueDate)
             """);
+    }
+
+    private static void ApplyVersion5Migration(
+    SQLiteConnection connection)
+    {
+        if (!ColumnExists(
+                connection,
+                "KanbanTasks",
+                "LinkedFileRelativePath"))
+        {
+            connection.Execute(
+                """
+            ALTER TABLE KanbanTasks
+            ADD COLUMN LinkedFileRelativePath TEXT NOT NULL DEFAULT ''
+            """);
+        }
     }
 
     private static void EnsureProjectsSchema(

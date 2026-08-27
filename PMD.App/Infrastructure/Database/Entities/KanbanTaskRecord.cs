@@ -15,6 +15,8 @@ public sealed class KanbanTaskRecord
 
     public string ProjectId { get; set; } = string.Empty;
 
+    public string LinkedFileRelativePath { get; set; } = string.Empty;
+
     public int Status { get; set; }
 
     public int Priority { get; set; }

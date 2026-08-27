@@ -143,6 +143,8 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
             Title = record.Title,
             Description = record.Description,
             ProjectId = projectId,
+            LinkedFileRelativePath =
+                record.LinkedFileRelativePath ?? string.Empty,
             Status = status,
             Priority = priority,
             SortOrder = record.SortOrder,
@@ -160,6 +162,8 @@ public sealed class SqliteKanbanTaskRepository : IKanbanTaskRepository
             Title = task.Title,
             Description = task.Description,
             ProjectId = task.ProjectId?.ToString() ?? string.Empty,
+            LinkedFileRelativePath =
+                task.LinkedFileRelativePath ?? string.Empty,
             Status = (int)task.Status,
             Priority = (int)task.Priority,
             SortOrder = task.SortOrder,

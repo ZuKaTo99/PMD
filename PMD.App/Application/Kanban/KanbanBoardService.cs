@@ -30,13 +30,19 @@ public sealed class KanbanBoardService : IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
-        DateTime? dueDate = null)
+        DateTime? dueDate = null,
+        string linkedFileRelativePath = "")
     {
         string normalizedTitle = NormalizeTitle(title);
         string normalizedDescription = NormalizeDescription(description);
         KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
-        KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
+        KanbanTaskPriority normalizedPriority =
+            NormalizePriority(priority);
         DateTime? normalizedDueDate = NormalizeDueDate(dueDate);
+        string normalizedLinkedFileRelativePath =
+            NormalizeLinkedFileRelativePath(
+                projectId,
+                linkedFileRelativePath);
 
         int nextSortOrder = tasks
             .Where(task => task.Status == normalizedStatus)
@@ -52,6 +58,8 @@ public sealed class KanbanBoardService : IKanbanBoardService
             Title = normalizedTitle,
             Description = normalizedDescription,
             ProjectId = projectId,
+            LinkedFileRelativePath =
+                normalizedLinkedFileRelativePath,
             Status = normalizedStatus,
             Priority = normalizedPriority,
             SortOrder = nextSortOrder,
@@ -75,14 +83,20 @@ public sealed class KanbanBoardService : IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
-        DateTime? dueDate = null)
+        DateTime? dueDate = null,
+        string linkedFileRelativePath = "")
     {
         KanbanTask existingTask = GetRequiredTask(taskId);
         string normalizedTitle = NormalizeTitle(title);
         string normalizedDescription = NormalizeDescription(description);
         KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
-        KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
+        KanbanTaskPriority normalizedPriority =
+            NormalizePriority(priority);
         DateTime? normalizedDueDate = NormalizeDueDate(dueDate);
+        string normalizedLinkedFileRelativePath =
+            NormalizeLinkedFileRelativePath(
+                projectId,
+                linkedFileRelativePath);
         DateTime now = DateTime.Now;
 
         if (existingTask.Status == normalizedStatus)
@@ -92,6 +106,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
                 normalizedTitle,
                 normalizedDescription,
                 projectId,
+                normalizedLinkedFileRelativePath,
                 normalizedStatus,
                 normalizedPriority,
                 normalizedDueDate,
@@ -124,6 +139,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
             normalizedTitle,
             normalizedDescription,
             projectId,
+            normalizedLinkedFileRelativePath,
             normalizedStatus,
             normalizedPriority,
             normalizedDueDate,
@@ -149,8 +165,8 @@ public sealed class KanbanBoardService : IKanbanBoardService
             now,
             updatedTasksById);
 
-        IReadOnlyList<KanbanTask> updatedTasks = updatedTasksById.Values
-            .ToList();
+        IReadOnlyList<KanbanTask> updatedTasks =
+            updatedTasksById.Values.ToList();
 
         taskRepository.SaveAll(updatedTasks);
         ReplaceTasks(updatedTasks);
@@ -179,8 +195,8 @@ public sealed class KanbanBoardService : IKanbanBoardService
             DateTime.Now,
             updatedTasksById);
 
-        IReadOnlyList<KanbanTask> updatedTasks = updatedTasksById.Values
-            .ToList();
+        IReadOnlyList<KanbanTask> updatedTasks =
+            updatedTasksById.Values.ToList();
 
         taskRepository.DeleteAndSaveAll(
             taskId,
@@ -196,7 +212,9 @@ public sealed class KanbanBoardService : IKanbanBoardService
         KanbanTaskStatus targetStatus,
         int targetIndex)
     {
-        if (!Enum.IsDefined(typeof(KanbanTaskStatus), targetStatus))
+        if (!Enum.IsDefined(
+                typeof(KanbanTaskStatus),
+                targetStatus))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(targetStatus),
@@ -207,18 +225,22 @@ public sealed class KanbanBoardService : IKanbanBoardService
         KanbanTask taskToMove = GetRequiredTask(taskId);
 
         List<KanbanTask> sourceColumnTasks = tasks
-            .Where(task => task.Status == taskToMove.Status && task.Id != taskId)
+            .Where(task =>
+                task.Status == taskToMove.Status &&
+                task.Id != taskId)
             .OrderBy(task => task.SortOrder)
             .ThenByDescending(task => task.CreatedAt)
             .ToList();
 
-        List<KanbanTask> targetColumnTasks = taskToMove.Status == targetStatus
-            ? sourceColumnTasks
-            : tasks
-                .Where(task => task.Status == targetStatus)
-                .OrderBy(task => task.SortOrder)
-                .ThenByDescending(task => task.CreatedAt)
-                .ToList();
+        List<KanbanTask> targetColumnTasks =
+            taskToMove.Status == targetStatus
+                ? sourceColumnTasks
+                : tasks
+                    .Where(task =>
+                        task.Status == targetStatus)
+                    .OrderBy(task => task.SortOrder)
+                    .ThenByDescending(task => task.CreatedAt)
+                    .ToList();
 
         int normalizedTargetIndex = Math.Clamp(
             targetIndex,
@@ -230,7 +252,8 @@ public sealed class KanbanBoardService : IKanbanBoardService
             taskToMove);
 
         DateTime now = DateTime.Now;
-        var updatedTasksById = new Dictionary<Guid, KanbanTask>();
+        var updatedTasksById =
+            new Dictionary<Guid, KanbanTask>();
 
         ReindexColumn(
             targetColumnTasks,
@@ -252,8 +275,8 @@ public sealed class KanbanBoardService : IKanbanBoardService
             return;
         }
 
-        IReadOnlyList<KanbanTask> updatedTasks = updatedTasksById.Values
-            .ToList();
+        IReadOnlyList<KanbanTask> updatedTasks =
+            updatedTasksById.Values.ToList();
 
         taskRepository.SaveAll(updatedTasks);
         ReplaceTasks(updatedTasks);
@@ -262,7 +285,8 @@ public sealed class KanbanBoardService : IKanbanBoardService
 
     private KanbanTask GetRequiredTask(Guid taskId)
     {
-        return tasks.FirstOrDefault(task => task.Id == taskId)
+        return tasks.FirstOrDefault(
+                task => task.Id == taskId)
             ?? throw new KeyNotFoundException(
                 $"Die Kanban-Aufgabe {taskId} wurde nicht gefunden.");
     }
@@ -276,21 +300,26 @@ public sealed class KanbanBoardService : IKanbanBoardService
         if (normalizedTitle.Length > MaximumTitleLength)
         {
             throw new ArgumentException(
-                $"Der Aufgabentitel darf höchstens {MaximumTitleLength} Zeichen lang sein.",
+                $"Der Aufgabentitel darf höchstens " +
+                $"{MaximumTitleLength} Zeichen lang sein.",
                 nameof(title));
         }
 
         return normalizedTitle;
     }
 
-    private static string NormalizeDescription(string description)
+    private static string NormalizeDescription(
+        string description)
     {
-        string normalizedDescription = description?.Trim() ?? string.Empty;
+        string normalizedDescription =
+            description?.Trim() ?? string.Empty;
 
-        if (normalizedDescription.Length > MaximumDescriptionLength)
+        if (normalizedDescription.Length >
+            MaximumDescriptionLength)
         {
             throw new ArgumentException(
-                $"Die Beschreibung darf höchstens {MaximumDescriptionLength} Zeichen lang sein.",
+                $"Die Beschreibung darf höchstens " +
+                $"{MaximumDescriptionLength} Zeichen lang sein.",
                 nameof(description));
         }
 
@@ -300,35 +329,60 @@ public sealed class KanbanBoardService : IKanbanBoardService
     private static KanbanTaskStatus NormalizeStatus(
         KanbanTaskStatus status)
     {
-        return Enum.IsDefined(typeof(KanbanTaskStatus), status)
-            ? status
-            : KanbanTaskStatus.Open;
+        return Enum.IsDefined(
+            typeof(KanbanTaskStatus),
+            status)
+                ? status
+                : KanbanTaskStatus.Open;
     }
 
     private static KanbanTaskPriority NormalizePriority(
         KanbanTaskPriority priority)
     {
-        return Enum.IsDefined(typeof(KanbanTaskPriority), priority)
-            ? priority
-            : KanbanTaskPriority.Normal;
+        return Enum.IsDefined(
+            typeof(KanbanTaskPriority),
+            priority)
+                ? priority
+                : KanbanTaskPriority.Normal;
     }
 
-    private static DateTime? NormalizeDueDate(DateTime? dueDate)
+    private static DateTime? NormalizeDueDate(
+        DateTime? dueDate)
     {
         return dueDate?.Date;
+    }
+
+    private static string NormalizeLinkedFileRelativePath(
+        Guid? projectId,
+        string linkedFileRelativePath)
+    {
+        if (!projectId.HasValue ||
+            string.IsNullOrWhiteSpace(
+                linkedFileRelativePath))
+        {
+            return string.Empty;
+        }
+
+        return linkedFileRelativePath
+            .Trim()
+            .Replace('\\', '/');
     }
 
     private static void ReindexColumn(
         IReadOnlyList<KanbanTask> columnTasks,
         KanbanTaskStatus status,
         DateTime updatedAt,
-        IDictionary<Guid, KanbanTask> updatedTasksById)
+        IDictionary<Guid, KanbanTask>
+            updatedTasksById)
     {
-        for (int index = 0; index < columnTasks.Count; index++)
+        for (int index = 0;
+             index < columnTasks.Count;
+             index++)
         {
             KanbanTask task = columnTasks[index];
 
-            if (task.Status == status && task.SortOrder == index)
+            if (task.Status == status &&
+                task.SortOrder == index)
             {
                 continue;
             }
@@ -338,6 +392,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
                 task.Title,
                 task.Description,
                 task.ProjectId,
+                task.LinkedFileRelativePath,
                 status,
                 task.Priority,
                 task.DueDate,
@@ -351,6 +406,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
         string title,
         string description,
         Guid? projectId,
+        string linkedFileRelativePath,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
         DateTime? dueDate,
@@ -363,6 +419,8 @@ public sealed class KanbanBoardService : IKanbanBoardService
             Title = title,
             Description = description,
             ProjectId = projectId,
+            LinkedFileRelativePath =
+                linkedFileRelativePath,
             Status = status,
             Priority = priority,
             SortOrder = sortOrder,
@@ -381,10 +439,13 @@ public sealed class KanbanBoardService : IKanbanBoardService
             return;
         }
 
-        Dictionary<Guid, KanbanTask> updatedTasksById = updatedTasks
-            .ToDictionary(task => task.Id);
+        Dictionary<Guid, KanbanTask>
+            updatedTasksById = updatedTasks
+                .ToDictionary(task => task.Id);
 
-        for (int index = 0; index < tasks.Count; index++)
+        for (int index = 0;
+             index < tasks.Count;
+             index++)
         {
             if (updatedTasksById.TryGetValue(
                     tasks[index].Id,
@@ -401,21 +462,24 @@ public sealed class KanbanBoardService : IKanbanBoardService
     {
         tasks.Sort((first, second) =>
         {
-            int statusComparison = first.Status.CompareTo(second.Status);
+            int statusComparison =
+                first.Status.CompareTo(second.Status);
 
             if (statusComparison != 0)
             {
                 return statusComparison;
             }
 
-            int orderComparison = first.SortOrder.CompareTo(second.SortOrder);
+            int orderComparison =
+                first.SortOrder.CompareTo(second.SortOrder);
 
             if (orderComparison != 0)
             {
                 return orderComparison;
             }
 
-            return second.CreatedAt.CompareTo(first.CreatedAt);
+            return second.CreatedAt.CompareTo(
+                first.CreatedAt);
         });
     }
 }

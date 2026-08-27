@@ -30,6 +30,7 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
     public void Initialize_MigratesVersion3AndPreservesExistingTasks()
     {
         Guid taskId = Guid.NewGuid();
+
         IPmdDatabasePathProvider pathProvider =
             new TestDatabasePathProvider(databasePath);
 
@@ -37,7 +38,7 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
             new PmdDatabaseConnectionFactory(pathProvider);
 
         using (SQLiteConnection connection =
-            connectionFactory.CreateConnection())
+               connectionFactory.CreateConnection())
         {
             connection.Execute(
                 """
@@ -81,17 +82,20 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
                 new DateTime(2026, 7, 15, 12, 0, 0),
                 new DateTime(2026, 7, 15, 12, 0, 0));
 
-            connection.Execute("PRAGMA user_version = 3");
+            connection.Execute(
+                "PRAGMA user_version = 3");
         }
 
-        new PmdDatabaseInitializer(connectionFactory).Initialize();
+        new PmdDatabaseInitializer(
+            connectionFactory).Initialize();
 
         using (SQLiteConnection connection =
-            connectionFactory.CreateConnection())
+               connectionFactory.CreateConnection())
         {
             Assert.Equal(
-                4,
-                connection.ExecuteScalar<int>("PRAGMA user_version"));
+                5,
+                connection.ExecuteScalar<int>(
+                    "PRAGMA user_version"));
 
             List<DatabaseColumnName> columns = connection
                 .Query<DatabaseColumnName>(
@@ -99,15 +103,33 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
 
             Assert.Contains(
                 columns,
-                column => column.Name == "DueDate");
+                column =>
+                    column.Name == "DueDate");
+
+            Assert.Contains(
+                columns,
+                column =>
+                    column.Name ==
+                    "LinkedFileRelativePath");
         }
 
-        var repository = new SqliteKanbanTaskRepository(connectionFactory);
-        KanbanTask? migratedTask = repository.GetById(taskId);
+        var repository =
+            new SqliteKanbanTaskRepository(
+                connectionFactory);
+
+        KanbanTask? migratedTask =
+            repository.GetById(taskId);
 
         Assert.NotNull(migratedTask);
-        Assert.Equal("Bestehende Aufgabe", migratedTask!.Title);
+
+        Assert.Equal(
+            "Bestehende Aufgabe",
+            migratedTask!.Title);
+
         Assert.Null(migratedTask.DueDate);
+
+        Assert.Empty(
+            migratedTask.LinkedFileRelativePath);
     }
 
     public void Dispose()
@@ -116,7 +138,9 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
         {
             if (Directory.Exists(testDirectoryPath))
             {
-                Directory.Delete(testDirectoryPath, recursive: true);
+                Directory.Delete(
+                    testDirectoryPath,
+                    recursive: true);
             }
         }
         catch (IOException)
@@ -127,7 +151,8 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
         }
     }
 
-    private sealed class TestDatabasePathProvider : IPmdDatabasePathProvider
+    private sealed class TestDatabasePathProvider
+        : IPmdDatabasePathProvider
     {
         private readonly string path;
 
@@ -145,6 +170,7 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
     private sealed class DatabaseColumnName
     {
         [Column("name")]
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } =
+            string.Empty;
     }
 }

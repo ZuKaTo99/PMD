@@ -30,87 +30,139 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
         var connectionFactory =
             new PmdDatabaseConnectionFactory(pathProvider);
 
-        new PmdDatabaseInitializer(connectionFactory).Initialize();
+        new PmdDatabaseInitializer(
+            connectionFactory).Initialize();
 
-        repository = new SqliteKanbanTaskRepository(connectionFactory);
+        repository =
+            new SqliteKanbanTaskRepository(
+                connectionFactory);
     }
 
     [Fact]
-    public void Save_PersistsKanbanTaskWithProjectPriorityAndDueDate()
+    public void Save_PersistsKanbanTaskWithProjectPriorityDueDateAndLinkedFile()
     {
         Guid projectId = Guid.NewGuid();
+
         var task = new KanbanTask
         {
             Id = Guid.NewGuid(),
             Title = "Kanban-Grundlage testen",
-            Description = "Die Aufgabe muss nach einem Neustart erhalten bleiben.",
+            Description =
+                "Die Aufgabe muss nach einem Neustart erhalten bleiben.",
             ProjectId = projectId,
+            LinkedFileRelativePath =
+                "PMD.App/Features/Kanban/Pages/KanbanPage.razor",
             Status = KanbanTaskStatus.InProgress,
             Priority = KanbanTaskPriority.High,
             SortOrder = 3,
             DueDate = new DateTime(2026, 7, 20),
-            CreatedAt = new DateTime(2026, 7, 15, 1, 30, 0),
-            UpdatedAt = new DateTime(2026, 7, 15, 1, 30, 0)
+            CreatedAt =
+                new DateTime(2026, 7, 15, 1, 30, 0),
+            UpdatedAt =
+                new DateTime(2026, 7, 15, 1, 30, 0)
         };
 
         repository.Save(task);
 
-        KanbanTask? loadedTask = repository.GetById(task.Id);
+        KanbanTask? loadedTask =
+            repository.GetById(task.Id);
 
         Assert.NotNull(loadedTask);
-        Assert.Equal(task.Title, loadedTask!.Title);
-        Assert.Equal(task.Description, loadedTask.Description);
-        Assert.Equal(projectId, loadedTask.ProjectId);
-        Assert.Equal(KanbanTaskStatus.InProgress, loadedTask.Status);
-        Assert.Equal(KanbanTaskPriority.High, loadedTask.Priority);
-        Assert.Equal(3, loadedTask.SortOrder);
-        Assert.Equal(new DateTime(2026, 7, 20), loadedTask.DueDate);
+
+        Assert.Equal(
+            task.Title,
+            loadedTask!.Title);
+
+        Assert.Equal(
+            task.Description,
+            loadedTask.Description);
+
+        Assert.Equal(
+            projectId,
+            loadedTask.ProjectId);
+
+        Assert.Equal(
+            task.LinkedFileRelativePath,
+            loadedTask.LinkedFileRelativePath);
+
+        Assert.Equal(
+            KanbanTaskStatus.InProgress,
+            loadedTask.Status);
+
+        Assert.Equal(
+            KanbanTaskPriority.High,
+            loadedTask.Priority);
+
+        Assert.Equal(
+            3,
+            loadedTask.SortOrder);
+
+        Assert.Equal(
+            new DateTime(2026, 7, 20),
+            loadedTask.DueDate);
     }
 
     [Fact]
     public void GetAll_OrdersTasksByStatusAndSortOrder()
     {
-        repository.Save(CreateTask(
-            "Zweite offene Aufgabe",
-            KanbanTaskStatus.Open,
-            1));
+        repository.Save(
+            CreateTask(
+                "Zweite offene Aufgabe",
+                KanbanTaskStatus.Open,
+                1));
 
-        repository.Save(CreateTask(
-            "Erste offene Aufgabe",
-            KanbanTaskStatus.Open,
-            0));
+        repository.Save(
+            CreateTask(
+                "Erste offene Aufgabe",
+                KanbanTaskStatus.Open,
+                0));
 
-        repository.Save(CreateTask(
-            "Aufgabe in Arbeit",
-            KanbanTaskStatus.InProgress,
-            0));
+        repository.Save(
+            CreateTask(
+                "Aufgabe in Arbeit",
+                KanbanTaskStatus.InProgress,
+                0));
 
-        IReadOnlyList<KanbanTask> tasks = repository.GetAll();
+        IReadOnlyList<KanbanTask> tasks =
+            repository.GetAll();
 
         Assert.Collection(
             tasks,
-            task => Assert.Equal("Erste offene Aufgabe", task.Title),
-            task => Assert.Equal("Zweite offene Aufgabe", task.Title),
-            task => Assert.Equal("Aufgabe in Arbeit", task.Title));
+            task =>
+                Assert.Equal(
+                    "Erste offene Aufgabe",
+                    task.Title),
+            task =>
+                Assert.Equal(
+                    "Zweite offene Aufgabe",
+                    task.Title),
+            task =>
+                Assert.Equal(
+                    "Aufgabe in Arbeit",
+                    task.Title));
     }
 
     [Fact]
-    public void SaveAll_PersistsMovedTaskStatusAndSortOrder()
+    public void SaveAll_PersistsMovedTaskStatusSortOrderAndLinkedFile()
     {
-        KanbanTask openTask = CreateTask(
-            "Offene Aufgabe",
-            KanbanTaskStatus.Open,
-            0);
+        KanbanTask openTask =
+            CreateTask(
+                "Offene Aufgabe",
+                KanbanTaskStatus.Open,
+                0,
+                "PMD.App/Application/Kanban/KanbanBoardService.cs");
 
-        KanbanTask inProgressTask = CreateTask(
-            "Aufgabe in Arbeit",
-            KanbanTaskStatus.InProgress,
-            0);
+        KanbanTask inProgressTask =
+            CreateTask(
+                "Aufgabe in Arbeit",
+                KanbanTaskStatus.InProgress,
+                0);
 
         repository.Save(openTask);
         repository.Save(inProgressTask);
 
-        DateTime updatedAt = DateTime.Now.AddMinutes(1);
+        DateTime updatedAt =
+            DateTime.Now.AddMinutes(1);
 
         repository.SaveAll(
         [
@@ -126,43 +178,72 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
                 updatedAt)
         ]);
 
-        IReadOnlyList<KanbanTask> tasks = repository.GetAll();
+        IReadOnlyList<KanbanTask> tasks =
+            repository.GetAll();
 
         Assert.Collection(
             tasks,
             task =>
             {
-                Assert.Equal(openTask.Id, task.Id);
-                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    openTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    KanbanTaskStatus.InProgress,
+                    task.Status);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
+
+                Assert.Equal(
+                    openTask.LinkedFileRelativePath,
+                    task.LinkedFileRelativePath);
             },
             task =>
             {
-                Assert.Equal(inProgressTask.Id, task.Id);
-                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
-                Assert.Equal(1, task.SortOrder);
+                Assert.Equal(
+                    inProgressTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    KanbanTaskStatus.InProgress,
+                    task.Status);
+
+                Assert.Equal(
+                    1,
+                    task.SortOrder);
             });
     }
 
     [Fact]
     public void DeleteAndSaveAll_RemovesTaskAndPersistsReindexedTasks()
     {
-        KanbanTask firstTask = CreateTask(
-            "Erste Aufgabe",
-            KanbanTaskStatus.Open,
-            0);
+        KanbanTask firstTask =
+            CreateTask(
+                "Erste Aufgabe",
+                KanbanTaskStatus.Open,
+                0);
 
-        KanbanTask secondTask = CreateTask(
-            "Zweite Aufgabe",
-            KanbanTaskStatus.Open,
-            1);
+        KanbanTask secondTask =
+            CreateTask(
+                "Zweite Aufgabe",
+                KanbanTaskStatus.Open,
+                1);
 
-        KanbanTask thirdTask = CreateTask(
-            "Dritte Aufgabe",
-            KanbanTaskStatus.Open,
-            2);
+        KanbanTask thirdTask =
+            CreateTask(
+                "Dritte Aufgabe",
+                KanbanTaskStatus.Open,
+                2);
 
-        repository.SaveAll([firstTask, secondTask, thirdTask]);
+        repository.SaveAll(
+        [
+            firstTask,
+            secondTask,
+            thirdTask
+        ]);
 
         repository.DeleteAndSaveAll(
             secondTask.Id,
@@ -174,22 +255,35 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
                     DateTime.Now.AddMinutes(1))
             ]);
 
-        IReadOnlyList<KanbanTask> tasks = repository.GetAll();
+        IReadOnlyList<KanbanTask> tasks =
+            repository.GetAll();
 
         Assert.Collection(
             tasks,
             task =>
             {
-                Assert.Equal(firstTask.Id, task.Id);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    firstTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
             },
             task =>
             {
-                Assert.Equal(thirdTask.Id, task.Id);
-                Assert.Equal(1, task.SortOrder);
+                Assert.Equal(
+                    thirdTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    1,
+                    task.SortOrder);
             });
 
-        Assert.Null(repository.GetById(secondTask.Id));
+        Assert.Null(
+            repository.GetById(
+                secondTask.Id));
     }
 
     public void Dispose()
@@ -198,7 +292,9 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
         {
             if (Directory.Exists(testDirectoryPath))
             {
-                Directory.Delete(testDirectoryPath, recursive: true);
+                Directory.Delete(
+                    testDirectoryPath,
+                    recursive: true);
             }
         }
         catch (IOException)
@@ -212,7 +308,8 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
     private static KanbanTask CreateTask(
         string title,
         KanbanTaskStatus status,
-        int sortOrder)
+        int sortOrder,
+        string linkedFileRelativePath = "")
     {
         DateTime now = DateTime.Now;
 
@@ -220,6 +317,8 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
         {
             Id = Guid.NewGuid(),
             Title = title,
+            LinkedFileRelativePath =
+                linkedFileRelativePath,
             Status = status,
             Priority = KanbanTaskPriority.Normal,
             SortOrder = sortOrder,
@@ -240,6 +339,8 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             Title = task.Title,
             Description = task.Description,
             ProjectId = task.ProjectId,
+            LinkedFileRelativePath =
+                task.LinkedFileRelativePath,
             Status = status,
             Priority = task.Priority,
             SortOrder = sortOrder,
@@ -249,11 +350,13 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
         };
     }
 
-    private sealed class TestDatabasePathProvider : IPmdDatabasePathProvider
+    private sealed class TestDatabasePathProvider
+        : IPmdDatabasePathProvider
     {
         private readonly string databasePath;
 
-        public TestDatabasePathProvider(string databasePath)
+        public TestDatabasePathProvider(
+            string databasePath)
         {
             this.databasePath = databasePath;
         }

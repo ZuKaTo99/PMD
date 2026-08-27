@@ -16,7 +16,8 @@ public interface IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
-        DateTime? dueDate = null);
+        DateTime? dueDate = null,
+        string linkedFileRelativePath = "");
 
     KanbanTask UpdateTask(
         Guid taskId,
@@ -25,7 +26,8 @@ public interface IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
-        DateTime? dueDate = null);
+        DateTime? dueDate = null,
+        string linkedFileRelativePath = "");
 
     void DeleteTask(Guid taskId);
 
