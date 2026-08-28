@@ -1,6 +1,7 @@
 @page "/kanban"
 @namespace PMD.App.Features.Kanban.Pages
 @using PMD.App.Domain.Kanban
+@using PMD.App.Domain.ProjectStates
 @using PMD.App.Domain.Projects
 
 <PageTitle>PMD - Kanban</PageTitle>
@@ -73,7 +74,8 @@
 
                     <select id="kanban-task-project"
                             class="form-select"
-                            @bind="SelectedProjectId">
+                            @bind="SelectedProjectId"
+                            @bind:after="OnSelectedProjectChanged">
                         <option value="">Keinem Projekt zuordnen</option>
 
                         @foreach (Project project in Projects)
@@ -85,6 +87,54 @@
                     </select>
                 </div>
 
+                @if (!string.IsNullOrWhiteSpace(SelectedProjectId))
+                {
+                    IReadOnlyList<ProjectStateFile> projectFiles =
+                        GetProjectFiles(SelectedProjectId);
+
+                    <div class="kanban-field kanban-field-linked-file">
+                        <label class="form-label"
+                               for="kanban-task-linked-file">
+                            Projektdatei
+                            <span class="text-muted">
+                                (optional)
+                            </span>
+                        </label>
+
+                        @if (projectFiles.Count == 0)
+                        {
+                            <div class="kanban-linked-file-empty"
+                                 role="status">
+                                Für dieses Projekt ist noch kein gespeicherter Projektstand mit Dateien vorhanden.
+                            </div>
+                        }
+                        else
+                        {
+                            <select id="kanban-task-linked-file"
+                                    class="form-select kanban-linked-file-select"
+                                    @bind="NewTaskLinkedFileRelativePath">
+                                <option value="">
+                                    Keine Datei verknüpfen
+                                </option>
+
+                                @foreach (ProjectStateFile file in projectFiles)
+                                {
+                                    string linkedFilePath =
+                                        GetLinkedFilePath(file);
+
+                                    <option value="@linkedFilePath">
+                                        @linkedFilePath
+                                    </option>
+                                }
+                            </select>
+
+                            <div class="kanban-linked-file-help">
+                                Grundlage ist die letzte gespeicherte Projektprüfung mit @projectFiles.Count Dateien.
+                            </div>
+                        }
+                    </div>
+                }
+
                 <div class="kanban-field">
                     <label class="form-label"
                            for="kanban-task-priority">
@@ -94,10 +144,21 @@
                     <select id="kanban-task-priority"
                             class="form-select"
                             @bind="NewTaskPriority">
-                        <option value="@KanbanTaskPriority.Low">Niedrig</option>
-                        <option value="@KanbanTaskPriority.Normal">Normal</option>
-                        <option value="@KanbanTaskPriority.High">Hoch</option>
-                        <option value="@KanbanTaskPriority.Critical">Kritisch</option>
+                        <option value="@KanbanTaskPriority.Low">
+                            Niedrig
+                        </option>
+
+                        <option value="@KanbanTaskPriority.Normal">
+                            Normal
+                        </option>
+
+                        <option value="@KanbanTaskPriority.High">
+                            Hoch
+                        </option>
+
+                        <option value="@KanbanTaskPriority.Critical">
+                            Kritisch
+                        </option>
                     </select>
                 </div>
 
@@ -110,17 +171,31 @@
                     <select id="kanban-task-status"
                             class="form-select"
                             @bind="NewTaskStatus">
-                        <option value="@KanbanTaskStatus.Open">Offen</option>
-                        <option value="@KanbanTaskStatus.InProgress">In Arbeit</option>
-                        <option value="@KanbanTaskStatus.Blocked">Blockiert</option>
-                        <option value="@KanbanTaskStatus.Done">Erledigt</option>
+                        <option value="@KanbanTaskStatus.Open">
+                            Offen
+                        </option>
+
+                        <option value="@KanbanTaskStatus.InProgress">
+                            In Arbeit
+                        </option>
+
+                        <option value="@KanbanTaskStatus.Blocked">
+                            Blockiert
+                        </option>
+
+                        <option value="@KanbanTaskStatus.Done">
+                            Erledigt
+                        </option>
                     </select>
                 </div>
 
                 <div class="kanban-field">
                     <label class="form-label"
                            for="kanban-task-due-date">
-                        Fällig am <span class="text-muted">(optional)</span>
+                        Fällig am
+                        <span class="text-muted">
+                            (optional)
+                        </span>
                     </label>
 
                     <input id="kanban-task-due-date"
@@ -132,7 +207,10 @@
                 <div class="kanban-field kanban-field-description">
                     <label class="form-label"
                            for="kanban-task-description">
-                        Beschreibung <span class="text-muted">(optional)</span>
+                        Beschreibung
+                        <span class="text-muted">
+                            (optional)
+                        </span>
                     </label>
 
                     <textarea id="kanban-task-description"
@@ -213,8 +291,11 @@
 
                     <select id="kanban-edit-task-project"
                             class="form-select"
-                            @bind="EditProjectId">
-                        <option value="">Keinem Projekt zuordnen</option>
+                            @bind="EditProjectId"
+                            @bind:after="OnEditProjectChanged">
+                        <option value="">
+                            Keinem Projekt zuordnen
+                        </option>
 
                         @foreach (Project project in Projects)
                         {
@@ -225,6 +306,78 @@
                     </select>
                 </div>
 
+                @if (!string.IsNullOrWhiteSpace(EditProjectId))
+                {
+                    IReadOnlyList<ProjectStateFile> projectFiles =
+                        GetProjectFiles(EditProjectId);
+
+                    bool linkedFileIsMissing =
+                        !string.IsNullOrWhiteSpace(
+                            EditTaskLinkedFileRelativePath) &&
+                        !ContainsLinkedFile(
+                            projectFiles,
+                            EditTaskLinkedFileRelativePath);
+
+                    <div class="kanban-field kanban-field-linked-file">
+                        <label class="form-label"
+                               for="kanban-edit-task-linked-file">
+                            Projektdatei
+                            <span class="text-muted">
+                                (optional)
+                            </span>
+                        </label>
+
+                        @if (projectFiles.Count == 0 &&
+                            !linkedFileIsMissing)
+                        {
+                            <div class="kanban-linked-file-empty"
+                                 role="status">
+                                Für dieses Projekt ist noch kein gespeicherter Projektstand mit Dateien vorhanden.
+                            </div>
+                        }
+                        else
+                        {
+                            <select id="kanban-edit-task-linked-file"
+                                    class="form-select kanban-linked-file-select"
+                                    @bind="EditTaskLinkedFileRelativePath">
+                                <option value="">
+                                    Keine Datei verknüpfen
+                                </option>
+
+                                @if (linkedFileIsMissing)
+                                {
+                                    <option value="@EditTaskLinkedFileRelativePath">
+                                        Bisherige Verknüpfung: @EditTaskLinkedFileRelativePath
+                                    </option>
+                                }
+
+                                @foreach (ProjectStateFile file in projectFiles)
+                                {
+                                    string linkedFilePath =
+                                        GetLinkedFilePath(file);
+
+                                    <option value="@linkedFilePath">
+                                        @linkedFilePath
+                                    </option>
+                                }
+                            </select>
+
+                            @if (linkedFileIsMissing)
+                            {
+                                <div class="kanban-linked-file-warning">
+                                    Die bisher verknüpfte Datei ist im neuesten Projektstand nicht mehr enthalten. Sie bleibt erhalten, bis du eine andere Auswahl triffst.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="kanban-linked-file-help">
+                                    Grundlage ist die letzte gespeicherte Projektprüfung mit @projectFiles.Count Dateien.
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+
                 <div class="kanban-field">
                     <label class="form-label"
                            for="kanban-edit-task-priority">
@@ -234,10 +387,21 @@
                     <select id="kanban-edit-task-priority"
                             class="form-select"
                             @bind="EditTaskPriority">
-                        <option value="@KanbanTaskPriority.Low">Niedrig</option>
-                        <option value="@KanbanTaskPriority.Normal">Normal</option>
-                        <option value="@KanbanTaskPriority.High">Hoch</option>
-                        <option value="@KanbanTaskPriority.Critical">Kritisch</option>
+                        <option value="@KanbanTaskPriority.Low">
+                            Niedrig
+                        </option>
+
+                        <option value="@KanbanTaskPriority.Normal">
+                            Normal
+                        </option>
+
+                        <option value="@KanbanTaskPriority.High">
+                            Hoch
+                        </option>
+
+                        <option value="@KanbanTaskPriority.Critical">
+                            Kritisch
+                        </option>
                     </select>
                 </div>
 
@@ -250,17 +414,31 @@
                     <select id="kanban-edit-task-status"
                             class="form-select"
                             @bind="EditTaskStatus">
-                        <option value="@KanbanTaskStatus.Open">Offen</option>
-                        <option value="@KanbanTaskStatus.InProgress">In Arbeit</option>
-                        <option value="@KanbanTaskStatus.Blocked">Blockiert</option>
-                        <option value="@KanbanTaskStatus.Done">Erledigt</option>
+                        <option value="@KanbanTaskStatus.Open">
+                            Offen
+                        </option>
+
+                        <option value="@KanbanTaskStatus.InProgress">
+                            In Arbeit
+                        </option>
+
+                        <option value="@KanbanTaskStatus.Blocked">
+                            Blockiert
+                        </option>
+
+                        <option value="@KanbanTaskStatus.Done">
+                            Erledigt
+                        </option>
                     </select>
                 </div>
 
                 <div class="kanban-field">
                     <label class="form-label"
                            for="kanban-edit-task-due-date">
-                        Fällig am <span class="text-muted">(optional)</span>
+                        Fällig am
+                        <span class="text-muted">
+                            (optional)
+                        </span>
                     </label>
 
                     <input id="kanban-edit-task-due-date"
@@ -272,7 +450,10 @@
                 <div class="kanban-field kanban-field-description">
                     <label class="form-label"
                            for="kanban-edit-task-description">
-                        Beschreibung <span class="text-muted">(optional)</span>
+                        Beschreibung
+                        <span class="text-muted">
+                            (optional)
+                        </span>
                     </label>
 
                     <textarea id="kanban-edit-task-description"
@@ -380,7 +561,9 @@
                 </h2>
 
                 <p class="text-muted small mb-0">
-                    @FormatVisibleTaskCount(VisibleTaskCount, TotalTaskCount)
+                    @FormatVisibleTaskCount(
+                        VisibleTaskCount,
+                        TotalTaskCount)
                 </p>
             </div>
 
@@ -416,8 +599,13 @@
                 <select id="kanban-filter-project"
                         class="form-select"
                         @bind="SelectedProjectFilter">
-                    <option value="">Alle Projekte</option>
-                    <option value="@UnassignedProjectFilterValue">Ohne Projekt</option>
+                    <option value="">
+                        Alle Projekte
+                    </option>
+
+                    <option value="@UnassignedProjectFilterValue">
+                        Ohne Projekt
+                    </option>
 
                     @foreach (Project project in Projects)
                     {
@@ -437,11 +625,25 @@
                 <select id="kanban-filter-priority"
                         class="form-select"
                         @bind="SelectedPriorityFilter">
-                    <option value="">Alle Prioritäten</option>
-                    <option value="@((int)KanbanTaskPriority.Low)">Niedrig</option>
-                    <option value="@((int)KanbanTaskPriority.Normal)">Normal</option>
-                    <option value="@((int)KanbanTaskPriority.High)">Hoch</option>
-                    <option value="@((int)KanbanTaskPriority.Critical)">Kritisch</option>
+                    <option value="">
+                        Alle Prioritäten
+                    </option>
+
+                    <option value="@((int)KanbanTaskPriority.Low)">
+                        Niedrig
+                    </option>
+
+                    <option value="@((int)KanbanTaskPriority.Normal)">
+                        Normal
+                    </option>
+
+                    <option value="@((int)KanbanTaskPriority.High)">
+                        Hoch
+                    </option>
+
+                    <option value="@((int)KanbanTaskPriority.Critical)">
+                        Kritisch
+                    </option>
                 </select>
             </div>
 
@@ -454,11 +656,25 @@
                 <select id="kanban-filter-status"
                         class="form-select"
                         @bind="SelectedStatusFilter">
-                    <option value="">Alle Status</option>
-                    <option value="@((int)KanbanTaskStatus.Open)">Offen</option>
-                    <option value="@((int)KanbanTaskStatus.InProgress)">In Arbeit</option>
-                    <option value="@((int)KanbanTaskStatus.Blocked)">Blockiert</option>
-                    <option value="@((int)KanbanTaskStatus.Done)">Erledigt</option>
+                    <option value="">
+                        Alle Status
+                    </option>
+
+                    <option value="@((int)KanbanTaskStatus.Open)">
+                        Offen
+                    </option>
+
+                    <option value="@((int)KanbanTaskStatus.InProgress)">
+                        In Arbeit
+                    </option>
+
+                    <option value="@((int)KanbanTaskStatus.Blocked)">
+                        Blockiert
+                    </option>
+
+                    <option value="@((int)KanbanTaskStatus.Done)">
+                        Erledigt
+                    </option>
                 </select>
             </div>
         </div>
@@ -476,7 +692,8 @@
              @ref="kanbanBoardElement">
         @foreach (KanbanColumnDefinition column in VisibleColumns)
         {
-            IReadOnlyList<KanbanTask> columnTasks = GetTasksByStatus(column.Status);
+            IReadOnlyList<KanbanTask> columnTasks =
+                GetTasksByStatus(column.Status);
 
             <article class="kanban-column kanban-column-@column.CssName"
                      data-kanban-status="@((int)column.Status)">
@@ -508,7 +725,10 @@
                     @if (columnTasks.Count == 0)
                     {
                         <div class="kanban-column-empty">
-                            <strong>Keine Aufgaben</strong>
+                            <strong>
+                                Keine Aufgaben
+                            </strong>
+
                             <span>
                                 @(AreFiltersActive
                                     ? "Keine Aufgabe entspricht den aktuellen Filtern."
@@ -520,7 +740,8 @@
                     {
                         @foreach (KanbanTask task in columnTasks)
                         {
-                            Project? project = GetProject(task.ProjectId);
+                            Project? project =
+                                GetProject(task.ProjectId);
 
                             <article class="kanban-task-card @GetPriorityClass(task.Priority) @GetProjectAccentClass(project) @GetDueDateCardClass(task) @(IsTaskBeingManaged(task.Id) ? "kanban-task-card-is-active" : string.Empty)"
                                      data-kanban-task-id="@task.Id"
@@ -553,6 +774,7 @@
                                                           stroke-linecap="round"
                                                           stroke-linejoin="round"
                                                           stroke-width="1.35" />
+
                                                     <path d="m9.9 2.95 3.15 3.15M8.6 13H3"
                                                           fill="none"
                                                           stroke="currentColor"
@@ -585,7 +807,9 @@
                                                 disabled="@(!CanDragTask(task.Id))"
                                                 title="@GetDragHandleTitle(task.Id)"
                                                 aria-label="@($"{task.Title} ziehen und verschieben")">
-                                            <span aria-hidden="true">⋮⋮</span>
+                                            <span aria-hidden="true">
+                                                ⋮⋮
+                                            </span>
                                         </button>
                                     </span>
                                 </div>
@@ -608,15 +832,77 @@
                                                   stroke-linejoin="round"
                                                   stroke-width="1.25" />
                                         </svg>
-                                        <span>@GetDueDateLabel(task)</span>
+
+                                        <span>
+                                            @GetDueDateLabel(task)
+                                        </span>
                                     </div>
                                 }
 
-                                @if (!string.IsNullOrWhiteSpace(task.Description))
+                                @if (!string.IsNullOrWhiteSpace(
+                                    task.Description))
                                 {
                                     <p class="kanban-task-description">
                                         @task.Description
                                     </p>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    task.LinkedFileRelativePath))
+                                {
+                                    @if (project is not null)
+                                    {
+                                        <a class="kanban-linked-file-link"
+                                           href="@GetLinkedFileHref(project.Id, task.LinkedFileRelativePath)"
+                                           title="@($"Projektdatei öffnen: {task.LinkedFileRelativePath}")">
+                                            <svg viewBox="0 0 16 16"
+                                                 aria-hidden="true"
+                                                 focusable="false">
+                                                <path d="M3.25 2.25h5.2l4.3 4.3v7.2h-9.5z"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      stroke-linejoin="round"
+                                                      stroke-width="1.25" />
+
+                                                <path d="M8.25 2.5v4.25h4.25M5.5 9h5M5.5 11.25h3.75"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      stroke-linecap="round"
+                                                      stroke-linejoin="round"
+                                                      stroke-width="1.25" />
+                                            </svg>
+
+                                            <span>
+                                                @task.LinkedFileRelativePath
+                                            </span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <div class="kanban-linked-file-link kanban-linked-file-unavailable"
+                                             title="@task.LinkedFileRelativePath">
+                                            <svg viewBox="0 0 16 16"
+                                                 aria-hidden="true"
+                                                 focusable="false">
+                                                <path d="M3.25 2.25h5.2l4.3 4.3v7.2h-9.5z"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      stroke-linejoin="round"
+                                                      stroke-width="1.25" />
+
+                                                <path d="M8.25 2.5v4.25h4.25M5.5 9h5M5.5 11.25h3.75"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      stroke-linecap="round"
+                                                      stroke-linejoin="round"
+                                                      stroke-width="1.25" />
+                                            </svg>
+
+                                            <span>
+                                                @task.LinkedFileRelativePath
+                                            </span>
+                                        </div>
+                                    }
                                 }
 
                                 <div class="kanban-task-footer">
@@ -652,6 +938,6 @@
 
     <div class="alert alert-info kanban-next-step-note mt-4 mb-0">
         <strong>Direkt organisieren:</strong>
-        Fälligkeiten werden rein visuell hervorgehoben. Statusänderungen erfolgen weiterhin ausschließlich durch dich.
+        Fälligkeiten werden rein visuell hervorgehoben. Verknüpfte Dateien öffnen den letzten gespeicherten Projektstand. Statusänderungen erfolgen weiterhin ausschließlich durch dich.
     </div>
 </div>

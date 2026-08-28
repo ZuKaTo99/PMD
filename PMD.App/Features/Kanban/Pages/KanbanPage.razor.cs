@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using PMD.App.Application.Kanban;
+using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
 using PMD.App.Domain.Kanban;
+using PMD.App.Domain.ProjectStates;
 using PMD.App.Domain.Projects;
 using System;
 using System.Collections.Generic;
@@ -13,7 +15,8 @@ namespace PMD.App.Features.Kanban.Pages;
 
 public partial class KanbanPage : IDisposable, IAsyncDisposable
 {
-    protected const string UnassignedProjectFilterValue = "__unassigned__";
+    protected const string UnassignedProjectFilterValue =
+        "__unassigned__";
 
     private static readonly IReadOnlyList<KanbanColumnDefinition>
         ColumnDefinitions =
@@ -45,13 +48,20 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     private bool isDisposed;
 
     [Inject]
-    private IKanbanBoardService KanbanBoardService { get; set; } = default!;
+    private IKanbanBoardService KanbanBoardService { get; set; } =
+        default!;
 
     [Inject]
-    private IProjectMemoryStore ProjectMemoryStore { get; set; } = default!;
+    private IProjectMemoryStore ProjectMemoryStore { get; set; } =
+        default!;
 
     [Inject]
-    private IJSRuntime JavaScriptRuntime { get; set; } = default!;
+    private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } =
+        default!;
+
+    [Inject]
+    private IJSRuntime JavaScriptRuntime { get; set; } =
+        default!;
 
     protected IReadOnlyList<KanbanColumnDefinition> Columns =>
         ColumnDefinitions;
@@ -61,22 +71,28 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             SelectedStatusFilter,
             out KanbanTaskStatus selectedStatus)
                 ? ColumnDefinitions
-                    .Where(column => column.Status == selectedStatus)
+                    .Where(column =>
+                        column.Status == selectedStatus)
                     .ToList()
                 : ColumnDefinitions;
 
     protected IReadOnlyList<Project> Projects =>
         ProjectMemoryStore.Projects
-            .OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(
+                project => project.Name,
+                StringComparer.OrdinalIgnoreCase)
             .ToList();
 
     protected bool IsCreateFormOpen { get; private set; }
 
-    protected string NewTaskTitle { get; set; } = string.Empty;
+    protected string NewTaskTitle { get; set; } =
+        string.Empty;
 
-    protected string NewTaskDescription { get; set; } = string.Empty;
+    protected string NewTaskDescription { get; set; } =
+        string.Empty;
 
-    protected string SelectedProjectId { get; set; } = string.Empty;
+    protected string SelectedProjectId { get; set; } =
+        string.Empty;
 
     protected KanbanTaskStatus NewTaskStatus { get; set; } =
         KanbanTaskStatus.Open;
@@ -86,6 +102,9 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     protected DateTime? NewTaskDueDate { get; set; }
 
+    protected string NewTaskLinkedFileRelativePath { get; set; } =
+        string.Empty;
+
     protected string CreateTaskErrorMessage { get; private set; } =
         string.Empty;
 
@@ -94,13 +113,17 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     protected Guid? EditingTaskId { get; private set; }
 
-    protected bool IsEditFormOpen => EditingTaskId.HasValue;
+    protected bool IsEditFormOpen =>
+        EditingTaskId.HasValue;
 
-    protected string EditTaskTitle { get; set; } = string.Empty;
+    protected string EditTaskTitle { get; set; } =
+        string.Empty;
 
-    protected string EditTaskDescription { get; set; } = string.Empty;
+    protected string EditTaskDescription { get; set; } =
+        string.Empty;
 
-    protected string EditProjectId { get; set; } = string.Empty;
+    protected string EditProjectId { get; set; } =
+        string.Empty;
 
     protected KanbanTaskStatus EditTaskStatus { get; set; } =
         KanbanTaskStatus.Open;
@@ -109,6 +132,9 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         KanbanTaskPriority.Normal;
 
     protected DateTime? EditTaskDueDate { get; set; }
+
+    protected string EditTaskLinkedFileRelativePath { get; set; } =
+        string.Empty;
 
     protected string EditTaskErrorMessage { get; private set; } =
         string.Empty;
@@ -121,30 +147,38 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     protected KanbanTask? TaskPendingDeletion =>
         PendingDeleteTaskId.HasValue
             ? KanbanBoardService.Tasks.FirstOrDefault(
-                task => task.Id == PendingDeleteTaskId.Value)
+                task =>
+                    task.Id == PendingDeleteTaskId.Value)
             : null;
 
     protected string DeleteTaskErrorMessage { get; private set; } =
         string.Empty;
 
-    protected string TaskSearchText { get; set; } = string.Empty;
+    protected string TaskSearchText { get; set; } =
+        string.Empty;
 
-    protected string SelectedProjectFilter { get; set; } = string.Empty;
+    protected string SelectedProjectFilter { get; set; } =
+        string.Empty;
 
-    protected string SelectedPriorityFilter { get; set; } = string.Empty;
+    protected string SelectedPriorityFilter { get; set; } =
+        string.Empty;
 
-    protected string SelectedStatusFilter { get; set; } = string.Empty;
+    protected string SelectedStatusFilter { get; set; } =
+        string.Empty;
 
-    protected bool AreFiltersActive => CurrentFilterCriteria.IsActive;
+    protected bool AreFiltersActive =>
+        CurrentFilterCriteria.IsActive;
 
     protected bool IsStatusFilterActive =>
         TryParseEnumFilter(
             SelectedStatusFilter,
             out KanbanTaskStatus _);
 
-    protected int TotalTaskCount => KanbanBoardService.Tasks.Count;
+    protected int TotalTaskCount =>
+        KanbanBoardService.Tasks.Count;
 
-    protected int VisibleTaskCount => FilteredTasks.Count;
+    protected int VisibleTaskCount =>
+        FilteredTasks.Count;
 
     private IReadOnlyList<KanbanTask> FilteredTasks =>
         KanbanTaskFilter.Apply(
@@ -163,18 +197,26 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        KanbanBoardService.BoardChanged += OnBoardChanged;
-        ProjectMemoryStore.ProjectsChanged += OnProjectsChanged;
+        KanbanBoardService.BoardChanged +=
+            OnBoardChanged;
+
+        ProjectMemoryStore.ProjectsChanged +=
+            OnProjectsChanged;
+
+        ProjectStateMemoryStore.ProjectStatesChanged +=
+            OnProjectStatesChanged;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
     {
         if (isDisposed)
         {
             return;
         }
 
-        dragDropReference ??= DotNetObjectReference.Create(this);
+        dragDropReference ??=
+            DotNetObjectReference.Create(this);
 
         await JavaScriptRuntime.InvokeVoidAsync(
             "pmdKanbanDragDrop.initialize",
@@ -185,9 +227,12 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 columnSelector = ".kanban-column",
                 listSelector = ".kanban-task-list",
                 itemSelector = ".kanban-task-card",
-                handleSelector = ".kanban-task-drag-handle",
-                draggingClass = "kanban-task-is-dragging",
-                targetColumnClass = "kanban-column-is-drop-target"
+                handleSelector =
+                    ".kanban-task-drag-handle",
+                draggingClass =
+                    "kanban-task-is-dragging",
+                targetColumnClass =
+                    "kanban-column-is-drop-target"
             });
     }
 
@@ -199,8 +244,15 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         }
 
         isDisposed = true;
-        KanbanBoardService.BoardChanged -= OnBoardChanged;
-        ProjectMemoryStore.ProjectsChanged -= OnProjectsChanged;
+
+        KanbanBoardService.BoardChanged -=
+            OnBoardChanged;
+
+        ProjectMemoryStore.ProjectsChanged -=
+            OnProjectsChanged;
+
+        ProjectStateMemoryStore.ProjectStatesChanged -=
+            OnProjectStatesChanged;
     }
 
     public async ValueTask DisposeAsync()
@@ -215,11 +267,13 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         }
         catch (JSException)
         {
-            // The WebView can already be unavailable while the page is disposed.
+            // The WebView can already be unavailable
+            // while the page is disposed.
         }
         catch (InvalidOperationException)
         {
-            // JavaScript interop is not available during every disposal phase.
+            // JavaScript interop is not available
+            // during every disposal phase.
         }
 
         dragDropReference?.Dispose();
@@ -237,7 +291,9 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             return Task.CompletedTask;
         }
 
-        if (!Guid.TryParse(taskIdValue, out Guid taskId) ||
+        if (!Guid.TryParse(
+                taskIdValue,
+                out Guid taskId) ||
             !Enum.IsDefined(
                 typeof(KanbanTaskStatus),
                 targetStatusValue))
@@ -257,17 +313,115 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         KanbanTaskStatus status)
     {
         return FilteredTasks
-            .Where(task => task.Status == status)
-            .OrderBy(task => task.SortOrder)
-            .ThenByDescending(task => task.CreatedAt)
+            .Where(task =>
+                task.Status == status)
+            .OrderBy(task =>
+                task.SortOrder)
+            .ThenByDescending(task =>
+                task.CreatedAt)
             .ToList();
     }
 
-    protected Project? GetProject(Guid? projectId)
+    protected Project? GetProject(
+        Guid? projectId)
     {
         return projectId.HasValue
-            ? ProjectMemoryStore.GetProjectById(projectId.Value)
+            ? ProjectMemoryStore.GetProjectById(
+                projectId.Value)
             : null;
+    }
+
+    protected IReadOnlyList<ProjectStateFile> GetProjectFiles(
+        string projectIdValue)
+    {
+        Guid? projectId =
+            ParseProjectId(projectIdValue);
+
+        if (!projectId.HasValue)
+        {
+            return Array.Empty<ProjectStateFile>();
+        }
+
+        ProjectState? latestProjectState =
+            ProjectStateMemoryStore.GetLatestByProjectId(
+                projectId.Value);
+
+        if (latestProjectState is null)
+        {
+            return Array.Empty<ProjectStateFile>();
+        }
+
+        return ProjectStateMemoryStore
+            .GetFilesByProjectStateId(
+                latestProjectState.Id)
+            .Where(file =>
+                !string.IsNullOrWhiteSpace(
+                    file.RelativePath))
+            .GroupBy(
+                file => NormalizeLinkedFilePath(
+                    file.RelativePath),
+                StringComparer.OrdinalIgnoreCase)
+            .Select(group =>
+                group.First())
+            .OrderBy(
+                file => NormalizeLinkedFilePath(
+                    file.RelativePath),
+                StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    protected void OnSelectedProjectChanged()
+    {
+        NewTaskLinkedFileRelativePath =
+            string.Empty;
+    }
+
+    protected void OnEditProjectChanged()
+    {
+        EditTaskLinkedFileRelativePath =
+            string.Empty;
+    }
+
+    protected static string GetLinkedFilePath(
+        ProjectStateFile file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+
+        return NormalizeLinkedFilePath(
+            file.RelativePath);
+    }
+
+    protected static bool ContainsLinkedFile(
+        IReadOnlyList<ProjectStateFile> files,
+        string linkedFileRelativePath)
+    {
+        if (string.IsNullOrWhiteSpace(
+                linkedFileRelativePath))
+        {
+            return false;
+        }
+
+        string normalizedLinkedFilePath =
+            NormalizeLinkedFilePath(
+                linkedFileRelativePath);
+
+        return files.Any(file =>
+            string.Equals(
+                GetLinkedFilePath(file),
+                normalizedLinkedFilePath,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    protected static string GetLinkedFileHref(
+        Guid projectId,
+        string linkedFileRelativePath)
+    {
+        string normalizedLinkedFilePath =
+            NormalizeLinkedFilePath(
+                linkedFileRelativePath);
+
+        return $"/projekte/{projectId}/dateien" +
+            $"?datei={Uri.EscapeDataString(normalizedLinkedFilePath)}";
     }
 
     protected void ToggleCreateForm()
@@ -280,6 +434,7 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
         CancelEditTask();
         CancelDeleteTask();
+
         IsCreateFormOpen = true;
         CreateTaskErrorMessage = string.Empty;
     }
@@ -299,21 +454,25 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             KanbanBoardService.CreateTask(
                 NewTaskTitle,
                 NewTaskDescription,
-                ParseProjectId(SelectedProjectId),
+                ParseProjectId(
+                    SelectedProjectId),
                 NewTaskStatus,
                 NewTaskPriority,
-                NewTaskDueDate?.Date);
+                NewTaskDueDate?.Date,
+                NewTaskLinkedFileRelativePath);
 
             ResetCreateForm();
             IsCreateFormOpen = false;
         }
         catch (ArgumentException exception)
         {
-            CreateTaskErrorMessage = exception.Message;
+            CreateTaskErrorMessage =
+                exception.Message;
         }
     }
 
-    protected void StartEditingTask(KanbanTask task)
+    protected void StartEditingTask(
+        KanbanTask task)
     {
         ArgumentNullException.ThrowIfNull(task);
 
@@ -323,11 +482,17 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         EditingTaskId = task.Id;
         EditTaskTitle = task.Title;
         EditTaskDescription = task.Description;
-        EditProjectId = task.ProjectId?.ToString() ?? string.Empty;
+        EditProjectId =
+            task.ProjectId?.ToString() ??
+            string.Empty;
         EditTaskStatus = task.Status;
         EditTaskPriority = task.Priority;
-        EditTaskDueDate = task.DueDate?.Date;
-        EditTaskErrorMessage = string.Empty;
+        EditTaskDueDate =
+            task.DueDate?.Date;
+        EditTaskLinkedFileRelativePath =
+            task.LinkedFileRelativePath;
+        EditTaskErrorMessage =
+            string.Empty;
     }
 
     protected void SaveEditedTask()
@@ -337,7 +502,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             return;
         }
 
-        EditTaskErrorMessage = string.Empty;
+        EditTaskErrorMessage =
+            string.Empty;
 
         try
         {
@@ -345,20 +511,24 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 EditingTaskId.Value,
                 EditTaskTitle,
                 EditTaskDescription,
-                ParseProjectId(EditProjectId),
+                ParseProjectId(
+                    EditProjectId),
                 EditTaskStatus,
                 EditTaskPriority,
-                EditTaskDueDate?.Date);
+                EditTaskDueDate?.Date,
+                EditTaskLinkedFileRelativePath);
 
             ResetEditForm();
         }
         catch (ArgumentException exception)
         {
-            EditTaskErrorMessage = exception.Message;
+            EditTaskErrorMessage =
+                exception.Message;
         }
         catch (KeyNotFoundException exception)
         {
-            EditTaskErrorMessage = exception.Message;
+            EditTaskErrorMessage =
+                exception.Message;
         }
     }
 
@@ -367,7 +537,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         ResetEditForm();
     }
 
-    protected void RequestDeleteTask(KanbanTask task)
+    protected void RequestDeleteTask(
+        KanbanTask task)
     {
         ArgumentNullException.ThrowIfNull(task);
 
@@ -375,7 +546,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         CancelEditTask();
 
         PendingDeleteTaskId = task.Id;
-        DeleteTaskErrorMessage = string.Empty;
+        DeleteTaskErrorMessage =
+            string.Empty;
     }
 
     protected void ConfirmDeleteTask()
@@ -385,16 +557,20 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             return;
         }
 
-        DeleteTaskErrorMessage = string.Empty;
+        DeleteTaskErrorMessage =
+            string.Empty;
 
         try
         {
-            KanbanBoardService.DeleteTask(PendingDeleteTaskId.Value);
+            KanbanBoardService.DeleteTask(
+                PendingDeleteTaskId.Value);
+
             ResetDeleteConfirmation();
         }
         catch (KeyNotFoundException exception)
         {
-            DeleteTaskErrorMessage = exception.Message;
+            DeleteTaskErrorMessage =
+                exception.Message;
         }
     }
 
@@ -403,18 +579,22 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         ResetDeleteConfirmation();
     }
 
-    protected bool IsTaskBeingManaged(Guid taskId)
+    protected bool IsTaskBeingManaged(
+        Guid taskId)
     {
         return EditingTaskId == taskId ||
             PendingDeleteTaskId == taskId;
     }
 
-    protected bool CanDragTask(Guid taskId)
+    protected bool CanDragTask(
+        Guid taskId)
     {
-        return !AreFiltersActive && !IsTaskBeingManaged(taskId);
+        return !AreFiltersActive &&
+            !IsTaskBeingManaged(taskId);
     }
 
-    protected string GetDragHandleTitle(Guid taskId)
+    protected string GetDragHandleTitle(
+        Guid taskId)
     {
         if (AreFiltersActive)
         {
@@ -455,10 +635,14 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     {
         return priority switch
         {
-            KanbanTaskPriority.Low => "Niedrig",
-            KanbanTaskPriority.High => "Hoch",
-            KanbanTaskPriority.Critical => "Kritisch",
-            _ => "Normal"
+            KanbanTaskPriority.Low =>
+                "Niedrig",
+            KanbanTaskPriority.High =>
+                "Hoch",
+            KanbanTaskPriority.Critical =>
+                "Kritisch",
+            _ =>
+                "Normal"
         };
     }
 
@@ -467,29 +651,38 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     {
         return priority switch
         {
-            KanbanTaskPriority.Low => "kanban-priority-low",
-            KanbanTaskPriority.High => "kanban-priority-high",
-            KanbanTaskPriority.Critical => "kanban-priority-critical",
-            _ => "kanban-priority-normal"
+            KanbanTaskPriority.Low =>
+                "kanban-priority-low",
+            KanbanTaskPriority.High =>
+                "kanban-priority-high",
+            KanbanTaskPriority.Critical =>
+                "kanban-priority-critical",
+            _ =>
+                "kanban-priority-normal"
         };
     }
 
-    protected static string GetProjectAccentClass(Project? project)
+    protected static string GetProjectAccentClass(
+        Project? project)
     {
         return project is null
             ? string.Empty
             : $"kanban-accent-{ProjectAccentColors.Normalize(project.AccentColor)}";
     }
 
-    protected static string GetDueDateLabel(KanbanTask task)
+    protected static string GetDueDateLabel(
+        KanbanTask task)
     {
         if (!task.DueDate.HasValue)
         {
             return string.Empty;
         }
 
-        DateTime dueDate = task.DueDate.Value.Date;
-        DateTime today = DateTime.Today;
+        DateTime dueDate =
+            task.DueDate.Value.Date;
+
+        DateTime today =
+            DateTime.Today;
 
         if (dueDate == today)
         {
@@ -501,7 +694,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             return "Morgen fällig";
         }
 
-        if (dueDate < today && task.Status != KanbanTaskStatus.Done)
+        if (dueDate < today &&
+            task.Status != KanbanTaskStatus.Done)
         {
             return $"Überfällig seit {dueDate:dd.MM.yyyy}";
         }
@@ -509,22 +703,28 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         return $"Fällig am {dueDate:dd.MM.yyyy}";
     }
 
-    protected static string GetDueDateClass(KanbanTask task)
+    protected static string GetDueDateClass(
+        KanbanTask task)
     {
         if (!task.DueDate.HasValue)
         {
             return string.Empty;
         }
 
-        DateTime dueDate = task.DueDate.Value.Date;
-        DateTime today = DateTime.Today;
+        DateTime dueDate =
+            task.DueDate.Value.Date;
 
-        if (dueDate < today && task.Status != KanbanTaskStatus.Done)
+        DateTime today =
+            DateTime.Today;
+
+        if (dueDate < today &&
+            task.Status != KanbanTaskStatus.Done)
         {
             return "kanban-due-overdue";
         }
 
-        if (dueDate == today && task.Status != KanbanTaskStatus.Done)
+        if (dueDate == today &&
+            task.Status != KanbanTaskStatus.Done)
         {
             return "kanban-due-today";
         }
@@ -538,30 +738,46 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         return "kanban-due-upcoming";
     }
 
-    protected static string GetDueDateCardClass(KanbanTask task)
+    protected static string GetDueDateCardClass(
+        KanbanTask task)
     {
         return task.DueDate.HasValue &&
-            task.DueDate.Value.Date < DateTime.Today &&
+            task.DueDate.Value.Date <
+            DateTime.Today &&
             task.Status != KanbanTaskStatus.Done
                 ? "kanban-task-card-overdue"
                 : string.Empty;
     }
 
-    protected static string FormatDate(DateTime dateTime)
+    protected static string FormatDate(
+        DateTime dateTime)
     {
-        return dateTime.ToString("dd.MM.yyyy");
+        return dateTime.ToString(
+            "dd.MM.yyyy");
     }
 
-    protected static string FormatTaskCount(int taskCount)
+    protected static string FormatTaskCount(
+        int taskCount)
     {
         return taskCount == 1
             ? "1 Aufgabe"
             : $"{taskCount} Aufgaben";
     }
 
-    private static Guid? ParseProjectId(string projectIdValue)
+    private static string NormalizeLinkedFilePath(
+        string linkedFileRelativePath)
     {
-        return Guid.TryParse(projectIdValue, out Guid parsedProjectId)
+        return linkedFileRelativePath
+            .Trim()
+            .Replace('\\', '/');
+    }
+
+    private static Guid? ParseProjectId(
+        string projectIdValue)
+    {
+        return Guid.TryParse(
+                projectIdValue,
+                out Guid parsedProjectId)
             ? parsedProjectId
             : null;
     }
@@ -573,7 +789,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 UnassignedProjectFilterValue,
                 StringComparison.Ordinal)
             ? null
-            : ParseProjectId(SelectedProjectFilter);
+            : ParseProjectId(
+                SelectedProjectFilter);
     }
 
     private KanbanTaskPriority? ParsePriorityFilter()
@@ -599,12 +816,17 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         out TEnum parsedValue)
         where TEnum : struct, Enum
     {
-        if (int.TryParse(value, out int numericValue) &&
-            Enum.IsDefined(typeof(TEnum), numericValue))
-        {
-            parsedValue = (TEnum)Enum.ToObject(
+        if (int.TryParse(
+                value,
+                out int numericValue) &&
+            Enum.IsDefined(
                 typeof(TEnum),
-                numericValue);
+                numericValue))
+        {
+            parsedValue =
+                (TEnum)Enum.ToObject(
+                    typeof(TEnum),
+                    numericValue);
 
             return true;
         }
@@ -618,10 +840,15 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         NewTaskTitle = string.Empty;
         NewTaskDescription = string.Empty;
         SelectedProjectId = string.Empty;
-        NewTaskStatus = KanbanTaskStatus.Open;
-        NewTaskPriority = KanbanTaskPriority.Normal;
+        NewTaskStatus =
+            KanbanTaskStatus.Open;
+        NewTaskPriority =
+            KanbanTaskPriority.Normal;
         NewTaskDueDate = null;
-        CreateTaskErrorMessage = string.Empty;
+        NewTaskLinkedFileRelativePath =
+            string.Empty;
+        CreateTaskErrorMessage =
+            string.Empty;
     }
 
     private void ResetEditForm()
@@ -630,26 +857,40 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         EditTaskTitle = string.Empty;
         EditTaskDescription = string.Empty;
         EditProjectId = string.Empty;
-        EditTaskStatus = KanbanTaskStatus.Open;
-        EditTaskPriority = KanbanTaskPriority.Normal;
+        EditTaskStatus =
+            KanbanTaskStatus.Open;
+        EditTaskPriority =
+            KanbanTaskPriority.Normal;
         EditTaskDueDate = null;
-        EditTaskErrorMessage = string.Empty;
+        EditTaskLinkedFileRelativePath =
+            string.Empty;
+        EditTaskErrorMessage =
+            string.Empty;
     }
 
     private void ResetDeleteConfirmation()
     {
         PendingDeleteTaskId = null;
-        DeleteTaskErrorMessage = string.Empty;
+        DeleteTaskErrorMessage =
+            string.Empty;
     }
 
     private void OnBoardChanged()
     {
-        _ = InvokeAsync(StateHasChanged);
+        _ = InvokeAsync(
+            StateHasChanged);
     }
 
     private void OnProjectsChanged()
     {
-        _ = InvokeAsync(StateHasChanged);
+        _ = InvokeAsync(
+            StateHasChanged);
+    }
+
+    private void OnProjectStatesChanged()
+    {
+        _ = InvokeAsync(
+            StateHasChanged);
     }
 
     protected sealed record KanbanColumnDefinition(
