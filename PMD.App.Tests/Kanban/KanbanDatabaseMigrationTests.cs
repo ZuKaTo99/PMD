@@ -93,7 +93,7 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
                connectionFactory.CreateConnection())
         {
             Assert.Equal(
-                5,
+                6,
                 connection.ExecuteScalar<int>(
                     "PRAGMA user_version"));
 
@@ -129,6 +129,222 @@ public sealed class KanbanDatabaseMigrationTests : IDisposable
         Assert.Null(migratedTask.DueDate);
 
         Assert.Empty(
+            migratedTask.LinkedFileRelativePath);
+    }
+
+    [Fact]
+    public void Initialize_MigratesVersion4AndPreservesDueDate()
+    {
+        Guid taskId = Guid.NewGuid();
+        DateTime dueDate =
+            new DateTime(2026, 7, 24);
+
+        IPmdDatabasePathProvider pathProvider =
+            new TestDatabasePathProvider(databasePath);
+
+        var connectionFactory =
+            new PmdDatabaseConnectionFactory(pathProvider);
+
+        using (SQLiteConnection connection =
+               connectionFactory.CreateConnection())
+        {
+            connection.Execute(
+                """
+                CREATE TABLE KanbanTasks
+                (
+                    Id TEXT NOT NULL PRIMARY KEY,
+                    Title TEXT NOT NULL,
+                    Description TEXT NOT NULL,
+                    ProjectId TEXT NOT NULL,
+                    Status INTEGER NOT NULL,
+                    Priority INTEGER NOT NULL,
+                    SortOrder INTEGER NOT NULL,
+                    DueDate DATETIME NULL,
+                    CreatedAt DATETIME NOT NULL,
+                    UpdatedAt DATETIME NOT NULL
+                )
+                """);
+
+            connection.Execute(
+                """
+                INSERT INTO KanbanTasks
+                (
+                    Id,
+                    Title,
+                    Description,
+                    ProjectId,
+                    Status,
+                    Priority,
+                    SortOrder,
+                    DueDate,
+                    CreatedAt,
+                    UpdatedAt
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                taskId.ToString(),
+                "Aufgabe mit Fälligkeit",
+                string.Empty,
+                string.Empty,
+                (int)KanbanTaskStatus.Open,
+                (int)KanbanTaskPriority.Normal,
+                0,
+                dueDate,
+                new DateTime(2026, 7, 15, 12, 0, 0),
+                new DateTime(2026, 7, 15, 12, 0, 0));
+
+            connection.Execute(
+                "PRAGMA user_version = 4");
+        }
+
+        new PmdDatabaseInitializer(
+            connectionFactory).Initialize();
+
+        var repository =
+            new SqliteKanbanTaskRepository(
+                connectionFactory);
+
+        KanbanTask? migratedTask =
+            repository.GetById(taskId);
+
+        Assert.NotNull(migratedTask);
+
+        Assert.Equal(
+            dueDate,
+            migratedTask!.DueDate);
+
+        Assert.Empty(
+            migratedTask.LinkedFileRelativePath);
+
+        using SQLiteConnection verificationConnection =
+            connectionFactory.CreateConnection();
+
+        Assert.Equal(
+            6,
+            verificationConnection.ExecuteScalar<int>(
+                "PRAGMA user_version"));
+    }
+
+    [Fact]
+    public void Initialize_MigratesAlternativeVersion5ProjectFilePath()
+    {
+        Guid taskId = Guid.NewGuid();
+        Guid projectId = Guid.NewGuid();
+
+        const string legacyProjectFilePath =
+            "Features/Kanban/Pages/KanbanPage.razor";
+
+        IPmdDatabasePathProvider pathProvider =
+            new TestDatabasePathProvider(databasePath);
+
+        var connectionFactory =
+            new PmdDatabaseConnectionFactory(pathProvider);
+
+        using (SQLiteConnection connection =
+               connectionFactory.CreateConnection())
+        {
+            connection.Execute(
+                """
+                CREATE TABLE KanbanTasks
+                (
+                    Id TEXT NOT NULL PRIMARY KEY,
+                    Title TEXT NOT NULL,
+                    Description TEXT NOT NULL,
+                    ProjectId TEXT NOT NULL,
+                    Status INTEGER NOT NULL,
+                    Priority INTEGER NOT NULL,
+                    SortOrder INTEGER NOT NULL,
+                    DueDate DATETIME NULL,
+                    ProjectFilePath TEXT NOT NULL DEFAULT '',
+                    CreatedAt DATETIME NOT NULL,
+                    UpdatedAt DATETIME NOT NULL
+                )
+                """);
+
+            connection.Execute(
+                """
+                INSERT INTO KanbanTasks
+                (
+                    Id,
+                    Title,
+                    Description,
+                    ProjectId,
+                    Status,
+                    Priority,
+                    SortOrder,
+                    DueDate,
+                    ProjectFilePath,
+                    CreatedAt,
+                    UpdatedAt
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                taskId.ToString(),
+                "Lokal verknüpfte Aufgabe",
+                "Der alte Dateipfad muss erhalten bleiben.",
+                projectId.ToString(),
+                (int)KanbanTaskStatus.InProgress,
+                (int)KanbanTaskPriority.High,
+                2,
+                null,
+                legacyProjectFilePath,
+                new DateTime(2026, 8, 28, 11, 0, 0),
+                new DateTime(2026, 8, 28, 11, 0, 0));
+
+            connection.Execute(
+                "PRAGMA user_version = 5");
+        }
+
+        new PmdDatabaseInitializer(
+            connectionFactory).Initialize();
+
+        using (SQLiteConnection connection =
+               connectionFactory.CreateConnection())
+        {
+            Assert.Equal(
+                6,
+                connection.ExecuteScalar<int>(
+                    "PRAGMA user_version"));
+
+            List<DatabaseColumnName> columns = connection
+                .Query<DatabaseColumnName>(
+                    "PRAGMA table_info(KanbanTasks)");
+
+            Assert.Contains(
+                columns,
+                column =>
+                    column.Name ==
+                    "LinkedFileRelativePath");
+
+            string migratedFilePath =
+                connection.ExecuteScalar<string>(
+                    """
+                    SELECT LinkedFileRelativePath
+                    FROM KanbanTasks
+                    WHERE Id = ?
+                    """,
+                    taskId.ToString());
+
+            Assert.Equal(
+                legacyProjectFilePath,
+                migratedFilePath);
+        }
+
+        var repository =
+            new SqliteKanbanTaskRepository(
+                connectionFactory);
+
+        KanbanTask? migratedTask =
+            repository.GetById(taskId);
+
+        Assert.NotNull(migratedTask);
+
+        Assert.Equal(
+            projectId,
+            migratedTask!.ProjectId);
+
+        Assert.Equal(
+            legacyProjectFilePath,
             migratedTask.LinkedFileRelativePath);
     }
 

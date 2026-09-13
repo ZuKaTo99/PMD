@@ -8,7 +8,7 @@ namespace PMD.App.Infrastructure.Database;
 
 public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
 {
-    private const int CurrentSchemaVersion = 5;
+    private const int CurrentSchemaVersion = 6;
 
     private readonly IPmdDatabaseConnectionFactory connectionFactory;
 
@@ -77,6 +77,10 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
 
             case 5:
                 ApplyVersion5Migration(connection);
+                break;
+
+            case 6:
+                ApplyVersion6Migration(connection);
                 break;
 
             default:
@@ -166,7 +170,7 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
     }
 
     private static void ApplyVersion5Migration(
-    SQLiteConnection connection)
+        SQLiteConnection connection)
     {
         if (!ColumnExists(
                 connection,
@@ -175,10 +179,50 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
         {
             connection.Execute(
                 """
-            ALTER TABLE KanbanTasks
-            ADD COLUMN LinkedFileRelativePath TEXT NOT NULL DEFAULT ''
-            """);
+                ALTER TABLE KanbanTasks
+                ADD COLUMN LinkedFileRelativePath TEXT NOT NULL DEFAULT ''
+                """);
         }
+    }
+
+    private static void ApplyVersion6Migration(
+        SQLiteConnection connection)
+    {
+        bool hasLegacyProjectFilePath =
+            ColumnExists(
+                connection,
+                "KanbanTasks",
+                "ProjectFilePath");
+
+        if (!ColumnExists(
+                connection,
+                "KanbanTasks",
+                "LinkedFileRelativePath"))
+        {
+            connection.Execute(
+                """
+                ALTER TABLE KanbanTasks
+                ADD COLUMN LinkedFileRelativePath TEXT NOT NULL DEFAULT ''
+                """);
+        }
+
+        if (!hasLegacyProjectFilePath)
+        {
+            return;
+        }
+
+        connection.Execute(
+            """
+            UPDATE KanbanTasks
+            SET LinkedFileRelativePath = ProjectFilePath
+            WHERE
+                (
+                    LinkedFileRelativePath IS NULL
+                    OR TRIM(LinkedFileRelativePath) = ''
+                )
+                AND ProjectFilePath IS NOT NULL
+                AND TRIM(ProjectFilePath) <> ''
+            """);
     }
 
     private static void EnsureProjectsSchema(
@@ -281,6 +325,7 @@ public sealed class PmdDatabaseInitializer : IPmdDatabaseInitializer
     private sealed class DatabaseColumnInfo
     {
         [Column("name")]
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } =
+            string.Empty;
     }
 }
