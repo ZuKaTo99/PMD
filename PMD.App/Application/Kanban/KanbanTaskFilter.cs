@@ -14,14 +14,23 @@ public static class KanbanTaskFilter
         ArgumentNullException.ThrowIfNull(tasks);
         ArgumentNullException.ThrowIfNull(criteria);
 
-        string normalizedSearchText = criteria.SearchText?.Trim() ?? string.Empty;
+        string normalizedSearchText =
+            criteria.SearchText?.Trim() ?? string.Empty;
 
         return tasks
-            .Where(task => MatchesSearch(task, normalizedSearchText))
-            .Where(task => MatchesProject(task, criteria))
-            .Where(task => !criteria.Priority.HasValue ||
+            .Where(task =>
+                MatchesSearch(
+                    task,
+                    normalizedSearchText))
+            .Where(task =>
+                MatchesProject(
+                    task,
+                    criteria))
+            .Where(task =>
+                !criteria.Priority.HasValue ||
                 task.Priority == criteria.Priority.Value)
-            .Where(task => !criteria.Status.HasValue ||
+            .Where(task =>
+                !criteria.Status.HasValue ||
                 task.Status == criteria.Status.Value)
             .OrderBy(task => task.Status)
             .ThenBy(task => task.SortOrder)
@@ -42,6 +51,9 @@ public static class KanbanTaskFilter
                 searchText,
                 StringComparison.OrdinalIgnoreCase) ||
             task.Description.Contains(
+                searchText,
+                StringComparison.OrdinalIgnoreCase) ||
+            task.LinkedFileRelativePath.Contains(
                 searchText,
                 StringComparison.OrdinalIgnoreCase);
     }

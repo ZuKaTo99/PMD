@@ -25,15 +25,40 @@ public sealed class KanbanBoardServiceTests
             projectId,
             KanbanTaskStatus.Open,
             KanbanTaskPriority.High,
-            new DateTime(2026, 7, 20, 18, 30, 0));
+            new DateTime(2026, 7, 20, 18, 30, 0),
+            @"Features\Kanban\Pages\KanbanPage.razor");
 
-        Assert.Equal("Neue Aufgabe", createdTask.Title);
-        Assert.Equal("Beschreibung", createdTask.Description);
-        Assert.Equal(projectId, createdTask.ProjectId);
-        Assert.Equal(KanbanTaskPriority.High, createdTask.Priority);
-        Assert.Equal(new DateTime(2026, 7, 20), createdTask.DueDate);
-        Assert.Equal(5, createdTask.SortOrder);
-        Assert.Same(createdTask, repository.SavedTask);
+        Assert.Equal(
+            "Neue Aufgabe",
+            createdTask.Title);
+
+        Assert.Equal(
+            "Beschreibung",
+            createdTask.Description);
+
+        Assert.Equal(
+            projectId,
+            createdTask.ProjectId);
+
+        Assert.Equal(
+            "Features/Kanban/Pages/KanbanPage.razor",
+            createdTask.LinkedFileRelativePath);
+
+        Assert.Equal(
+            KanbanTaskPriority.High,
+            createdTask.Priority);
+
+        Assert.Equal(
+            new DateTime(2026, 7, 20),
+            createdTask.DueDate);
+
+        Assert.Equal(
+            5,
+            createdTask.SortOrder);
+
+        Assert.Same(
+            createdTask,
+            repository.SavedTask);
     }
 
     [Fact]
@@ -52,6 +77,47 @@ public sealed class KanbanBoardServiceTests
     }
 
     [Fact]
+    public void CreateTask_WithoutProjectClearsLinkedFile()
+    {
+        var service = new KanbanBoardService(
+            new InMemoryKanbanTaskRepository());
+
+        KanbanTask createdTask = service.CreateTask(
+            "Aufgabe ohne Projekt",
+            string.Empty,
+            null,
+            KanbanTaskStatus.Open,
+            KanbanTaskPriority.Normal,
+            null,
+            "PMD.App/Program.cs");
+
+        Assert.Empty(
+            createdTask.LinkedFileRelativePath);
+    }
+
+    [Fact]
+    public void CreateTask_RejectsTooLongLinkedFilePath()
+    {
+        var service = new KanbanBoardService(
+            new InMemoryKanbanTaskRepository());
+
+        ArgumentException exception =
+            Assert.Throws<ArgumentException>(() =>
+                service.CreateTask(
+                    "Aufgabe mit zu langem Pfad",
+                    string.Empty,
+                    Guid.NewGuid(),
+                    KanbanTaskStatus.Open,
+                    KanbanTaskPriority.Normal,
+                    null,
+                    new string('a', 1025)));
+
+        Assert.Equal(
+            "linkedFileRelativePath",
+            exception.ParamName);
+    }
+
+    [Fact]
     public void UpdateTask_UpdatesContentWithinSameStatus()
     {
         KanbanTask existingTask = CreateTask(
@@ -59,8 +125,13 @@ public sealed class KanbanBoardServiceTests
             KanbanTaskStatus.Open,
             0);
 
-        var repository = new InMemoryKanbanTaskRepository([existingTask]);
-        var service = new KanbanBoardService(repository);
+        var repository =
+            new InMemoryKanbanTaskRepository(
+                [existingTask]);
+
+        var service =
+            new KanbanBoardService(repository);
+
         Guid projectId = Guid.NewGuid();
 
         KanbanTask updatedTask = service.UpdateTask(
@@ -70,16 +141,44 @@ public sealed class KanbanBoardServiceTests
             projectId,
             KanbanTaskStatus.Open,
             KanbanTaskPriority.Critical,
-            new DateTime(2026, 7, 22, 9, 15, 0));
+            new DateTime(2026, 7, 22, 9, 15, 0),
+            @"/Features\Kanban\Pages\KanbanPage.razor");
 
-        Assert.Equal("Neuer Titel", updatedTask.Title);
-        Assert.Equal("Neue Beschreibung", updatedTask.Description);
-        Assert.Equal(projectId, updatedTask.ProjectId);
-        Assert.Equal(KanbanTaskPriority.Critical, updatedTask.Priority);
-        Assert.Equal(new DateTime(2026, 7, 22), updatedTask.DueDate);
-        Assert.Equal(KanbanTaskStatus.Open, updatedTask.Status);
-        Assert.Equal(0, updatedTask.SortOrder);
-        Assert.Equal(updatedTask.Id, repository.SavedTask?.Id);
+        Assert.Equal(
+            "Neuer Titel",
+            updatedTask.Title);
+
+        Assert.Equal(
+            "Neue Beschreibung",
+            updatedTask.Description);
+
+        Assert.Equal(
+            projectId,
+            updatedTask.ProjectId);
+
+        Assert.Equal(
+            "Features/Kanban/Pages/KanbanPage.razor",
+            updatedTask.LinkedFileRelativePath);
+
+        Assert.Equal(
+            KanbanTaskPriority.Critical,
+            updatedTask.Priority);
+
+        Assert.Equal(
+            new DateTime(2026, 7, 22),
+            updatedTask.DueDate);
+
+        Assert.Equal(
+            KanbanTaskStatus.Open,
+            updatedTask.Status);
+
+        Assert.Equal(
+            0,
+            updatedTask.SortOrder);
+
+        Assert.Equal(
+            updatedTask.Id,
+            repository.SavedTask?.Id);
     }
 
     [Fact]
@@ -107,7 +206,8 @@ public sealed class KanbanBoardServiceTests
             inProgressTask
         ]);
 
-        var service = new KanbanBoardService(repository);
+        var service =
+            new KanbanBoardService(repository);
 
         KanbanTask updatedTask = service.UpdateTask(
             firstOpenTask.Id,
@@ -121,25 +221,54 @@ public sealed class KanbanBoardServiceTests
             service.Tasks,
             task =>
             {
-                Assert.Equal(secondOpenTask.Id, task.Id);
-                Assert.Equal(KanbanTaskStatus.Open, task.Status);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    secondOpenTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    KanbanTaskStatus.Open,
+                    task.Status);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
             },
             task =>
             {
-                Assert.Equal(inProgressTask.Id, task.Id);
-                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    inProgressTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    KanbanTaskStatus.InProgress,
+                    task.Status);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
             },
             task =>
             {
-                Assert.Equal(updatedTask.Id, task.Id);
-                Assert.Equal("Jetzt in Arbeit", task.Title);
-                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
-                Assert.Equal(1, task.SortOrder);
+                Assert.Equal(
+                    updatedTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    "Jetzt in Arbeit",
+                    task.Title);
+
+                Assert.Equal(
+                    KanbanTaskStatus.InProgress,
+                    task.Status);
+
+                Assert.Equal(
+                    1,
+                    task.SortOrder);
             });
 
-        Assert.Equal(2, repository.SavedTasks.Count);
+        Assert.Equal(
+            2,
+            repository.SavedTasks.Count);
     }
 
     [Fact]
@@ -151,7 +280,8 @@ public sealed class KanbanBoardServiceTests
             0);
 
         var service = new KanbanBoardService(
-            new InMemoryKanbanTaskRepository([existingTask]));
+            new InMemoryKanbanTaskRepository(
+                [existingTask]));
 
         Assert.Throws<ArgumentException>(() =>
             service.UpdateTask(
@@ -161,6 +291,39 @@ public sealed class KanbanBoardServiceTests
                 null,
                 KanbanTaskStatus.Open,
                 KanbanTaskPriority.Normal));
+    }
+
+    [Fact]
+    public void UpdateTask_WithoutProjectClearsLinkedFile()
+    {
+        Guid projectId = Guid.NewGuid();
+
+        KanbanTask existingTask = CreateTask(
+            "Datei prüfen",
+            KanbanTaskStatus.Open,
+            0,
+            "Features/Kanban/Pages/KanbanPage.razor",
+            projectId);
+
+        var service = new KanbanBoardService(
+            new InMemoryKanbanTaskRepository(
+                [existingTask]));
+
+        KanbanTask updatedTask = service.UpdateTask(
+            existingTask.Id,
+            existingTask.Title,
+            existingTask.Description,
+            null,
+            existingTask.Status,
+            existingTask.Priority,
+            existingTask.DueDate,
+            existingTask.LinkedFileRelativePath);
+
+        Assert.Null(
+            updatedTask.ProjectId);
+
+        Assert.Empty(
+            updatedTask.LinkedFileRelativePath);
     }
 
     [Fact]
@@ -188,7 +351,8 @@ public sealed class KanbanBoardServiceTests
             thirdTask
         ]);
 
-        var service = new KanbanBoardService(repository);
+        var service =
+            new KanbanBoardService(repository);
 
         service.DeleteTask(secondTask.Id);
 
@@ -196,23 +360,42 @@ public sealed class KanbanBoardServiceTests
             service.Tasks,
             task =>
             {
-                Assert.Equal(firstTask.Id, task.Id);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    firstTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
             },
             task =>
             {
-                Assert.Equal(thirdTask.Id, task.Id);
-                Assert.Equal(1, task.SortOrder);
+                Assert.Equal(
+                    thirdTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    1,
+                    task.SortOrder);
             });
 
-        Assert.Equal(secondTask.Id, repository.DeletedTaskId);
-        Assert.Single(repository.SavedTasks);
-        Assert.Equal(thirdTask.Id, repository.SavedTasks[0].Id);
+        Assert.Equal(
+            secondTask.Id,
+            repository.DeletedTaskId);
+
+        Assert.Single(
+            repository.SavedTasks);
+
+        Assert.Equal(
+            thirdTask.Id,
+            repository.SavedTasks[0].Id);
     }
 
     [Fact]
     public void MoveTask_ToAnotherStatus_ReordersBothColumns()
     {
+        Guid projectId = Guid.NewGuid();
+
         KanbanTask firstOpenTask = CreateTask(
             "Erste offene Aufgabe",
             KanbanTaskStatus.Open,
@@ -221,7 +404,9 @@ public sealed class KanbanBoardServiceTests
         KanbanTask secondOpenTask = CreateTask(
             "Zweite offene Aufgabe",
             KanbanTaskStatus.Open,
-            1);
+            1,
+            "Features/Kanban/Pages/KanbanPage.razor",
+            projectId);
 
         KanbanTask inProgressTask = CreateTask(
             "Bereits in Arbeit",
@@ -235,7 +420,8 @@ public sealed class KanbanBoardServiceTests
             inProgressTask
         ]);
 
-        var service = new KanbanBoardService(repository);
+        var service =
+            new KanbanBoardService(repository);
 
         service.MoveTask(
             secondOpenTask.Id,
@@ -246,24 +432,54 @@ public sealed class KanbanBoardServiceTests
             service.Tasks,
             task =>
             {
-                Assert.Equal(firstOpenTask.Id, task.Id);
-                Assert.Equal(KanbanTaskStatus.Open, task.Status);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    firstOpenTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    KanbanTaskStatus.Open,
+                    task.Status);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
             },
             task =>
             {
-                Assert.Equal(secondOpenTask.Id, task.Id);
-                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    secondOpenTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    KanbanTaskStatus.InProgress,
+                    task.Status);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
+
+                Assert.Equal(
+                    secondOpenTask.LinkedFileRelativePath,
+                    task.LinkedFileRelativePath);
             },
             task =>
             {
-                Assert.Equal(inProgressTask.Id, task.Id);
-                Assert.Equal(KanbanTaskStatus.InProgress, task.Status);
-                Assert.Equal(1, task.SortOrder);
+                Assert.Equal(
+                    inProgressTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    KanbanTaskStatus.InProgress,
+                    task.Status);
+
+                Assert.Equal(
+                    1,
+                    task.SortOrder);
             });
 
-        Assert.Equal(2, repository.SavedTasks.Count);
+        Assert.Equal(
+            2,
+            repository.SavedTasks.Count);
     }
 
     [Fact]
@@ -291,7 +507,8 @@ public sealed class KanbanBoardServiceTests
             thirdTask
         ]);
 
-        var service = new KanbanBoardService(repository);
+        var service =
+            new KanbanBoardService(repository);
 
         service.MoveTask(
             thirdTask.Id,
@@ -302,27 +519,46 @@ public sealed class KanbanBoardServiceTests
             service.Tasks,
             task =>
             {
-                Assert.Equal(thirdTask.Id, task.Id);
-                Assert.Equal(0, task.SortOrder);
+                Assert.Equal(
+                    thirdTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    0,
+                    task.SortOrder);
             },
             task =>
             {
-                Assert.Equal(firstTask.Id, task.Id);
-                Assert.Equal(1, task.SortOrder);
+                Assert.Equal(
+                    firstTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    1,
+                    task.SortOrder);
             },
             task =>
             {
-                Assert.Equal(secondTask.Id, task.Id);
-                Assert.Equal(2, task.SortOrder);
+                Assert.Equal(
+                    secondTask.Id,
+                    task.Id);
+
+                Assert.Equal(
+                    2,
+                    task.SortOrder);
             });
 
-        Assert.Equal(3, repository.SavedTasks.Count);
+        Assert.Equal(
+            3,
+            repository.SavedTasks.Count);
     }
 
     private static KanbanTask CreateTask(
         string title,
         KanbanTaskStatus status,
-        int sortOrder)
+        int sortOrder,
+        string linkedFileRelativePath = "",
+        Guid? projectId = null)
     {
         DateTime now = DateTime.Now;
 
@@ -330,6 +566,9 @@ public sealed class KanbanBoardServiceTests
         {
             Id = Guid.NewGuid(),
             Title = title,
+            ProjectId = projectId,
+            LinkedFileRelativePath =
+                linkedFileRelativePath,
             Status = status,
             Priority = KanbanTaskPriority.Normal,
             SortOrder = sortOrder,
@@ -346,13 +585,17 @@ public sealed class KanbanBoardServiceTests
         public InMemoryKanbanTaskRepository(
             IEnumerable<KanbanTask>? tasks = null)
         {
-            this.tasks = tasks?.ToList() ?? [];
+            this.tasks =
+                tasks?.ToList() ?? [];
         }
 
         public KanbanTask? SavedTask { get; private set; }
 
-        public IReadOnlyList<KanbanTask> SavedTasks { get; private set; } =
-            Array.Empty<KanbanTask>();
+        public IReadOnlyList<KanbanTask> SavedTasks
+        {
+            get;
+            private set;
+        } = Array.Empty<KanbanTask>();
 
         public Guid? DeletedTaskId { get; private set; }
 
@@ -363,7 +606,8 @@ public sealed class KanbanBoardServiceTests
 
         public KanbanTask? GetById(Guid taskId)
         {
-            return tasks.FirstOrDefault(task => task.Id == taskId);
+            return tasks.FirstOrDefault(
+                task => task.Id == taskId);
         }
 
         public void Save(KanbanTask task)
@@ -372,13 +616,18 @@ public sealed class KanbanBoardServiceTests
             SaveAll([task]);
         }
 
-        public void SaveAll(IReadOnlyList<KanbanTask> tasksToSave)
+        public void SaveAll(
+            IReadOnlyList<KanbanTask> tasksToSave)
         {
-            SavedTasks = tasksToSave.ToList();
+            SavedTasks =
+                tasksToSave.ToList();
 
             foreach (KanbanTask task in tasksToSave)
             {
-                tasks.RemoveAll(existingTask => existingTask.Id == task.Id);
+                tasks.RemoveAll(
+                    existingTask =>
+                        existingTask.Id == task.Id);
+
                 tasks.Add(task);
             }
         }
@@ -386,7 +635,9 @@ public sealed class KanbanBoardServiceTests
         public void Delete(Guid taskId)
         {
             DeletedTaskId = taskId;
-            tasks.RemoveAll(task => task.Id == taskId);
+
+            tasks.RemoveAll(
+                task => task.Id == taskId);
         }
 
         public void DeleteAndSaveAll(

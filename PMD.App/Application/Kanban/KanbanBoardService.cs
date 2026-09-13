@@ -9,6 +9,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
 {
     private const int MaximumTitleLength = 160;
     private const int MaximumDescriptionLength = 2000;
+    private const int MaximumLinkedFileRelativePathLength = 1024;
 
     private readonly IKanbanTaskRepository taskRepository;
     private readonly List<KanbanTask> tasks;
@@ -363,9 +364,22 @@ public sealed class KanbanBoardService : IKanbanBoardService
             return string.Empty;
         }
 
-        return linkedFileRelativePath
-            .Trim()
-            .Replace('\\', '/');
+        string normalizedLinkedFileRelativePath =
+            linkedFileRelativePath
+                .Trim()
+                .Replace('\\', '/')
+                .TrimStart('/');
+
+        if (normalizedLinkedFileRelativePath.Length >
+            MaximumLinkedFileRelativePathLength)
+        {
+            throw new ArgumentException(
+                $"Der verknüpfte Dateipfad darf höchstens " +
+                $"{MaximumLinkedFileRelativePathLength} Zeichen lang sein.",
+                nameof(linkedFileRelativePath));
+        }
+
+        return normalizedLinkedFileRelativePath;
     }
 
     private static void ReindexColumn(

@@ -18,15 +18,45 @@ public sealed class KanbanTaskFilterTests
                 "Drag-and-drop prüfen")
         ];
 
-        IReadOnlyList<KanbanTask> result = KanbanTaskFilter.Apply(
-            tasks,
-            KanbanTaskFilterCriteria.Empty with
-            {
-                SearchText = "SPRACHDIAGRAMM"
-            });
+        IReadOnlyList<KanbanTask> result =
+            KanbanTaskFilter.Apply(
+                tasks,
+                KanbanTaskFilterCriteria.Empty with
+                {
+                    SearchText = "SPRACHDIAGRAMM"
+                });
 
-        KanbanTask matchingTask = Assert.Single(result);
-        Assert.Equal("Dashboard überarbeiten", matchingTask.Title);
+        KanbanTask matchingTask =
+            Assert.Single(result);
+
+        Assert.Equal(
+            "Dashboard überarbeiten",
+            matchingTask.Title);
+    }
+
+    [Fact]
+    public void Apply_SearchesLinkedFileRelativePath()
+    {
+        KanbanTask matchingTask = CreateTask(
+            "Datei prüfen",
+            projectId: Guid.NewGuid(),
+            linkedFileRelativePath:
+                "Features/Dashboard/Pages/DashboardPage.razor");
+
+        IReadOnlyList<KanbanTask> result =
+            KanbanTaskFilter.Apply(
+                [
+                    matchingTask,
+                    CreateTask("Andere Aufgabe")
+                ],
+                KanbanTaskFilterCriteria.Empty with
+                {
+                    SearchText = "DASHBOARDPAGE"
+                });
+
+        Assert.Same(
+            matchingTask,
+            Assert.Single(result));
     }
 
     [Fact]
@@ -40,53 +70,60 @@ public sealed class KanbanTaskFilterTests
             priority: KanbanTaskPriority.High,
             status: KanbanTaskStatus.InProgress);
 
-        IReadOnlyList<KanbanTask> result = KanbanTaskFilter.Apply(
-            [
-                matchingTask,
-                CreateTask(
-                    "Falsches Projekt",
-                    projectId: Guid.NewGuid(),
-                    priority: KanbanTaskPriority.High,
-                    status: KanbanTaskStatus.InProgress),
-                CreateTask(
-                    "Falsche Priorität",
-                    projectId: matchingProjectId,
-                    priority: KanbanTaskPriority.Normal,
-                    status: KanbanTaskStatus.InProgress),
-                CreateTask(
-                    "Falscher Status",
-                    projectId: matchingProjectId,
-                    priority: KanbanTaskPriority.High,
-                    status: KanbanTaskStatus.Open)
-            ],
-            new KanbanTaskFilterCriteria(
-                string.Empty,
-                matchingProjectId,
-                false,
-                KanbanTaskPriority.High,
-                KanbanTaskStatus.InProgress));
+        IReadOnlyList<KanbanTask> result =
+            KanbanTaskFilter.Apply(
+                [
+                    matchingTask,
+                    CreateTask(
+                        "Falsches Projekt",
+                        projectId: Guid.NewGuid(),
+                        priority: KanbanTaskPriority.High,
+                        status: KanbanTaskStatus.InProgress),
+                    CreateTask(
+                        "Falsche Priorität",
+                        projectId: matchingProjectId,
+                        priority: KanbanTaskPriority.Normal,
+                        status: KanbanTaskStatus.InProgress),
+                    CreateTask(
+                        "Falscher Status",
+                        projectId: matchingProjectId,
+                        priority: KanbanTaskPriority.High,
+                        status: KanbanTaskStatus.Open)
+                ],
+                new KanbanTaskFilterCriteria(
+                    string.Empty,
+                    matchingProjectId,
+                    false,
+                    KanbanTaskPriority.High,
+                    KanbanTaskStatus.InProgress));
 
-        Assert.Same(matchingTask, Assert.Single(result));
+        Assert.Same(
+            matchingTask,
+            Assert.Single(result));
     }
 
     [Fact]
     public void Apply_OnlyUnassignedProject_ExcludesAssignedTasks()
     {
-        KanbanTask unassignedTask = CreateTask("Ohne Projekt");
+        KanbanTask unassignedTask =
+            CreateTask("Ohne Projekt");
 
-        IReadOnlyList<KanbanTask> result = KanbanTaskFilter.Apply(
-            [
-                unassignedTask,
-                CreateTask(
-                    "Mit Projekt",
-                    projectId: Guid.NewGuid())
-            ],
-            KanbanTaskFilterCriteria.Empty with
-            {
-                OnlyUnassignedProject = true
-            });
+        IReadOnlyList<KanbanTask> result =
+            KanbanTaskFilter.Apply(
+                [
+                    unassignedTask,
+                    CreateTask(
+                        "Mit Projekt",
+                        projectId: Guid.NewGuid())
+                ],
+                KanbanTaskFilterCriteria.Empty with
+                {
+                    OnlyUnassignedProject = true
+                });
 
-        Assert.Same(unassignedTask, Assert.Single(result));
+        Assert.Same(
+            unassignedTask,
+            Assert.Single(result));
     }
 
     [Fact]
@@ -107,24 +144,41 @@ public sealed class KanbanTaskFilterTests
             status: KanbanTaskStatus.InProgress,
             sortOrder: 0);
 
-        IReadOnlyList<KanbanTask> result = KanbanTaskFilter.Apply(
-            [laterOpenTask, inProgressTask, firstOpenTask],
-            KanbanTaskFilterCriteria.Empty);
+        IReadOnlyList<KanbanTask> result =
+            KanbanTaskFilter.Apply(
+                [
+                    laterOpenTask,
+                    inProgressTask,
+                    firstOpenTask
+                ],
+                KanbanTaskFilterCriteria.Empty);
 
         Assert.Collection(
             result,
-            task => Assert.Same(firstOpenTask, task),
-            task => Assert.Same(laterOpenTask, task),
-            task => Assert.Same(inProgressTask, task));
+            task =>
+                Assert.Same(
+                    firstOpenTask,
+                    task),
+            task =>
+                Assert.Same(
+                    laterOpenTask,
+                    task),
+            task =>
+                Assert.Same(
+                    inProgressTask,
+                    task));
     }
 
     private static KanbanTask CreateTask(
         string title,
         string description = "",
         Guid? projectId = null,
-        KanbanTaskPriority priority = KanbanTaskPriority.Normal,
-        KanbanTaskStatus status = KanbanTaskStatus.Open,
-        int sortOrder = 0)
+        KanbanTaskPriority priority =
+            KanbanTaskPriority.Normal,
+        KanbanTaskStatus status =
+            KanbanTaskStatus.Open,
+        int sortOrder = 0,
+        string linkedFileRelativePath = "")
     {
         DateTime now = DateTime.Now;
 
@@ -134,6 +188,8 @@ public sealed class KanbanTaskFilterTests
             Title = title,
             Description = description,
             ProjectId = projectId,
+            LinkedFileRelativePath =
+                linkedFileRelativePath,
             Priority = priority,
             Status = status,
             SortOrder = sortOrder,
