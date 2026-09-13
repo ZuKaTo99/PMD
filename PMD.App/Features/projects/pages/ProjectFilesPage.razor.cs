@@ -13,52 +13,126 @@ namespace PMD.App.Features.Projects.Pages;
 
 public partial class ProjectFilesPage
 {
-    protected const string SortByPath = "path";
-    protected const string SortByExtension = "extension";
-    protected const string SortBySizeDescending = "size-desc";
-    protected const string SortByLastChangedDescending = "last-changed-desc";
+    protected const string SortByPath =
+        "path";
+
+    protected const string SortByExtension =
+        "extension";
+
+    protected const string SortBySizeDescending =
+        "size-desc";
+
+    protected const string SortByLastChangedDescending =
+        "last-changed-desc";
 
     [Inject]
-    private IProjectMemoryStore ProjectMemoryStore { get; set; } = default!;
+    private IProjectMemoryStore ProjectMemoryStore
+    {
+        get;
+        set;
+    } = default!;
 
     [Inject]
-    private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } = default!;
+    private IProjectStateMemoryStore ProjectStateMemoryStore
+    {
+        get;
+        set;
+    } = default!;
 
     [Inject]
-    private IProjectFileContentReader ProjectFileContentReader { get; set; } = default!;
+    private IProjectFileContentReader ProjectFileContentReader
+    {
+        get;
+        set;
+    } = default!;
 
     [Parameter]
-    public Guid ProjectId { get; set; }
+    public Guid ProjectId
+    {
+        get;
+        set;
+    }
 
     [SupplyParameterFromQuery(Name = "datei")]
-    public string? RequestedFilePath { get; set; }
+    public string? RequestedFilePath
+    {
+        get;
+        set;
+    }
 
     [SupplyParameterFromQuery(Name = "quelle")]
-    public string? SourceArea { get; set; }
+    public string? SourceArea
+    {
+        get;
+        set;
+    }
 
-    protected Project? CurrentProject { get; private set; }
+    protected Project? CurrentProject
+    {
+        get;
+        private set;
+    }
 
-    protected ProjectState? LatestProjectState { get; private set; }
+    protected ProjectState? LatestProjectState
+    {
+        get;
+        private set;
+    }
 
-    protected IReadOnlyList<ProjectStateFile> Files { get; private set; } =
-        Array.Empty<ProjectStateFile>();
+    protected IReadOnlyList<ProjectStateFile> Files
+    {
+        get;
+        private set;
+    } = Array.Empty<ProjectStateFile>();
 
-    protected ProjectStateFile? SelectedFile { get; private set; }
+    protected ProjectStateFile? SelectedFile
+    {
+        get;
+        private set;
+    }
 
-    protected ProjectFileContentResult? SelectedFileContentResult { get; private set; }
+    protected ProjectFileContentResult?
+        SelectedFileContentResult
+    {
+        get;
+        private set;
+    }
 
-    protected string SearchText { get; private set; } = string.Empty;
+    protected string SearchText
+    {
+        get;
+        private set;
+    } = string.Empty;
 
-    protected string SelectedExtension { get; private set; } = string.Empty;
+    protected string SelectedExtension
+    {
+        get;
+        private set;
+    } = string.Empty;
 
-    protected string SelectedSortMode { get; private set; } = SortByPath;
+    protected string SelectedSortMode
+    {
+        get;
+        private set;
+    } = SortByPath;
 
     protected bool HasFocusedFileRequest =>
-        !string.IsNullOrWhiteSpace(RequestedFilePath);
+        !string.IsNullOrWhiteSpace(
+            RequestedFilePath);
 
     protected bool OpenedFromChanges =>
         HasFocusedFileRequest &&
-        string.Equals(SourceArea, "aenderungen", StringComparison.OrdinalIgnoreCase);
+        string.Equals(
+            SourceArea,
+            "aenderungen",
+            StringComparison.OrdinalIgnoreCase);
+
+    protected bool OpenedFromKanban =>
+        HasFocusedFileRequest &&
+        string.Equals(
+            SourceArea,
+            "kanban",
+            StringComparison.OrdinalIgnoreCase);
 
     protected string FocusedFileDisplayPath
     {
@@ -69,12 +143,14 @@ public partial class ProjectFilesPage
                 return SelectedFile.RelativePath;
             }
 
-            if (string.IsNullOrWhiteSpace(RequestedFilePath))
+            if (string.IsNullOrWhiteSpace(
+                RequestedFilePath))
             {
                 return string.Empty;
             }
 
-            return DecodeRequestedFilePath(RequestedFilePath);
+            return DecodeRequestedFilePath(
+                RequestedFilePath);
         }
     }
 
@@ -85,55 +161,87 @@ public partial class ProjectFilesPage
         $"/projekte/{ProjectId}/dateien";
 
     protected bool HasActiveFilters =>
-        !string.IsNullOrWhiteSpace(SearchText) ||
-        !string.IsNullOrWhiteSpace(SelectedExtension);
+        !string.IsNullOrWhiteSpace(
+            SearchText) ||
+        !string.IsNullOrWhiteSpace(
+            SelectedExtension);
 
     protected string FileListResetKey =>
-        $"{ProjectId}\u001f{SearchText}\u001f{SelectedExtension}\u001f{SelectedSortMode}";
+        $"{ProjectId}\u001f" +
+        $"{SearchText}\u001f" +
+        $"{SelectedExtension}\u001f" +
+        $"{SelectedSortMode}";
 
-    protected string SelectedSortLabel => SelectedSortMode switch
-    {
-        SortByExtension => "Dateityp",
-        SortBySizeDescending => "Größe",
-        SortByLastChangedDescending => "Änderungsdatum",
-        _ => "Pfad"
-    };
+    protected string SelectedSortLabel =>
+        SelectedSortMode switch
+        {
+            SortByExtension =>
+                "Dateityp",
 
-    protected IReadOnlyList<string> AvailableExtensions => Files
-        .Select(file => file.Extension)
-        .Where(extension => !string.IsNullOrWhiteSpace(extension))
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(extension => extension, StringComparer.OrdinalIgnoreCase)
-        .ToList();
+            SortBySizeDescending =>
+                "Größe",
 
-    protected IReadOnlyList<ProjectStateFile> FilteredFiles => Files
-        .Where(MatchesSelectedExtension)
-        .Where(MatchesSearchText)
-        .ToList();
+            SortByLastChangedDescending =>
+                "Änderungsdatum",
 
-    protected IReadOnlyList<ProjectStateFile> VisibleFiles => SortFiles(FilteredFiles)
-        .ToList();
+            _ => "Pfad"
+        };
+
+    protected IReadOnlyList<string>
+        AvailableExtensions => Files
+            .Select(file => file.Extension)
+            .Where(extension =>
+                !string.IsNullOrWhiteSpace(
+                    extension))
+            .Distinct(
+                StringComparer.OrdinalIgnoreCase)
+            .OrderBy(
+                extension => extension,
+                StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    protected IReadOnlyList<ProjectStateFile>
+        FilteredFiles => Files
+            .Where(MatchesSelectedExtension)
+            .Where(MatchesSearchText)
+            .ToList();
+
+    protected IReadOnlyList<ProjectStateFile>
+        VisibleFiles => SortFiles(
+                FilteredFiles)
+            .ToList();
 
     protected override void OnParametersSet()
     {
         LoadProjectFiles();
     }
 
-    protected void OnSearchTextChanged(ChangeEventArgs eventArgs)
+    protected void OnSearchTextChanged(
+        ChangeEventArgs eventArgs)
     {
-        SearchText = eventArgs.Value?.ToString() ?? string.Empty;
+        SearchText =
+            eventArgs.Value?.ToString() ??
+            string.Empty;
+
         ClearSelectedFileIfFilteredOut();
     }
 
-    protected void OnSelectedExtensionChanged(ChangeEventArgs eventArgs)
+    protected void OnSelectedExtensionChanged(
+        ChangeEventArgs eventArgs)
     {
-        SelectedExtension = eventArgs.Value?.ToString() ?? string.Empty;
+        SelectedExtension =
+            eventArgs.Value?.ToString() ??
+            string.Empty;
+
         ClearSelectedFileIfFilteredOut();
     }
 
-    protected void OnSelectedSortModeChanged(ChangeEventArgs eventArgs)
+    protected void OnSelectedSortModeChanged(
+        ChangeEventArgs eventArgs)
     {
-        SelectedSortMode = eventArgs.Value?.ToString() ?? SortByPath;
+        SelectedSortMode =
+            eventArgs.Value?.ToString() ??
+            SortByPath;
     }
 
     protected void ClearFilters()
@@ -142,9 +250,12 @@ public partial class ProjectFilesPage
         SelectedExtension = string.Empty;
     }
 
-    protected void SelectFile(ProjectStateFile file)
+    protected void SelectFile(
+        ProjectStateFile file)
     {
-        if (!IsSameFile(file, SelectedFile))
+        if (!IsSameFile(
+            file,
+            SelectedFile))
         {
             SelectedFileContentResult = null;
         }
@@ -154,25 +265,32 @@ public partial class ProjectFilesPage
 
     protected void LoadSelectedFilePreview()
     {
-        if (SelectedFile is null || LatestProjectState is null)
+        if (SelectedFile is null ||
+            LatestProjectState is null)
         {
-            SelectedFileContentResult = ProjectFileContentResult.Blocked(
-                string.Empty,
-                "Es wurde keine Datei ausgewählt.");
+            SelectedFileContentResult =
+                ProjectFileContentResult.Blocked(
+                    string.Empty,
+                    "Es wurde keine Datei ausgewählt.");
 
             return;
         }
 
-        SelectedFileContentResult = ProjectFileContentReader.ReadPreview(
-            LatestProjectState.RootPath,
-            SelectedFile.RelativePath);
+        SelectedFileContentResult =
+            ProjectFileContentReader.ReadPreview(
+                LatestProjectState.RootPath,
+                SelectedFile.RelativePath);
     }
 
     private void LoadProjectFiles()
     {
-        CurrentProject = ProjectMemoryStore.GetProjectById(ProjectId);
+        CurrentProject =
+            ProjectMemoryStore.GetProjectById(
+                ProjectId);
+
         LatestProjectState = null;
-        Files = Array.Empty<ProjectStateFile>();
+        Files =
+            Array.Empty<ProjectStateFile>();
         SelectedFile = null;
         SelectedFileContentResult = null;
         SearchText = string.Empty;
@@ -184,37 +302,56 @@ public partial class ProjectFilesPage
             return;
         }
 
-        LatestProjectState = ProjectStateMemoryStore.GetLatestByProjectId(ProjectId);
+        LatestProjectState =
+            ProjectStateMemoryStore
+                .GetLatestByProjectId(
+                    ProjectId);
 
         if (LatestProjectState is null)
         {
             return;
         }
 
-        Files = ProjectStateMemoryStore.GetFilesByProjectStateId(LatestProjectState.Id);
+        Files =
+            ProjectStateMemoryStore
+                .GetFilesByProjectStateId(
+                    LatestProjectState.Id);
 
         TrySelectRequestedFile();
-
     }
 
-    private IEnumerable<ProjectStateFile> SortFiles(IReadOnlyList<ProjectStateFile> files)
+    private IEnumerable<ProjectStateFile>
+        SortFiles(
+            IReadOnlyList<ProjectStateFile> files)
     {
         return SelectedSortMode switch
         {
             SortByExtension => files
-                .OrderBy(file => file.Extension, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase),
+                .OrderBy(
+                    file => file.Extension,
+                    StringComparer.OrdinalIgnoreCase)
+                .ThenBy(
+                    file => file.RelativePath,
+                    StringComparer.OrdinalIgnoreCase),
 
             SortBySizeDescending => files
-                .OrderByDescending(file => file.SizeInBytes)
-                .ThenBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase),
+                .OrderByDescending(
+                    file => file.SizeInBytes)
+                .ThenBy(
+                    file => file.RelativePath,
+                    StringComparer.OrdinalIgnoreCase),
 
             SortByLastChangedDescending => files
-                .OrderByDescending(file => file.LastChangedAt)
-                .ThenBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase),
+                .OrderByDescending(
+                    file => file.LastChangedAt)
+                .ThenBy(
+                    file => file.RelativePath,
+                    StringComparer.OrdinalIgnoreCase),
 
             _ => files
-                .OrderBy(file => file.RelativePath, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(
+                    file => file.RelativePath,
+                    StringComparer.OrdinalIgnoreCase)
         };
     }
 
@@ -225,8 +362,11 @@ public partial class ProjectFilesPage
             return;
         }
 
-        bool selectedFileStillVisible = FilteredFiles
-            .Any(file => IsSameFile(file, SelectedFile));
+        bool selectedFileStillVisible =
+            FilteredFiles.Any(file =>
+                IsSameFile(
+                    file,
+                    SelectedFile));
 
         if (!selectedFileStillVisible)
         {
@@ -235,9 +375,11 @@ public partial class ProjectFilesPage
         }
     }
 
-    private bool MatchesSelectedExtension(ProjectStateFile file)
+    private bool MatchesSelectedExtension(
+        ProjectStateFile file)
     {
-        if (string.IsNullOrWhiteSpace(SelectedExtension))
+        if (string.IsNullOrWhiteSpace(
+            SelectedExtension))
         {
             return true;
         }
@@ -248,9 +390,11 @@ public partial class ProjectFilesPage
             StringComparison.OrdinalIgnoreCase);
     }
 
-    private bool MatchesSearchText(ProjectStateFile file)
+    private bool MatchesSearchText(
+        ProjectStateFile file)
     {
-        if (string.IsNullOrWhiteSpace(SearchText))
+        if (string.IsNullOrWhiteSpace(
+            SearchText))
         {
             return true;
         }
@@ -276,25 +420,32 @@ public partial class ProjectFilesPage
                 firstFile.RelativePath,
                 secondFile.RelativePath,
                 StringComparison.OrdinalIgnoreCase) &&
-            firstFile.LastChangedAt == secondFile.LastChangedAt &&
-            firstFile.SizeInBytes == secondFile.SizeInBytes;
+            firstFile.LastChangedAt ==
+                secondFile.LastChangedAt &&
+            firstFile.SizeInBytes ==
+                secondFile.SizeInBytes;
     }
 
     private void TrySelectRequestedFile()
     {
-        if (string.IsNullOrWhiteSpace(RequestedFilePath))
+        if (string.IsNullOrWhiteSpace(
+            RequestedFilePath))
         {
             return;
         }
 
-        string requestedFilePath = NormalizeRelativePath(
-            DecodeRequestedFilePath(RequestedFilePath));
+        string requestedFilePath =
+            NormalizeRelativePath(
+                DecodeRequestedFilePath(
+                    RequestedFilePath));
 
-        ProjectStateFile? requestedFile = Files.FirstOrDefault(file =>
-            string.Equals(
-                NormalizeRelativePath(file.RelativePath),
-                requestedFilePath,
-                StringComparison.OrdinalIgnoreCase));
+        ProjectStateFile? requestedFile =
+            Files.FirstOrDefault(file =>
+                string.Equals(
+                    NormalizeRelativePath(
+                        file.RelativePath),
+                    requestedFilePath,
+                    StringComparison.OrdinalIgnoreCase));
 
         if (requestedFile is null)
         {
@@ -302,25 +453,30 @@ public partial class ProjectFilesPage
             return;
         }
 
-        SearchText = requestedFile.RelativePath;
+        SearchText =
+            requestedFile.RelativePath;
+
         SelectedFile = requestedFile;
         SelectedFileContentResult = null;
 
         LoadSelectedFilePreview();
     }
 
-    private static string NormalizeRelativePath(string relativePath)
+    private static string NormalizeRelativePath(
+        string relativePath)
     {
         return relativePath
             .Replace('\\', '/')
             .Trim();
     }
 
-    private static string DecodeRequestedFilePath(string requestedFilePath)
+    private static string DecodeRequestedFilePath(
+        string requestedFilePath)
     {
         try
         {
-            return Uri.UnescapeDataString(requestedFilePath);
+            return Uri.UnescapeDataString(
+                requestedFilePath);
         }
         catch (UriFormatException)
         {

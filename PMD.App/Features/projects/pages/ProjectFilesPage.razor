@@ -8,32 +8,40 @@
     @if (CurrentProject is null)
     {
         <div class="alert alert-warning">
-            Das Projekt wurde nicht gefunden. Es ist nicht mehr in der Projektliste vorhanden.
+            Das Projekt wurde nicht gefunden.
+            Es ist nicht mehr in der Projektliste vorhanden.
         </div>
     }
     else
     {
         <div class="mb-4">
-            <div class="text-muted small mb-1">PMD - Dateien</div>
+            <div class="text-muted small mb-1">
+                PMD - Dateien
+            </div>
 
             <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
                 <div>
                     <h1>Dateien</h1>
+
                     <p class="text-muted mb-0">
-                        Dateiansicht für @CurrentProject.Name. Diese Ansicht basiert auf der letzten gespeicherten Prüfung.
+                        Dateiansicht für @CurrentProject.Name.
+                        Diese Ansicht basiert auf der letzten gespeicherten Prüfung.
                     </p>
                 </div>
 
                 <div class="d-flex gap-2 flex-wrap align-self-xl-start">
-                    <a class="btn btn-outline-secondary" href="@($"/projekte/{CurrentProject.Id}")">
+                    <a class="btn btn-outline-secondary"
+                       href="@($"/projekte/{CurrentProject.Id}")">
                         Zurück zum Projekt
                     </a>
 
-                    <a class="btn btn-outline-primary" href="@ProjectChangesLink">
+                    <a class="btn btn-outline-primary"
+                       href="@ProjectChangesLink">
                         Änderungen ansehen
                     </a>
 
-                    <a class="btn btn-outline-secondary" href="/projektpruefung">
+                    <a class="btn btn-outline-secondary"
+                       href="/projektpruefung">
                         Anderen Projektordner prüfen
                     </a>
                 </div>
@@ -43,7 +51,8 @@
         @if (LatestProjectState is null)
         {
             <div class="alert alert-info">
-                Für dieses Projekt gibt es noch keine gespeicherte Prüfung. Prüfe das Projekt zuerst, damit PMD die Dateien anzeigen kann.
+                Für dieses Projekt gibt es noch keine gespeicherte Prüfung.
+                Prüfe das Projekt zuerst, damit PMD die Dateien anzeigen kann.
             </div>
         }
         else
@@ -55,31 +64,45 @@
 
                 <div class="card-body">
                     <p class="text-muted">
-                        Diese Dateiansicht nutzt die zuletzt gespeicherte Prüfung aus SQLite.
+                        Diese Dateiansicht nutzt die zuletzt
+                        gespeicherte Prüfung aus SQLite.
                     </p>
 
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <div class="border rounded p-3 h-100">
-                                <div class="text-muted small">Letzte Prüfung</div>
+                                <div class="text-muted small">
+                                    Letzte Prüfung
+                                </div>
+
                                 <div class="fw-semibold">
-                                    @ProjectOverviewFormatter.FormatDateTime(LatestProjectState.ScannedAt)
+                                    @ProjectOverviewFormatter.FormatDateTime(
+                                        LatestProjectState.ScannedAt)
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-12 col-md-4">
                             <div class="border rounded p-3 h-100">
-                                <div class="text-muted small">Dateien</div>
-                                <div class="fw-semibold">@Files.Count</div>
+                                <div class="text-muted small">
+                                    Dateien
+                                </div>
+
+                                <div class="fw-semibold">
+                                    @Files.Count
+                                </div>
                             </div>
                         </div>
 
                         <div class="col-12 col-md-4">
                             <div class="border rounded p-3 h-100">
-                                <div class="text-muted small">Gesamtgröße</div>
+                                <div class="text-muted small">
+                                    Gesamtgröße
+                                </div>
+
                                 <div class="fw-semibold">
-                                    @ProjectOverviewFormatter.FormatFileSize(LatestProjectState.TotalSizeInBytes)
+                                    @ProjectOverviewFormatter.FormatFileSize(
+                                        LatestProjectState.TotalSizeInBytes)
                                 </div>
                             </div>
                         </div>
@@ -93,23 +116,30 @@
                     <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
                         <div>
                             <div class="fw-semibold mb-1">
-                                @(OpenedFromChanges ? "Aus Änderungen geöffnet" : "Datei direkt geöffnet")
+                                @(OpenedFromChanges
+                                    ? "Aus Änderungen geöffnet"
+                                    : OpenedFromKanban
+                                        ? "Aus Kanban geöffnet"
+                                        : "Datei direkt geöffnet")
                             </div>
 
                             @if (SelectedFile is not null)
                             {
                                 <div>
-                                    PMD hat die Datei gefunden und direkt ausgewählt:
+                                    PMD hat die Datei gefunden
+                                    und direkt ausgewählt:
                                 </div>
                             }
                             else
                             {
                                 <div>
-                                    PMD konnte diese Datei in der letzten Prüfung nicht finden:
+                                    PMD konnte diese Datei in der
+                                    letzten Prüfung nicht finden:
                                 </div>
                             }
 
-                            <code class="d-block mt-2 text-break" title="@FocusedFileDisplayPath">
+                            <code class="d-block mt-2 text-break"
+                                  title="@FocusedFileDisplayPath">
                                 @FocusedFileDisplayPath
                             </code>
                         </div>
@@ -120,6 +150,13 @@
                                 <a class="btn btn-outline-primary btn-sm"
                                    href="@ProjectChangesLink">
                                     Zurück zu Änderungen
+                                </a>
+                            }
+                            else if (OpenedFromKanban)
+                            {
+                                <a class="btn btn-outline-primary btn-sm"
+                                   href="/kanban">
+                                    Zurück zum Kanban
                                 </a>
                             }
 
@@ -136,9 +173,14 @@
                 <div class="card-header">
                     <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
                         <div>
-                            <h2 class="h5 mb-1">Dateien durchsuchen</h2>
+                            <h2 class="h5 mb-1">
+                                Dateien durchsuchen
+                            </h2>
+
                             <div class="text-muted small">
-                                Suche gezielt nach Dateien, filtere nach Dateityp oder ändere die Sortierung.
+                                Suche gezielt nach Dateien,
+                                filtere nach Dateityp oder
+                                ändere die Sortierung.
                             </div>
                         </div>
 
@@ -171,8 +213,10 @@
                         </div>
 
                         <div class="pmd-detail-pane">
-                            <ProjectFileDetailCard SelectedFile="SelectedFile"
+                            <ProjectFileDetailCard ProjectId="@ProjectId"
+                                                   SelectedFile="SelectedFile"
                                                    SelectedFileContentResult="SelectedFileContentResult"
+                                                   ShowCreateTaskAction="true"
                                                    OnLoadPreview="LoadSelectedFilePreview" />
                         </div>
                     </div>

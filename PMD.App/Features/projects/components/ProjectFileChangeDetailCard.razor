@@ -81,35 +81,40 @@
                     <div class="border rounded p-3 h-100 pmd-detail-item">
                         <div class="text-muted small">Dateityp</div>
                         <div class="fw-semibold">
-                            @ProjectOverviewFormatter.FormatExtension(SelectedChange.Extension)
+                            @ProjectOverviewFormatter.FormatExtension(
+                                SelectedChange.Extension)
                         </div>
                     </div>
 
                     <div class="border rounded p-3 h-100 pmd-detail-item">
                         <div class="text-muted small">Vorherige Größe</div>
                         <div class="fw-semibold">
-                            @FormatFileSize(SelectedChange.PreviousFile)
+                            @FormatFileSize(
+                                SelectedChange.PreviousFile)
                         </div>
                     </div>
 
                     <div class="border rounded p-3 h-100 pmd-detail-item">
                         <div class="text-muted small">Letzte Größe</div>
                         <div class="fw-semibold">
-                            @FormatFileSize(SelectedChange.LatestFile)
+                            @FormatFileSize(
+                                SelectedChange.LatestFile)
                         </div>
                     </div>
 
                     <div class="border rounded p-3 h-100 pmd-detail-item">
                         <div class="text-muted small">Vorher geändert</div>
                         <div class="fw-semibold">
-                            @FormatLastChangedAt(SelectedChange.PreviousFile)
+                            @FormatLastChangedAt(
+                                SelectedChange.PreviousFile)
                         </div>
                     </div>
 
                     <div class="border rounded p-3 h-100 pmd-detail-item">
                         <div class="text-muted small">Zuletzt geändert</div>
                         <div class="fw-semibold">
-                            @FormatLastChangedAt(SelectedChange.LatestFile)
+                            @FormatLastChangedAt(
+                                SelectedChange.LatestFile)
                         </div>
                     </div>
                 </div>
@@ -154,6 +159,16 @@
                         </div>
                     }
                 }
+
+                @if (ShowCreateTaskAction)
+                {
+                    <div class="pmd-responsive-actions">
+                        <a class="btn btn-outline-secondary"
+                           href="@CreateTaskLink">
+                            Aufgabe für Datei erstellen
+                        </a>
+                    </div>
+                }
             </div>
         }
     </div>
@@ -169,26 +184,35 @@
     [Parameter]
     public bool ShowFileOpenAction { get; set; } = true;
 
+    [Parameter]
+    public bool ShowCreateTaskAction { get; set; }
+
     private bool CanOpenLatestFile =>
         SelectedChange?.LatestFile is not null;
 
     private bool CanShowCodeChangeSections =>
         SelectedChange is not null &&
-        SelectedChange.ChangeKind != ProjectFileChangeKind.Unchanged &&
+        SelectedChange.ChangeKind !=
+            ProjectFileChangeKind.Unchanged &&
         HasAnyTextSnapshot;
 
     private bool CanShowMissingTextSnapshotHint =>
         SelectedChange is not null &&
-        SelectedChange.ChangeKind != ProjectFileChangeKind.Unchanged &&
+        SelectedChange.ChangeKind !=
+            ProjectFileChangeKind.Unchanged &&
         !HasAnyTextSnapshot;
 
     private bool HasAnyTextSnapshot =>
-        HasTextSnapshot(SelectedChange?.PreviousFile) ||
-        HasTextSnapshot(SelectedChange?.LatestFile);
+        HasTextSnapshot(
+            SelectedChange?.PreviousFile) ||
+        HasTextSnapshot(
+            SelectedChange?.LatestFile);
 
-    private static bool HasTextSnapshot(ProjectStateFile? file)
+    private static bool HasTextSnapshot(
+        ProjectStateFile? file)
     {
-        return !string.IsNullOrWhiteSpace(file?.TextSnapshotContent);
+        return !string.IsNullOrWhiteSpace(
+            file?.TextSnapshotContent);
     }
 
     private string LatestFileDetailsLink
@@ -200,10 +224,41 @@
                 return "#";
             }
 
-            string encodedRelativePath = Uri.EscapeDataString(
-                SelectedChange.LatestFile.RelativePath);
+            string encodedRelativePath =
+                Uri.EscapeDataString(
+                    SelectedChange
+                        .LatestFile
+                        .RelativePath);
 
-            return $"/projekte/{ProjectId}/dateien?datei={encodedRelativePath}&quelle=aenderungen";
+            return
+                $"/projekte/{ProjectId}/dateien" +
+                $"?datei={encodedRelativePath}" +
+                "&quelle=aenderungen";
+        }
+    }
+
+    private string CreateTaskLink
+    {
+        get
+        {
+            if (SelectedChange is null)
+            {
+                return "/kanban";
+            }
+
+            string encodedFilePath =
+                Uri.EscapeDataString(
+                    SelectedChange.RelativePath);
+
+            string encodedTitle =
+                Uri.EscapeDataString(
+                    $"Aufgabe für " +
+                    $"{SelectedChange.FileName}");
+
+            return
+                $"/kanban?projekt={ProjectId}" +
+                $"&datei={encodedFilePath}" +
+                $"&titel={encodedTitle}";
         }
     }
 
@@ -218,44 +273,74 @@
 
             return SelectedChange.ChangeKind switch
             {
-                ProjectFileChangeKind.Added => new[] { "Neue Datei" },
-                ProjectFileChangeKind.Removed => new[] { "Datei entfernt" },
-                ProjectFileChangeKind.Unchanged => new[] { "Keine auffällige Änderung" },
-                ProjectFileChangeKind.Modified => GetModifiedChangeReasons(),
+                ProjectFileChangeKind.Added =>
+                    new[] { "Neue Datei" },
+
+                ProjectFileChangeKind.Removed =>
+                    new[] { "Datei entfernt" },
+
+                ProjectFileChangeKind.Unchanged =>
+                    new[]
+                    {
+                        "Keine auffällige Änderung"
+                    },
+
+                ProjectFileChangeKind.Modified =>
+                    GetModifiedChangeReasons(),
+
                 _ => new[] { "Unbekannte Änderung" }
             };
         }
     }
 
-    private IReadOnlyList<string> GetModifiedChangeReasons()
+    private IReadOnlyList<string>
+        GetModifiedChangeReasons()
     {
         List<string> reasons = new();
 
-        if (SelectedChange?.PreviousFile is null || SelectedChange.LatestFile is null)
+        if (SelectedChange?.PreviousFile is null ||
+            SelectedChange.LatestFile is null)
         {
-            reasons.Add("Dateidaten unvollständig");
+            reasons.Add(
+                "Dateidaten unvollständig");
+
             return reasons;
         }
 
         if (HasUsableContentHashes(
-            SelectedChange.PreviousFile,
-            SelectedChange.LatestFile) &&
+                SelectedChange.PreviousFile,
+                SelectedChange.LatestFile) &&
             !string.Equals(
-                SelectedChange.PreviousFile.ContentHashSha256,
-                SelectedChange.LatestFile.ContentHashSha256,
+                SelectedChange
+                    .PreviousFile
+                    .ContentHashSha256,
+                SelectedChange
+                    .LatestFile
+                    .ContentHashSha256,
                 StringComparison.OrdinalIgnoreCase))
         {
             reasons.Add("Inhalt geändert");
         }
 
-        if (SelectedChange.PreviousFile.SizeInBytes != SelectedChange.LatestFile.SizeInBytes)
+        if (SelectedChange
+                .PreviousFile
+                .SizeInBytes !=
+            SelectedChange
+                .LatestFile
+                .SizeInBytes)
         {
             reasons.Add("Größe geändert");
         }
 
-        if (SelectedChange.PreviousFile.LastChangedAt != SelectedChange.LatestFile.LastChangedAt)
+        if (SelectedChange
+                .PreviousFile
+                .LastChangedAt !=
+            SelectedChange
+                .LatestFile
+                .LastChangedAt)
         {
-            reasons.Add("Änderungsdatum geändert");
+            reasons.Add(
+                "Änderungsdatum geändert");
         }
 
         if (reasons.Count == 0)
@@ -270,96 +355,135 @@
         ProjectStateFile previousFile,
         ProjectStateFile latestFile)
     {
-        return !string.IsNullOrWhiteSpace(previousFile.ContentHashSha256) &&
-            !string.IsNullOrWhiteSpace(latestFile.ContentHashSha256);
+        return
+            !string.IsNullOrWhiteSpace(
+                previousFile.ContentHashSha256) &&
+            !string.IsNullOrWhiteSpace(
+                latestFile.ContentHashSha256);
     }
 
     private string FormatSizeDifference()
     {
-        if (SelectedChange?.PreviousFile is null || SelectedChange.LatestFile is null)
+        if (SelectedChange?.PreviousFile is null ||
+            SelectedChange.LatestFile is null)
         {
             return "Nicht berechenbar";
         }
 
         long difference =
-            SelectedChange.LatestFile.SizeInBytes -
-            SelectedChange.PreviousFile.SizeInBytes;
+            SelectedChange
+                .LatestFile
+                .SizeInBytes -
+            SelectedChange
+                .PreviousFile
+                .SizeInBytes;
 
         if (difference == 0)
         {
             return "Keine Größenänderung";
         }
 
-        string prefix = difference > 0 ? "+" : "-";
-        long absoluteDifference = Math.Abs(difference);
+        string prefix =
+            difference > 0 ? "+" : "-";
 
-        return $"{prefix}{ProjectOverviewFormatter.FormatFileSize(absoluteDifference)}";
+        long absoluteDifference =
+            Math.Abs(difference);
+
+        return
+            $"{prefix}" +
+            $"{ProjectOverviewFormatter.FormatFileSize(
+                absoluteDifference)}";
     }
 
     private string FormatLastChangedDifference()
     {
-        if (SelectedChange?.PreviousFile is null || SelectedChange.LatestFile is null)
+        if (SelectedChange?.PreviousFile is null ||
+            SelectedChange.LatestFile is null)
         {
             return "Nicht berechenbar";
         }
 
         TimeSpan difference =
-            SelectedChange.LatestFile.LastChangedAt -
-            SelectedChange.PreviousFile.LastChangedAt;
+            SelectedChange
+                .LatestFile
+                .LastChangedAt -
+            SelectedChange
+                .PreviousFile
+                .LastChangedAt;
 
         if (difference == TimeSpan.Zero)
         {
             return "Kein Zeitunterschied";
         }
 
-        TimeSpan absoluteDifference = difference.Duration();
+        TimeSpan absoluteDifference =
+            difference.Duration();
 
         if (absoluteDifference.TotalDays >= 1)
         {
-            return $"{absoluteDifference.TotalDays:0.#} Tage";
+            return
+                $"{absoluteDifference.TotalDays:0.#} Tage";
         }
 
         if (absoluteDifference.TotalHours >= 1)
         {
-            return $"{absoluteDifference.TotalHours:0.#} Stunden";
+            return
+                $"{absoluteDifference.TotalHours:0.#} Stunden";
         }
 
         if (absoluteDifference.TotalMinutes >= 1)
         {
-            return $"{absoluteDifference.TotalMinutes:0.#} Minuten";
+            return
+                $"{absoluteDifference.TotalMinutes:0.#} Minuten";
         }
 
-        return $"{absoluteDifference.TotalSeconds:0.#} Sekunden";
+        return
+            $"{absoluteDifference.TotalSeconds:0.#} Sekunden";
     }
 
-    private static string FormatFileSize(ProjectStateFile? file)
+    private static string FormatFileSize(
+        ProjectStateFile? file)
     {
         if (file is null)
         {
             return "Nicht vorhanden";
         }
 
-        return ProjectOverviewFormatter.FormatFileSize(file.SizeInBytes);
+        return
+            ProjectOverviewFormatter.FormatFileSize(
+                file.SizeInBytes);
     }
 
-    private static string FormatLastChangedAt(ProjectStateFile? file)
+    private static string FormatLastChangedAt(
+        ProjectStateFile? file)
     {
         if (file is null)
         {
             return "Nicht vorhanden";
         }
 
-        return ProjectOverviewFormatter.FormatDateTime(file.LastChangedAt);
+        return
+            ProjectOverviewFormatter.FormatDateTime(
+                file.LastChangedAt);
     }
 
-    private static string FormatChangeKind(ProjectFileChangeKind changeKind)
+    private static string FormatChangeKind(
+        ProjectFileChangeKind changeKind)
     {
         return changeKind switch
         {
-            ProjectFileChangeKind.Added => "Neue Datei",
-            ProjectFileChangeKind.Modified => "Geänderte Datei",
-            ProjectFileChangeKind.Removed => "Entfernte Datei",
-            ProjectFileChangeKind.Unchanged => "Unverändert",
+            ProjectFileChangeKind.Added =>
+                "Neue Datei",
+
+            ProjectFileChangeKind.Modified =>
+                "Geänderte Datei",
+
+            ProjectFileChangeKind.Removed =>
+                "Entfernte Datei",
+
+            ProjectFileChangeKind.Unchanged =>
+                "Unverändert",
+
             _ => "Unbekannt"
         };
     }
