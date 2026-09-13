@@ -87,53 +87,63 @@
                     </select>
                 </div>
 
-                @if (!string.IsNullOrWhiteSpace(SelectedProjectId))
-                {
-                    IReadOnlyList<ProjectStateFile> projectFiles =
-                        GetProjectFiles(SelectedProjectId);
+                <div class="kanban-field kanban-field-linked-file">
+                    <label class="form-label"
+                           for="kanban-task-linked-file">
+                        Projektdatei
+                        <span class="text-muted">
+                            (optional)
+                        </span>
+                    </label>
 
-                    <div class="kanban-field kanban-field-linked-file">
-                        <label class="form-label"
-                               for="kanban-task-linked-file">
-                            Projektdatei
-                            <span class="text-muted">
-                                (optional)
-                            </span>
-                        </label>
+                    <input id="kanban-task-linked-file"
+                           class="form-control kanban-linked-file-select"
+                           type="search"
+                           list="kanban-task-linked-file-options"
+                           maxlength="1024"
+                           disabled="@(!HasSelectedCreateProject)"
+                           placeholder="Relativen Dateipfad eingeben oder auswählen"
+                           @bind="NewTaskLinkedFileRelativePath"
+                           @bind:event="oninput" />
 
-                        @if (projectFiles.Count == 0)
+                    <datalist id="kanban-task-linked-file-options">
+                        @foreach (ProjectStateFile file in
+                            SuggestedCreateProjectFiles)
                         {
-                            <div class="kanban-linked-file-empty"
-                                 role="status">
-                                Für dieses Projekt ist noch kein gespeicherter Projektstand mit Dateien vorhanden.
-                            </div>
+                            string linkedFilePath =
+                                GetLinkedFilePath(file);
+
+                            <option value="@linkedFilePath"></option>
+                        }
+                    </datalist>
+
+                    <div class="kanban-linked-file-help">
+                        @if (!HasSelectedCreateProject)
+                        {
+                            <span>
+                                Eine Datei kann nur zusammen mit einem Projekt verknüpft werden.
+                            </span>
+                        }
+                        else if (SuggestedCreateProjectFiles.Count == 0)
+                        {
+                            <span>
+                                Für die letzte Prüfung wurden keine Dateivorschläge gefunden. Ein relativer Pfad kann trotzdem eingetragen werden.
+                            </span>
+                        }
+                        else if (HasMoreCreateProjectFiles)
+                        {
+                            <span>
+                                Die ersten 250 Dateien werden vorgeschlagen. Weitere Dateien können über ihren relativen Pfad eingetragen werden.
+                            </span>
                         }
                         else
                         {
-                            <select id="kanban-task-linked-file"
-                                    class="form-select kanban-linked-file-select"
-                                    @bind="NewTaskLinkedFileRelativePath">
-                                <option value="">
-                                    Keine Datei verknüpfen
-                                </option>
-
-                                @foreach (ProjectStateFile file in projectFiles)
-                                {
-                                    string linkedFilePath =
-                                        GetLinkedFilePath(file);
-
-                                    <option value="@linkedFilePath">
-                                        @linkedFilePath
-                                    </option>
-                                }
-                            </select>
-
-                            <div class="kanban-linked-file-help">
-                                Grundlage ist die letzte gespeicherte Projektprüfung mit @projectFiles.Count Dateien.
-                            </div>
+                            <span>
+                                Datei aus der letzten gespeicherten Prüfung auswählen oder den relativen Pfad eingeben.
+                            </span>
                         }
                     </div>
-                }
+                </div>
 
                 <div class="kanban-field">
                     <label class="form-label"
@@ -306,77 +316,67 @@
                     </select>
                 </div>
 
-                @if (!string.IsNullOrWhiteSpace(EditProjectId))
-                {
-                    IReadOnlyList<ProjectStateFile> projectFiles =
-                        GetProjectFiles(EditProjectId);
+                <div class="kanban-field kanban-field-linked-file">
+                    <label class="form-label"
+                           for="kanban-edit-task-linked-file">
+                        Projektdatei
+                        <span class="text-muted">
+                            (optional)
+                        </span>
+                    </label>
 
-                    bool linkedFileIsMissing =
-                        !string.IsNullOrWhiteSpace(
-                            EditTaskLinkedFileRelativePath) &&
-                        !ContainsLinkedFile(
-                            projectFiles,
-                            EditTaskLinkedFileRelativePath);
+                    <input id="kanban-edit-task-linked-file"
+                           class="form-control kanban-linked-file-select"
+                           type="search"
+                           list="kanban-edit-task-linked-file-options"
+                           maxlength="1024"
+                           disabled="@(!HasSelectedEditProject)"
+                           placeholder="Relativen Dateipfad eingeben oder auswählen"
+                           @bind="EditTaskLinkedFileRelativePath"
+                           @bind:event="oninput" />
 
-                    <div class="kanban-field kanban-field-linked-file">
-                        <label class="form-label"
-                               for="kanban-edit-task-linked-file">
-                            Projektdatei
-                            <span class="text-muted">
-                                (optional)
-                            </span>
-                        </label>
-
-                        @if (projectFiles.Count == 0 &&
-                            !linkedFileIsMissing)
+                    <datalist id="kanban-edit-task-linked-file-options">
+                        @foreach (ProjectStateFile file in
+                            SuggestedEditProjectFiles)
                         {
-                            <div class="kanban-linked-file-empty"
-                                 role="status">
-                                Für dieses Projekt ist noch kein gespeicherter Projektstand mit Dateien vorhanden.
-                            </div>
+                            string linkedFilePath =
+                                GetLinkedFilePath(file);
+
+                            <option value="@linkedFilePath"></option>
                         }
-                        else
-                        {
-                            <select id="kanban-edit-task-linked-file"
-                                    class="form-select kanban-linked-file-select"
-                                    @bind="EditTaskLinkedFileRelativePath">
-                                <option value="">
-                                    Keine Datei verknüpfen
-                                </option>
+                    </datalist>
 
-                                @if (linkedFileIsMissing)
-                                {
-                                    <option value="@EditTaskLinkedFileRelativePath">
-                                        Bisherige Verknüpfung: @EditTaskLinkedFileRelativePath
-                                    </option>
-                                }
-
-                                @foreach (ProjectStateFile file in projectFiles)
-                                {
-                                    string linkedFilePath =
-                                        GetLinkedFilePath(file);
-
-                                    <option value="@linkedFilePath">
-                                        @linkedFilePath
-                                    </option>
-                                }
-                            </select>
-
-                            @if (linkedFileIsMissing)
-                            {
-                                <div class="kanban-linked-file-warning">
-                                    Die bisher verknüpfte Datei ist im neuesten Projektstand nicht mehr enthalten. Sie bleibt erhalten, bis du eine andere Auswahl triffst.
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="kanban-linked-file-help">
-                                    Grundlage ist die letzte gespeicherte Projektprüfung mit @projectFiles.Count Dateien.
-                                </div>
-                            }
-                        }
-                    </div>
-                }
+                    @if (!HasSelectedEditProject)
+                    {
+                        <div class="kanban-linked-file-help">
+                            Ohne Projekt wird eine vorhandene Dateiverknüpfung entfernt.
+                        </div>
+                    }
+                    else if (EditLinkedFileIsMissing)
+                    {
+                        <div class="kanban-linked-file-warning">
+                            Die bisher verknüpfte Datei ist im neuesten Projektstand nicht mehr enthalten. Sie bleibt erhalten, bis du eine andere Auswahl triffst.
+                        </div>
+                    }
+                    else if (SuggestedEditProjectFiles.Count == 0)
+                    {
+                        <div class="kanban-linked-file-help">
+                            Für die letzte Prüfung wurden keine Dateivorschläge gefunden. Ein relativer Pfad kann trotzdem eingetragen werden.
+                        </div>
+                    }
+                    else if (HasMoreEditProjectFiles)
+                    {
+                        <div class="kanban-linked-file-help">
+                            Die ersten 250 Dateien werden vorgeschlagen. Weitere Dateien können über ihren relativen Pfad eingetragen werden.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="kanban-linked-file-help">
+                            Datei aus der letzten gespeicherten Prüfung auswählen oder den relativen Pfad eingeben.
+                        </div>
+                    }
+                </div>
 
                 <div class="kanban-field">
                     <label class="form-label"
