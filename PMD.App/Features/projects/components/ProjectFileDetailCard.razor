@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @using PMD.App.Domain.ProjectFiles
 @using PMD.App.Domain.ProjectStates
+@using System
 
 <div class="card h-100">
     <div class="card-header">
@@ -57,11 +58,21 @@
                     </div>
                 </div>
 
-                <button class="btn btn-outline-primary"
-                        type="button"
-                        @onclick="OnLoadPreview">
-                    Vorschau laden
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-primary"
+                            type="button"
+                            @onclick="OnLoadPreview">
+                        Vorschau laden
+                    </button>
+
+                    @if (ShowCreateTaskAction)
+                    {
+                        <a class="btn btn-outline-secondary"
+                           href="@CreateTaskLink">
+                            Aufgabe für Datei erstellen
+                        </a>
+                    }
+                </div>
 
                 <ProjectFilePreviewCard PreviewResult="SelectedFileContentResult" />
             </div>
@@ -78,4 +89,30 @@
 
     [Parameter]
     public EventCallback OnLoadPreview { get; set; }
+
+    [Parameter]
+    public Guid ProjectId { get; set; }
+
+    [Parameter]
+    public bool ShowCreateTaskAction { get; set; }
+
+    private string CreateTaskLink
+    {
+        get
+        {
+            if (SelectedFile is null)
+            {
+                return "/kanban";
+            }
+
+            string encodedFilePath = Uri.EscapeDataString(
+                SelectedFile.RelativePath);
+            string encodedTitle = Uri.EscapeDataString(
+                $"Aufgabe für {SelectedFile.FileName}");
+
+            return $"/kanban?projekt={ProjectId}" +
+                $"&datei={encodedFilePath}" +
+                $"&titel={encodedTitle}";
+        }
+    }
 }

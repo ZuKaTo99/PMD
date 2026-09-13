@@ -60,6 +60,10 @@ public partial class ProjectFilesPage
         HasFocusedFileRequest &&
         string.Equals(SourceArea, "aenderungen", StringComparison.OrdinalIgnoreCase);
 
+    protected bool OpenedFromKanban =>
+        HasFocusedFileRequest &&
+        string.Equals(SourceArea, "kanban", StringComparison.OrdinalIgnoreCase);
+
     protected string FocusedFileDisplayPath
     {
         get

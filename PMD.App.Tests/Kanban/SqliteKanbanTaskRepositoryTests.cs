@@ -36,7 +36,7 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void Save_PersistsKanbanTaskWithProjectPriorityAndDueDate()
+    public void Save_PersistsKanbanTaskWithProjectPriorityDueDateAndFile()
     {
         Guid projectId = Guid.NewGuid();
         var task = new KanbanTask
@@ -45,6 +45,7 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             Title = "Kanban-Grundlage testen",
             Description = "Die Aufgabe muss nach einem Neustart erhalten bleiben.",
             ProjectId = projectId,
+            ProjectFilePath = "Features/Kanban/Pages/KanbanPage.razor",
             Status = KanbanTaskStatus.InProgress,
             Priority = KanbanTaskPriority.High,
             SortOrder = 3,
@@ -61,6 +62,9 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
         Assert.Equal(task.Title, loadedTask!.Title);
         Assert.Equal(task.Description, loadedTask.Description);
         Assert.Equal(projectId, loadedTask.ProjectId);
+        Assert.Equal(
+            "Features/Kanban/Pages/KanbanPage.razor",
+            loadedTask.ProjectFilePath);
         Assert.Equal(KanbanTaskStatus.InProgress, loadedTask.Status);
         Assert.Equal(KanbanTaskPriority.High, loadedTask.Priority);
         Assert.Equal(3, loadedTask.SortOrder);
@@ -240,6 +244,7 @@ public sealed class SqliteKanbanTaskRepositoryTests : IDisposable
             Title = task.Title,
             Description = task.Description,
             ProjectId = task.ProjectId,
+            ProjectFilePath = task.ProjectFilePath,
             Status = status,
             Priority = task.Priority,
             SortOrder = sortOrder,

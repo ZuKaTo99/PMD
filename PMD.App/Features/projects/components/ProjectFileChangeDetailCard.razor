@@ -154,6 +154,16 @@
                         </div>
                     }
                 }
+
+                @if (ShowCreateTaskAction)
+                {
+                    <div class="pmd-responsive-actions">
+                        <a class="btn btn-outline-secondary"
+                           href="@CreateTaskLink">
+                            Aufgabe für Datei erstellen
+                        </a>
+                    </div>
+                }
             </div>
         }
     </div>
@@ -168,6 +178,9 @@
 
     [Parameter]
     public bool ShowFileOpenAction { get; set; } = true;
+
+    [Parameter]
+    public bool ShowCreateTaskAction { get; set; }
 
     private bool CanOpenLatestFile =>
         SelectedChange?.LatestFile is not null;
@@ -204,6 +217,26 @@
                 SelectedChange.LatestFile.RelativePath);
 
             return $"/projekte/{ProjectId}/dateien?datei={encodedRelativePath}&quelle=aenderungen";
+        }
+    }
+
+    private string CreateTaskLink
+    {
+        get
+        {
+            if (SelectedChange is null)
+            {
+                return "/kanban";
+            }
+
+            string encodedFilePath = Uri.EscapeDataString(
+                SelectedChange.RelativePath);
+            string encodedTitle = Uri.EscapeDataString(
+                $"Aufgabe für {SelectedChange.FileName}");
+
+            return $"/kanban?projekt={ProjectId}" +
+                $"&datei={encodedFilePath}" +
+                $"&titel={encodedTitle}";
         }
     }
 

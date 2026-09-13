@@ -41,7 +41,7 @@
 
 .kanban-task-form-grid {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) repeat(4, minmax(9rem, 1fr));
+    grid-template-columns: minmax(0, 2fr) repeat(5, minmax(9rem, 1fr));
     gap: 0.9rem;
 }
 
@@ -51,6 +51,10 @@
 
 .kanban-field-title {
     min-width: 14rem;
+}
+
+.kanban-field-file {
+    min-width: 13rem;
 }
 
 .kanban-field-description {
@@ -416,6 +420,45 @@
 
 .kanban-due-upcoming {
     color: var(--bs-secondary-color);
+}
+
+.kanban-task-file-reference {
+    min-width: 0;
+}
+
+.kanban-task-file-reference a,
+.kanban-task-file-reference span {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 0.4rem;
+    padding: 0.42rem 0.5rem;
+    color: var(--bs-secondary-color);
+    border: 1px solid var(--pmd-border);
+    border-radius: 0.65rem;
+    background: var(--pmd-surface-subtle);
+    text-decoration: none;
+}
+
+.kanban-task-file-reference a:hover,
+.kanban-task-file-reference a:focus-visible {
+    color: var(--bs-primary);
+    border-color: color-mix(in srgb, var(--bs-primary) 35%, var(--pmd-border));
+}
+
+.kanban-task-file-reference svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: 0 0 auto;
+}
+
+.kanban-task-file-reference code {
+    min-width: 0;
+    overflow: hidden;
+    color: inherit;
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .kanban-task-description {

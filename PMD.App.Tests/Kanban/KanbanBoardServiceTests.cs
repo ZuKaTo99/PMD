@@ -25,11 +25,15 @@ public sealed class KanbanBoardServiceTests
             projectId,
             KanbanTaskStatus.Open,
             KanbanTaskPriority.High,
-            new DateTime(2026, 7, 20, 18, 30, 0));
+            new DateTime(2026, 7, 20, 18, 30, 0),
+            "Features\\Kanban\\Pages\\KanbanPage.razor");
 
         Assert.Equal("Neue Aufgabe", createdTask.Title);
         Assert.Equal("Beschreibung", createdTask.Description);
         Assert.Equal(projectId, createdTask.ProjectId);
+        Assert.Equal(
+            "Features/Kanban/Pages/KanbanPage.razor",
+            createdTask.ProjectFilePath);
         Assert.Equal(KanbanTaskPriority.High, createdTask.Priority);
         Assert.Equal(new DateTime(2026, 7, 20), createdTask.DueDate);
         Assert.Equal(5, createdTask.SortOrder);
@@ -70,11 +74,15 @@ public sealed class KanbanBoardServiceTests
             projectId,
             KanbanTaskStatus.Open,
             KanbanTaskPriority.Critical,
-            new DateTime(2026, 7, 22, 9, 15, 0));
+            new DateTime(2026, 7, 22, 9, 15, 0),
+            "/Features/Kanban/Pages/KanbanPage.razor");
 
         Assert.Equal("Neuer Titel", updatedTask.Title);
         Assert.Equal("Neue Beschreibung", updatedTask.Description);
         Assert.Equal(projectId, updatedTask.ProjectId);
+        Assert.Equal(
+            "Features/Kanban/Pages/KanbanPage.razor",
+            updatedTask.ProjectFilePath);
         Assert.Equal(KanbanTaskPriority.Critical, updatedTask.Priority);
         Assert.Equal(new DateTime(2026, 7, 22), updatedTask.DueDate);
         Assert.Equal(KanbanTaskStatus.Open, updatedTask.Status);
@@ -161,6 +169,40 @@ public sealed class KanbanBoardServiceTests
                 null,
                 KanbanTaskStatus.Open,
                 KanbanTaskPriority.Normal));
+    }
+
+    [Fact]
+    public void UpdateTask_WithoutProject_RemovesProjectFileReference()
+    {
+        DateTime now = DateTime.Now;
+        var existingTask = new KanbanTask
+        {
+            Id = Guid.NewGuid(),
+            Title = "Datei prüfen",
+            ProjectId = Guid.NewGuid(),
+            ProjectFilePath = "Features/Kanban/KanbanPage.razor",
+            Status = KanbanTaskStatus.Open,
+            Priority = KanbanTaskPriority.Normal,
+            SortOrder = 0,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        var service = new KanbanBoardService(
+            new InMemoryKanbanTaskRepository([existingTask]));
+
+        KanbanTask updatedTask = service.UpdateTask(
+            existingTask.Id,
+            existingTask.Title,
+            existingTask.Description,
+            null,
+            existingTask.Status,
+            existingTask.Priority,
+            existingTask.DueDate,
+            existingTask.ProjectFilePath);
+
+        Assert.Null(updatedTask.ProjectId);
+        Assert.Empty(updatedTask.ProjectFilePath);
     }
 
     [Fact]

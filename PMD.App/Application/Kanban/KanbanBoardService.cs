@@ -9,6 +9,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
 {
     private const int MaximumTitleLength = 160;
     private const int MaximumDescriptionLength = 2000;
+    private const int MaximumProjectFilePathLength = 1024;
 
     private readonly IKanbanTaskRepository taskRepository;
     private readonly List<KanbanTask> tasks;
@@ -30,10 +31,14 @@ public sealed class KanbanBoardService : IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
-        DateTime? dueDate = null)
+        DateTime? dueDate = null,
+        string projectFilePath = "")
     {
         string normalizedTitle = NormalizeTitle(title);
         string normalizedDescription = NormalizeDescription(description);
+        string normalizedProjectFilePath = NormalizeProjectFilePath(
+            projectFilePath,
+            projectId);
         KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
         KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
         DateTime? normalizedDueDate = NormalizeDueDate(dueDate);
@@ -52,6 +57,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
             Title = normalizedTitle,
             Description = normalizedDescription,
             ProjectId = projectId,
+            ProjectFilePath = normalizedProjectFilePath,
             Status = normalizedStatus,
             Priority = normalizedPriority,
             SortOrder = nextSortOrder,
@@ -75,11 +81,15 @@ public sealed class KanbanBoardService : IKanbanBoardService
         Guid? projectId,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
-        DateTime? dueDate = null)
+        DateTime? dueDate = null,
+        string projectFilePath = "")
     {
         KanbanTask existingTask = GetRequiredTask(taskId);
         string normalizedTitle = NormalizeTitle(title);
         string normalizedDescription = NormalizeDescription(description);
+        string normalizedProjectFilePath = NormalizeProjectFilePath(
+            projectFilePath,
+            projectId);
         KanbanTaskStatus normalizedStatus = NormalizeStatus(status);
         KanbanTaskPriority normalizedPriority = NormalizePriority(priority);
         DateTime? normalizedDueDate = NormalizeDueDate(dueDate);
@@ -92,6 +102,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
                 normalizedTitle,
                 normalizedDescription,
                 projectId,
+                normalizedProjectFilePath,
                 normalizedStatus,
                 normalizedPriority,
                 normalizedDueDate,
@@ -124,6 +135,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
             normalizedTitle,
             normalizedDescription,
             projectId,
+            normalizedProjectFilePath,
             normalizedStatus,
             normalizedPriority,
             normalizedDueDate,
@@ -297,6 +309,33 @@ public sealed class KanbanBoardService : IKanbanBoardService
         return normalizedDescription;
     }
 
+    private static string NormalizeProjectFilePath(
+        string projectFilePath,
+        Guid? projectId)
+    {
+        if (!projectId.HasValue ||
+            string.IsNullOrWhiteSpace(projectFilePath))
+        {
+            return string.Empty;
+        }
+
+        string normalizedProjectFilePath = projectFilePath
+            .Trim()
+            .Replace('\\', '/')
+            .TrimStart('/');
+
+        if (normalizedProjectFilePath.Length >
+            MaximumProjectFilePathLength)
+        {
+            throw new ArgumentException(
+                $"Der Dateipfad darf höchstens " +
+                $"{MaximumProjectFilePathLength} Zeichen lang sein.",
+                nameof(projectFilePath));
+        }
+
+        return normalizedProjectFilePath;
+    }
+
     private static KanbanTaskStatus NormalizeStatus(
         KanbanTaskStatus status)
     {
@@ -338,6 +377,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
                 task.Title,
                 task.Description,
                 task.ProjectId,
+                task.ProjectFilePath,
                 status,
                 task.Priority,
                 task.DueDate,
@@ -351,6 +391,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
         string title,
         string description,
         Guid? projectId,
+        string projectFilePath,
         KanbanTaskStatus status,
         KanbanTaskPriority priority,
         DateTime? dueDate,
@@ -363,6 +404,7 @@ public sealed class KanbanBoardService : IKanbanBoardService
             Title = title,
             Description = description,
             ProjectId = projectId,
+            ProjectFilePath = projectFilePath,
             Status = status,
             Priority = priority,
             SortOrder = sortOrder,

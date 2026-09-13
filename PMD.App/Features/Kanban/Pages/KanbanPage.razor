@@ -1,6 +1,7 @@
 @page "/kanban"
 @namespace PMD.App.Features.Kanban.Pages
 @using PMD.App.Domain.Kanban
+@using PMD.App.Domain.ProjectStates
 @using PMD.App.Domain.Projects
 
 <PageTitle>PMD - Kanban</PageTitle>
@@ -73,7 +74,8 @@
 
                     <select id="kanban-task-project"
                             class="form-select"
-                            @bind="SelectedProjectId">
+                            value="@SelectedProjectId"
+                            @onchange="OnCreateProjectChanged">
                         <option value="">Keinem Projekt zuordnen</option>
 
                         @foreach (Project project in Projects)
@@ -83,6 +85,49 @@
                             </option>
                         }
                     </select>
+                </div>
+
+                <div class="kanban-field kanban-field-file">
+                    <label class="form-label"
+                           for="kanban-task-file">
+                        Projektdatei <span class="text-muted">(optional)</span>
+                    </label>
+
+                    <input id="kanban-task-file"
+                           class="form-control"
+                           type="search"
+                           list="kanban-task-file-options"
+                           maxlength="1024"
+                           disabled="@(!HasSelectedCreateProject)"
+                           placeholder="Relativen Dateipfad eingeben oder auswählen"
+                           @bind="NewTaskProjectFilePath"
+                           @bind:event="oninput" />
+
+                    <datalist id="kanban-task-file-options">
+                        @foreach (ProjectStateFile file in SuggestedCreateProjectFiles)
+                        {
+                            <option value="@NormalizeProjectFilePath(file.RelativePath)"></option>
+                        }
+                    </datalist>
+
+                    <div class="form-text">
+                        @if (!HasSelectedCreateProject)
+                        {
+                            <span>Eine Datei kann nur zusammen mit einem Projekt verknüpft werden.</span>
+                        }
+                        else if (SuggestedCreateProjectFiles.Count == 0)
+                        {
+                            <span>Für die letzte Prüfung wurden keine Dateivorschläge gefunden. Ein relativer Pfad kann trotzdem eingetragen werden.</span>
+                        }
+                        else if (HasMoreCreateProjectFiles)
+                        {
+                            <span>Die ersten 250 Dateien werden vorgeschlagen. Weitere Dateien können über ihren relativen Pfad eingetragen werden.</span>
+                        }
+                        else
+                        {
+                            <span>Datei aus der letzten gespeicherten Prüfung auswählen oder den relativen Pfad eingeben.</span>
+                        }
+                    </div>
                 </div>
 
                 <div class="kanban-field">
@@ -213,7 +258,8 @@
 
                     <select id="kanban-edit-task-project"
                             class="form-select"
-                            @bind="EditProjectId">
+                            value="@EditProjectId"
+                            @onchange="OnEditProjectChanged">
                         <option value="">Keinem Projekt zuordnen</option>
 
                         @foreach (Project project in Projects)
@@ -223,6 +269,49 @@
                             </option>
                         }
                     </select>
+                </div>
+
+                <div class="kanban-field kanban-field-file">
+                    <label class="form-label"
+                           for="kanban-edit-task-file">
+                        Projektdatei <span class="text-muted">(optional)</span>
+                    </label>
+
+                    <input id="kanban-edit-task-file"
+                           class="form-control"
+                           type="search"
+                           list="kanban-edit-task-file-options"
+                           maxlength="1024"
+                           disabled="@(!HasSelectedEditProject)"
+                           placeholder="Relativen Dateipfad eingeben oder auswählen"
+                           @bind="EditTaskProjectFilePath"
+                           @bind:event="oninput" />
+
+                    <datalist id="kanban-edit-task-file-options">
+                        @foreach (ProjectStateFile file in SuggestedEditProjectFiles)
+                        {
+                            <option value="@NormalizeProjectFilePath(file.RelativePath)"></option>
+                        }
+                    </datalist>
+
+                    <div class="form-text">
+                        @if (!HasSelectedEditProject)
+                        {
+                            <span>Ohne Projekt wird eine vorhandene Dateiverknüpfung entfernt.</span>
+                        }
+                        else if (SuggestedEditProjectFiles.Count == 0)
+                        {
+                            <span>Für die letzte Prüfung wurden keine Dateivorschläge gefunden. Ein relativer Pfad kann trotzdem eingetragen werden.</span>
+                        }
+                        else if (HasMoreEditProjectFiles)
+                        {
+                            <span>Die ersten 250 Dateien werden vorgeschlagen. Weitere Dateien können über ihren relativen Pfad eingetragen werden.</span>
+                        }
+                        else
+                        {
+                            <span>Datei aus der letzten gespeicherten Prüfung auswählen oder den relativen Pfad eingeben.</span>
+                        }
+                    </div>
                 </div>
 
                 <div class="kanban-field">
@@ -402,7 +491,7 @@
                 <input id="kanban-filter-search"
                        class="form-control"
                        type="search"
-                       placeholder="Titel oder Beschreibung durchsuchen"
+                       placeholder="Titel, Beschreibung oder Datei durchsuchen"
                        @bind="TaskSearchText"
                        @bind:event="oninput" />
             </div>
@@ -612,6 +701,45 @@
                                     </div>
                                 }
 
+                                @if (!string.IsNullOrWhiteSpace(task.ProjectFilePath))
+                                {
+                                    <div class="kanban-task-file-reference">
+                                        @if (project is not null)
+                                        {
+                                            <a href="@GetProjectFileLink(task)"
+                                               title="@task.ProjectFilePath">
+                                                <svg viewBox="0 0 16 16"
+                                                     aria-hidden="true"
+                                                     focusable="false">
+                                                    <path d="M3.25 2.5h5l3.5 3.5v7.5h-8.5zM8.25 2.5V6h3.5"
+                                                          fill="none"
+                                                          stroke="currentColor"
+                                                          stroke-linecap="round"
+                                                          stroke-linejoin="round"
+                                                          stroke-width="1.2" />
+                                                </svg>
+                                                <code>@task.ProjectFilePath</code>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span title="@task.ProjectFilePath">
+                                                <svg viewBox="0 0 16 16"
+                                                     aria-hidden="true"
+                                                     focusable="false">
+                                                    <path d="M3.25 2.5h5l3.5 3.5v7.5h-8.5zM8.25 2.5V6h3.5"
+                                                          fill="none"
+                                                          stroke="currentColor"
+                                                          stroke-linecap="round"
+                                                          stroke-linejoin="round"
+                                                          stroke-width="1.2" />
+                                                </svg>
+                                                <code>@task.ProjectFilePath</code>
+                                            </span>
+                                        }
+                                    </div>
+                                }
+
                                 @if (!string.IsNullOrWhiteSpace(task.Description))
                                 {
                                     <p class="kanban-task-description">
@@ -652,6 +780,6 @@
 
     <div class="alert alert-info kanban-next-step-note mt-4 mb-0">
         <strong>Direkt organisieren:</strong>
-        Fälligkeiten werden rein visuell hervorgehoben. Statusänderungen erfolgen weiterhin ausschließlich durch dich.
+        Verknüpfte Projektdateien öffnen die aktuelle Dateiansicht. Aufgaben und Status bleiben vollständig unter deiner Kontrolle.
     </div>
 </div>

@@ -30,6 +30,23 @@ public sealed class KanbanTaskFilterTests
     }
 
     [Fact]
+    public void Apply_SearchesLinkedProjectFilePath()
+    {
+        KanbanTask matchingTask = CreateTask(
+            "Datei prüfen",
+            projectFilePath: "Features/Dashboard/Pages/DashboardPage.razor");
+
+        IReadOnlyList<KanbanTask> result = KanbanTaskFilter.Apply(
+            [matchingTask, CreateTask("Andere Aufgabe")],
+            KanbanTaskFilterCriteria.Empty with
+            {
+                SearchText = "DashboardPage"
+            });
+
+        Assert.Same(matchingTask, Assert.Single(result));
+    }
+
+    [Fact]
     public void Apply_FiltersByProjectPriorityAndStatus()
     {
         Guid matchingProjectId = Guid.NewGuid();
@@ -124,7 +141,8 @@ public sealed class KanbanTaskFilterTests
         Guid? projectId = null,
         KanbanTaskPriority priority = KanbanTaskPriority.Normal,
         KanbanTaskStatus status = KanbanTaskStatus.Open,
-        int sortOrder = 0)
+        int sortOrder = 0,
+        string projectFilePath = "")
     {
         DateTime now = DateTime.Now;
 
@@ -134,6 +152,7 @@ public sealed class KanbanTaskFilterTests
             Title = title,
             Description = description,
             ProjectId = projectId,
+            ProjectFilePath = projectFilePath,
             Priority = priority,
             Status = status,
             SortOrder = sortOrder,

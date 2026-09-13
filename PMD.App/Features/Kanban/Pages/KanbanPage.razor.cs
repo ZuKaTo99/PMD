@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using PMD.App.Application.Kanban;
+using PMD.App.Application.ProjectStates;
 using PMD.App.Application.Projects;
 using PMD.App.Domain.Kanban;
+using PMD.App.Domain.ProjectStates;
 using PMD.App.Domain.Projects;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,8 @@ namespace PMD.App.Features.Kanban.Pages;
 public partial class KanbanPage : IDisposable, IAsyncDisposable
 {
     protected const string UnassignedProjectFilterValue = "__unassigned__";
+    private const int MaximumSuggestedProjectFileCount = 250;
+    private const int MaximumTaskTitleLength = 160;
 
     private static readonly IReadOnlyList<KanbanColumnDefinition>
         ColumnDefinitions =
@@ -42,6 +46,11 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     private ElementReference kanbanBoardElement;
     private DotNetObjectReference<KanbanPage>? dragDropReference;
+    private IReadOnlyList<ProjectStateFile> createProjectFiles =
+        Array.Empty<ProjectStateFile>();
+    private IReadOnlyList<ProjectStateFile> editProjectFiles =
+        Array.Empty<ProjectStateFile>();
+    private string lastHandledTaskRequestKey = string.Empty;
     private bool isDisposed;
 
     [Inject]
@@ -51,7 +60,19 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     private IProjectMemoryStore ProjectMemoryStore { get; set; } = default!;
 
     [Inject]
+    private IProjectStateMemoryStore ProjectStateMemoryStore { get; set; } = default!;
+
+    [Inject]
     private IJSRuntime JavaScriptRuntime { get; set; } = default!;
+
+    [SupplyParameterFromQuery(Name = "projekt")]
+    public string? RequestedProjectId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "datei")]
+    public string? RequestedProjectFilePath { get; set; }
+
+    [SupplyParameterFromQuery(Name = "titel")]
+    public string? RequestedTaskTitle { get; set; }
 
     protected IReadOnlyList<KanbanColumnDefinition> Columns =>
         ColumnDefinitions;
@@ -78,6 +99,19 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     protected string SelectedProjectId { get; set; } = string.Empty;
 
+    protected string NewTaskProjectFilePath { get; set; } = string.Empty;
+
+    protected IReadOnlyList<ProjectStateFile> SuggestedCreateProjectFiles =>
+        createProjectFiles
+            .Take(MaximumSuggestedProjectFileCount)
+            .ToList();
+
+    protected bool HasSelectedCreateProject =>
+        ParseProjectId(SelectedProjectId).HasValue;
+
+    protected bool HasMoreCreateProjectFiles =>
+        createProjectFiles.Count > MaximumSuggestedProjectFileCount;
+
     protected KanbanTaskStatus NewTaskStatus { get; set; } =
         KanbanTaskStatus.Open;
 
@@ -101,6 +135,19 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     protected string EditTaskDescription { get; set; } = string.Empty;
 
     protected string EditProjectId { get; set; } = string.Empty;
+
+    protected string EditTaskProjectFilePath { get; set; } = string.Empty;
+
+    protected IReadOnlyList<ProjectStateFile> SuggestedEditProjectFiles =>
+        editProjectFiles
+            .Take(MaximumSuggestedProjectFileCount)
+            .ToList();
+
+    protected bool HasSelectedEditProject =>
+        ParseProjectId(EditProjectId).HasValue;
+
+    protected bool HasMoreEditProjectFiles =>
+        editProjectFiles.Count > MaximumSuggestedProjectFileCount;
 
     protected KanbanTaskStatus EditTaskStatus { get; set; } =
         KanbanTaskStatus.Open;
@@ -165,6 +212,11 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
     {
         KanbanBoardService.BoardChanged += OnBoardChanged;
         ProjectMemoryStore.ProjectsChanged += OnProjectsChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        TryApplyTaskCreationRequest();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -270,6 +322,22 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
             : null;
     }
 
+    protected void OnCreateProjectChanged(ChangeEventArgs eventArgs)
+    {
+        SelectedProjectId = eventArgs.Value?.ToString() ?? string.Empty;
+        NewTaskProjectFilePath = string.Empty;
+        createProjectFiles = LoadProjectFiles(
+            ParseProjectId(SelectedProjectId));
+    }
+
+    protected void OnEditProjectChanged(ChangeEventArgs eventArgs)
+    {
+        EditProjectId = eventArgs.Value?.ToString() ?? string.Empty;
+        EditTaskProjectFilePath = string.Empty;
+        editProjectFiles = LoadProjectFiles(
+            ParseProjectId(EditProjectId));
+    }
+
     protected void ToggleCreateForm()
     {
         if (IsCreateFormOpen)
@@ -302,7 +370,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 ParseProjectId(SelectedProjectId),
                 NewTaskStatus,
                 NewTaskPriority,
-                NewTaskDueDate?.Date);
+                NewTaskDueDate?.Date,
+                NewTaskProjectFilePath);
 
             ResetCreateForm();
             IsCreateFormOpen = false;
@@ -324,6 +393,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         EditTaskTitle = task.Title;
         EditTaskDescription = task.Description;
         EditProjectId = task.ProjectId?.ToString() ?? string.Empty;
+        EditTaskProjectFilePath = task.ProjectFilePath;
+        editProjectFiles = LoadProjectFiles(task.ProjectId);
         EditTaskStatus = task.Status;
         EditTaskPriority = task.Priority;
         EditTaskDueDate = task.DueDate?.Date;
@@ -348,7 +419,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 ParseProjectId(EditProjectId),
                 EditTaskStatus,
                 EditTaskPriority,
-                EditTaskDueDate?.Date);
+                EditTaskDueDate?.Date,
+                EditTaskProjectFilePath);
 
             ResetEditForm();
         }
@@ -547,6 +619,30 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
                 : string.Empty;
     }
 
+    protected static string NormalizeProjectFilePath(
+        string projectFilePath)
+    {
+        return (projectFilePath ?? string.Empty)
+            .Trim()
+            .Replace('\\', '/')
+            .TrimStart('/');
+    }
+
+    protected static string GetProjectFileLink(KanbanTask task)
+    {
+        if (!task.ProjectId.HasValue ||
+            string.IsNullOrWhiteSpace(task.ProjectFilePath))
+        {
+            return "#";
+        }
+
+        string encodedFilePath = Uri.EscapeDataString(
+            task.ProjectFilePath);
+
+        return $"/projekte/{task.ProjectId.Value}/dateien" +
+            $"?datei={encodedFilePath}&quelle=kanban";
+    }
+
     protected static string FormatDate(DateTime dateTime)
     {
         return dateTime.ToString("dd.MM.yyyy");
@@ -618,6 +714,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         NewTaskTitle = string.Empty;
         NewTaskDescription = string.Empty;
         SelectedProjectId = string.Empty;
+        NewTaskProjectFilePath = string.Empty;
+        createProjectFiles = Array.Empty<ProjectStateFile>();
         NewTaskStatus = KanbanTaskStatus.Open;
         NewTaskPriority = KanbanTaskPriority.Normal;
         NewTaskDueDate = null;
@@ -630,6 +728,8 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         EditTaskTitle = string.Empty;
         EditTaskDescription = string.Empty;
         EditProjectId = string.Empty;
+        EditTaskProjectFilePath = string.Empty;
+        editProjectFiles = Array.Empty<ProjectStateFile>();
         EditTaskStatus = KanbanTaskStatus.Open;
         EditTaskPriority = KanbanTaskPriority.Normal;
         EditTaskDueDate = null;
@@ -642,6 +742,100 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
         DeleteTaskErrorMessage = string.Empty;
     }
 
+    private void TryApplyTaskCreationRequest()
+    {
+        string requestKey = string.Join(
+            "\u001f",
+            RequestedProjectId ?? string.Empty,
+            RequestedProjectFilePath ?? string.Empty,
+            RequestedTaskTitle ?? string.Empty);
+
+        bool hasRequest =
+            !string.IsNullOrWhiteSpace(RequestedProjectId) ||
+            !string.IsNullOrWhiteSpace(RequestedProjectFilePath) ||
+            !string.IsNullOrWhiteSpace(RequestedTaskTitle);
+
+        if (!hasRequest ||
+            string.Equals(
+                requestKey,
+                lastHandledTaskRequestKey,
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        lastHandledTaskRequestKey = requestKey;
+        ResetCreateForm();
+        ResetEditForm();
+        ResetDeleteConfirmation();
+
+        Guid? requestedProjectId = ParseProjectId(
+            RequestedProjectId ?? string.Empty);
+
+        if (requestedProjectId.HasValue &&
+            ProjectMemoryStore.GetProjectById(
+                requestedProjectId.Value) is not null)
+        {
+            SelectedProjectId = requestedProjectId.Value.ToString();
+            createProjectFiles = LoadProjectFiles(requestedProjectId);
+            NewTaskProjectFilePath = NormalizeProjectFilePath(
+                RequestedProjectFilePath ?? string.Empty);
+        }
+
+        NewTaskTitle = BuildRequestedTaskTitle(
+            RequestedTaskTitle,
+            NewTaskProjectFilePath);
+
+        IsCreateFormOpen = true;
+    }
+
+    private IReadOnlyList<ProjectStateFile> LoadProjectFiles(
+        Guid? projectId)
+    {
+        if (!projectId.HasValue ||
+            ProjectMemoryStore.GetProjectById(projectId.Value) is null)
+        {
+            return Array.Empty<ProjectStateFile>();
+        }
+
+        ProjectState? latestProjectState =
+            ProjectStateMemoryStore.GetLatestByProjectId(
+                projectId.Value);
+
+        if (latestProjectState is null)
+        {
+            return Array.Empty<ProjectStateFile>();
+        }
+
+        return ProjectStateMemoryStore
+            .GetFilesByProjectStateId(latestProjectState.Id)
+            .OrderBy(
+                file => file.RelativePath,
+                StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static string BuildRequestedTaskTitle(
+        string? requestedTaskTitle,
+        string projectFilePath)
+    {
+        string title = requestedTaskTitle?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(title) &&
+            !string.IsNullOrWhiteSpace(projectFilePath))
+        {
+            string fileName = projectFilePath
+                .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                .LastOrDefault() ?? projectFilePath;
+
+            title = $"Aufgabe für {fileName}";
+        }
+
+        return title.Length <= MaximumTaskTitleLength
+            ? title
+            : title[..MaximumTaskTitleLength];
+    }
+
     private void OnBoardChanged()
     {
         _ = InvokeAsync(StateHasChanged);
@@ -649,6 +843,11 @@ public partial class KanbanPage : IDisposable, IAsyncDisposable
 
     private void OnProjectsChanged()
     {
+        createProjectFiles = LoadProjectFiles(
+            ParseProjectId(SelectedProjectId));
+        editProjectFiles = LoadProjectFiles(
+            ParseProjectId(EditProjectId));
+
         _ = InvokeAsync(StateHasChanged);
     }
 

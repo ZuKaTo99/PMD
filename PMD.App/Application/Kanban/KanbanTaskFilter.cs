@@ -43,6 +43,9 @@ public static class KanbanTaskFilter
                 StringComparison.OrdinalIgnoreCase) ||
             task.Description.Contains(
                 searchText,
+                StringComparison.OrdinalIgnoreCase) ||
+            task.ProjectFilePath.Contains(
+                searchText,
                 StringComparison.OrdinalIgnoreCase);
     }
 

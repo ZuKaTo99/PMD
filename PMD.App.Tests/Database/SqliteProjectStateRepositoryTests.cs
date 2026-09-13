@@ -58,7 +58,7 @@ public sealed class SqliteProjectStateRepositoryTests : IDisposable
                 WHERE type = 'index'
                 """);
 
-        Assert.Equal(4, schemaVersion);
+        Assert.Equal(5, schemaVersion);
 
         Assert.Contains(
             indexes,
